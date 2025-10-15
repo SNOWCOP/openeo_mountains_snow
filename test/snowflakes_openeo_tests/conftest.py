@@ -5,8 +5,10 @@ import openeo
 import pytest
 from hydra import initialize, compose
 
-from snowflakes_openeo.collect_training import snowflake_inputs_cube
-import snowflakes_openeo.collect_training
+import sys
+print(sys.path)
+from openeo_mountains_snow.collect_training import snowflake_inputs_cube
+import openeo_mountains_snow.collect_training
 
 @pytest.fixture
 def cdse_connection() -> openeo.Connection:

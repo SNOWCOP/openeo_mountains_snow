@@ -12,7 +12,7 @@ from openeo import UDF
 from openeo.extra.spectral_indices import compute_indices
 from openeo.processes import any, array_append, process, cos, sin, arccos, array_create, quantiles
 
-from snowflakes_openeo.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
+from openeo_mountains_snow.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
 
 
 def elevation_mask(region, conn: openeo.Connection, cfg:DictConfig):
