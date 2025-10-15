@@ -1,5 +1,5 @@
 [project]
-name = "openeo-mountains-snow"
+name = "openeo_mountains_snow"
 version = "0.1.0"
 description = "Snow processing in the mountains using openEO"
 readme = "README.md"
@@ -12,4 +12,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest"
+]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = [
+  "src"
 ]
