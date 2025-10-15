@@ -1,0 +1,20 @@
+connection:
+  endpoint: "openeo-staging.dataspace.copernicus.eu"
+
+
+sentinel2_l2a:
+  collection: "SENTINEL2_L2A"
+  scl_band: "SCL"
+  cloud_values: [8,9,3,10]
+
+sentinel2_l1c:
+  collection: "SENTINEL2_L1C"
+  bands: ["B02", "B03", "B04", "B08", "B11", "sunZenithAngles", "sunAzimuthAngles"]
+
+water_mask:
+  collection: "ESA_WORLDCOVER_10M_2021_V2"
+  band: "MAP"
+  water_values: [80]
+
+
+corsa_job: None
