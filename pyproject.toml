@@ -1,0 +1,9 @@
+[project]
+name = "openeo-mountains-snow"
+version = "0.1.0"
+description = "Snow processing in the mountains using openEO"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "openeo"
+]
