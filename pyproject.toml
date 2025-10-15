@@ -5,7 +5,8 @@ description = "Snow processing in the mountains using openEO"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "openeo"
+    "openeo",
+    "hydra"
 ]
 
 [project.optional-dependencies]
