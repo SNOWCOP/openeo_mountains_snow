@@ -71,7 +71,7 @@ def collect_training(inputs_cube):
 def run_openeo(cfg : DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     c = openeo.connect(cfg.connection.endpoint).authenticate_oidc()
-    aoi = json.load(open(Path(__file__).parent / ".." / ".."/ "auxiliary"/"senales_wgs84.geojson"))
+    aoi = json.load(open(Path(__file__).parent / "senales_wgs84.geojson"))
 
     # define time period
     time_period = ['2023-02-01', '2023-02-28']
@@ -92,9 +92,9 @@ def run_openeo(cfg : DictConfig) -> None:
 
 
 def get_udf(name):
-    with (files('snowflakes_openeo') / name).open('r') as fp:
+    with (files('openeo_mountains_snow') / name).open('r') as fp:
         udf_code = fp.read()
-        return UDF( code= udf_code, runtime="Python", version="3.8")
+        return UDF( code= udf_code, runtime="Python", version="3.8", context={"classify":True})
 
 
 def snowflake_inputs_cube(aoi, time_period, connection, cfg):
