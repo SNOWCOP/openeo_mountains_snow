@@ -10,7 +10,7 @@ def test_elevation_mask(elevation_mask):
     print(elevation_mask)
 
 def test_udf_local(local_cube):
-    from snowflakes_openeo.representative_pixels import apply_datacube
+    from openeo_mountains_snow.representative_pixels import apply_datacube
 
     cube = xarray.open_dataset(local_cube)
     crs = cube.crs
@@ -19,7 +19,7 @@ def test_udf_local(local_cube):
 
     input_da = cube.isel(t=1).to_dataarray(dim="bands")
 
-    result = apply_datacube(input_da,{})
+    result = apply_datacube(input_da,{"classify":True})
     ds = result.to_dataset(dim="bands")
     ds = ds.assign(crs=crs)
     ds = ds.rename(dict(B03='snowmask'))

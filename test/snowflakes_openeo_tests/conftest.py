@@ -28,21 +28,23 @@ def elevation_mask(cdse_connection):
             # config is relative to a module
             cfg = compose(config_name="config", overrides=[])
 
-            mask = snowflakes_openeo.collect_training.elevation_mask(aoi, cdse_connection, cfg)
+            mask = openeo_mountains_snow.collect_training.elevation_mask(aoi, cdse_connection, cfg)
             mask.execute_batch(str(out))
     return out
 
 
 @pytest.fixture
 def local_cube(cdse_connection):
-    out = Path(__file__).parent / "testdata" / "snowflake_area1.nc"
+    out = Path(__file__).parent / "testdata" / "snowflake_inputs_with_angle.nc"
     if not out.exists():
-        aoi = json.load(open(Path(__file__).parent / "andes_area1.geojson"))
+        area1 = Path(__file__).parent / "andes_area1.geojson"
+        senales = Path(__file__).parent / "senales_wgs84.geojson"
+        aoi = json.load(open(senales))
 
         # define time period
         time_period = ['2023-02-01', '2023-02-28']
 
-        with initialize(version_base=None, config_path="../../src/snowflakes_openeo/conf"):
+        with initialize(version_base=None, config_path="../../src/openeo_mountains_snow/conf"):
             # config is relative to a module
             cfg = compose(config_name="config", overrides=[])
 

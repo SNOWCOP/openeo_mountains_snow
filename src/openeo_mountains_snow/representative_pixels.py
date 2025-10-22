@@ -83,6 +83,13 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
             if representative_pixels_mask_noSnow.shape[0] > 0:
                     values[~mask] +=  representative_pixels_mask_noSnow * 4
 
+    if(context.get("classify", False)):
+        def reshape(v):
+            return np.stack(v, axis=-1)
+        class_array, normalizer, svm, training_array = model_training_svm(reshape(curr_bands.values[:,values==10]), reshape(curr_bands.values[:,values==8]))
+        SCF_map = classify(curr_bands.values, ~mask, normalizer, svm)
+        values = SCF_map
+
     cube.loc['B03'] = 0
 
     if values is not None and values.shape[0] > 0:
@@ -127,6 +134,63 @@ def calculate_training_samples(solar_incidence_angle, ranges, total_samples):
 
     return range_samples
 
+def hyp_disatance(svmModel, svmMatrix):
+    return svmModel.decision_function(svmMatrix)
+
+def classify(bands, valid_mask, normalizer, svm, Nprocesses = 8):
+    from joblib import Parallel, delayed
+    min_score_ns = -1
+    max_score_s = 1
+    Image_array_to_classify = bands[:, valid_mask].transpose()
+    Samples_to_classify = normalizer.transform(Image_array_to_classify)
+    # Divide Samples_to_classify into blocks for parallel processing
+    samplesBlocks = np.array_split(Samples_to_classify, Nprocesses, axis=0)
+    # Calculate the score
+    scoreImage_arrayBlocks = Parallel(n_jobs=Nprocesses, verbose=10)(
+        delayed(hyp_disatance)(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))
+    )
+    scoreImage_array = np.concatenate(scoreImage_arrayBlocks, axis=0)
+    Score_map = 255 * np.ones(np.shape(valid_mask)).astype(float)
+    Score_map[valid_mask] = scoreImage_array.flatten()
+    scoreImage_array[scoreImage_array < min_score_ns] = min_score_ns
+    scoreImage_array[scoreImage_array > max_score_s] = max_score_s
+    SCF_Image_array = (scoreImage_array * 50 + 50).astype('uint8')
+    # Create the SCF map
+    SCF_map = 255 * np.ones(np.shape(valid_mask))
+    SCF_map[valid_mask] = SCF_Image_array.flatten()
+
+    return SCF_map
+
+def model_training_svm(snow_training, no_snow_training, gamma=None):
+    from sklearn import preprocessing
+    from sklearn.svm import SVC
+    from sklearn.metrics.pairwise import rbf_kernel
+
+    training_array = np.concatenate((snow_training, no_snow_training), axis=0)
+    class_array = np.concatenate((np.ones(snow_training.shape[0]), np.zeros(no_snow_training.shape[0])), axis=0)
+    # Rescale: standardization between 0 and 1
+    normalizer = preprocessing.StandardScaler().fit(training_array)
+    Samples_train_normalized = normalizer.transform(training_array)
+    if gamma == None:
+        # Gamma selection by examining the kernel
+        gamma_range = np.logspace(-2, 2, 100)
+        std_list = []
+        for curr_gamma in gamma_range:
+            rbf = rbf_kernel(Samples_train_normalized, Samples_train_normalized, gamma=curr_gamma)
+            std_list.append(rbf.std())
+
+        idx_max_std = np.argmax(std_list)
+        best_gamma = gamma_range[idx_max_std]
+
+        print('The best Gamma is: ' + str(best_gamma))
+
+    else:
+        best_gamma = gamma
+    svm = SVC(C=2000000, kernel='rbf', gamma=best_gamma, probability=False,
+              decision_function_shape='ovo', cache_size=8000)
+    svm.fit(Samples_train_normalized, class_array)
+    pred = svm.predict(Samples_train_normalized)
+    return class_array, normalizer, svm, training_array
 
 def compute_representative_snow_pixels_high_range(curr_NDSI, curr_bands, curr_diff_B_NIR, curr_distance_idx, curr_shad_idx,
                                                   sample_count):
