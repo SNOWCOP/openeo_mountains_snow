@@ -1,0 +1,13 @@
+# Snow water equivalent (SWE) reconstruction
+
+
+https://github.com/SNOWCOP/SWE_reconstruction/blob/main/main.py#L133C15-L133C22
+
+Data inputs:
+
+- reconstructed daily snow cover area timeseries at 20m resolution
+- air temperature at 30m reconstructed from ERA5 via MicroMet
+- shortwave incoming radiation (SW) at 30m reconstructed from ERA5 via MicroMet
+- era5-land precipitation in meters
+
+Algorithm type: multi-band timeseries input is used to compute single-band timeseries output.

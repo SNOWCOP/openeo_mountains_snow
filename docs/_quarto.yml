@@ -1,0 +1,26 @@
+project:
+  type: website
+  preview:
+    port: 4200
+
+website:
+  repo-url: "https://github.com/SNOWCOP/openeo_mountains_snow"
+  repo-branch: "master"
+  search:
+    location: sidebar
+    type: textbox
+    copy-button: true
+
+  navbar:
+    pinned: true
+  page-navigation: true
+  title: "openEO library for mountain snow analysis"
+  sidebar:
+    style: "floating"
+    collapse-level: 2
+    contents:
+      - href: timeseries_reconstruction.qmd
+        text: Timeseries reconstruction
+      - href: snow_water_equivalent_reconstruction.qmd
+        text: Snow Water Equivalent reconstruction
+
