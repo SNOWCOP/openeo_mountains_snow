@@ -7,7 +7,14 @@ https://ieeexplore.ieee.org/document/9511108
 ## Data Sources
 
 High spatial, low temporal resolution: Landsat and Sentinel-2
-Low spatial, high temporal resolution: MODIS snow cover fraction
+
+- Sentinel-2 SCA can be obtained from SCL, but better is to use 'SNOWFLAKE' algorithm 
+
+
+Low spatial, high temporal resolution: MODIS snow cover fraction:
+
+- https://stac.eurac.edu/collections/MOD10A1v61
+- https://radiantearth.github.io/stac-browser/#/external/stac.openeo.vito.be/collections/modis-10A1-061
 
 Long timeseries needed to have sufficient input for statistical methods. 
 
