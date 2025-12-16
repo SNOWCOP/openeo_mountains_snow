@@ -1,0 +1,52 @@
+
+# Algorithm to reconstruct a snow cover timeseries with high spatiotemporal resolution
+
+Original reference: 
+https://ieeexplore.ieee.org/document/9511108
+
+## Data Sources
+
+High spatial, low temporal resolution: Landsat and Sentinel-2
+Low spatial, high temporal resolution: MODIS snow cover fraction
+
+Long timeseries needed to have sufficient input for statistical methods. 
+
+## Step 1: High resolution gap filling
+
+For each partially clouded high-resolution image, compare it to every other HR observation in the timeseries and compute similarity.
+Fill in gaps if similarity is above a certain threshold.
+
+Original code: https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/gapfilling.py#L40
+
+### Proposed openEO implementation
+
+We need the full scene for spatial similarity metric and we need the full timeseries. So a callback using apply_neighborhood seems in order.
+
+Using a UDF will allow us to start from the original code, maintaining similar performance.
+Biggest drawback is higher memory use, but other methods seem to imply a high degree of data movement, making it hard to achieve similar performance.
+
+
+## Step 2: Downscaling of low-resolution time series to high resolution
+
+For each high-resolution pixel, the probability distribution of snow cover based on the low-resolution snow cover fraction is computed.
+So observed high-resolution SCF is first resampled to low-resolution, obtaining LR SCF. Then for all low resolution pixels with a similar SCF, 
+the snow presence probablity is computed.
+
+The distribution computation can be done once, and only changes when sufficient new data is available.
+
+Original code for computing distribution::
+https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/downscaling.py#L115
+
+Original code to fill in high-resolution gaps based on computed distribution:
+https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/historical_block.py#L97
+
+
+### Proposed openEO implementation
+
+
+
+
+
+
+
+
