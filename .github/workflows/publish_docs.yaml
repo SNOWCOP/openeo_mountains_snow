@@ -1,9 +1,9 @@
 name: Publish content to GitHub pages
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 concurrency: publish_docs
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
         with:
           tinytex: true
-          version: '1.6.43'
+          version: '1.8.26'
       - name: Render documentation pages
         run: quarto render --output-dir _build
       - name: Setup GitHub pages
@@ -42,7 +42,7 @@ jobs:
   deploy-documentation-ghpages:
     runs-on: ubuntu-latest
     needs: build-documentation
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
