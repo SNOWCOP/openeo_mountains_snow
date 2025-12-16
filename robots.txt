@@ -1,0 +1,1 @@
+Sitemap: https://SNOWCOP.github.io/openeo_mountains_snow/sitemap.xml

@@ -1,0 +1,59 @@
+[
+  {
+    "objectID": "snow_statistics.html",
+    "href": "snow_statistics.html",
+    "title": "openEO library for mountain snow analysis",
+    "section": "",
+    "text": "import json\nfrom pathlib import Path\n\nimport openeo\n\nimport openeo_mountains_snow\nfrom openeo_mountains_snow.snowcoverarea_reconstruction.highresolution_gapfilling import calculate_snow_from_scl\n\n\nconnection = openeo.connect(\"openeo.dataspace.copernicus.eu\").authenticate_oidc()\n\naoi = json.load(open(Path(openeo_mountains_snow.__file__).parent / \"senales_wgs84.geojson\"))\n\nstartdate = '2024-10-01'\nenddate = '2025-06-30'\n\n\nsnow_cube = calculate_snow_from_scl(connection,temporal_extent=(startdate,enddate), spatial_extent=None)\n\nsnow_cube.aggregate_spatial(geometries=aoi, reducer = \"sum\" ).download(\"snow_sum.csv\")\n\nAuthenticated using refresh token.\n\n\n\nimport pandas as pd\n\nsnow_sum_df = pd.read_csv(\"snow_sum.csv\")\nsnow_sum_df.index = pd.to_datetime(snow_sum_df['date'])\nsnow_sum_df.sort_index(inplace=True)\nsnow_sum_df.drop(columns=[\"feature_index\"], inplace=True)\nsnow_sum_df.plot()\n\n\n\n\n\n\n\n\n\nsnow_cube.mask_polygon(aoi).download(\"snow_cube.nc\")\n\n\nsnow_sum_df.count()\n\ndate    79\nsnow    79\ndtype: int64"
+  },
+  {
+    "objectID": "timeseries_reconstruction.html",
+    "href": "timeseries_reconstruction.html",
+    "title": "Algorithm to reconstruct a snow cover timeseries with high spatiotemporal resolution",
+    "section": "",
+    "text": "Original reference: https://ieeexplore.ieee.org/document/9511108\n\n\nHigh spatial, low temporal resolution: Landsat and Sentinel-2 Low spatial, high temporal resolution: MODIS snow cover fraction\nLong timeseries needed to have sufficient input for statistical methods.\n\n\n\nFor each partially clouded high-resolution image, compare it to every other HR observation in the timeseries and compute similarity. Fill in gaps if similarity is above a certain threshold.\nOriginal code: https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/gapfilling.py#L40\n\n\nWe need the full scene for spatial similarity metric and we need the full timeseries. So a callback using apply_neighborhood seems in order.\nUsing a UDF will allow us to start from the original code, maintaining similar performance. Biggest drawback is higher memory use, but other methods seem to imply a high degree of data movement, making it hard to achieve similar performance.\n\n\n\n\nFor each high-resolution pixel, the probability distribution of snow cover based on the low-resolution snow cover fraction is computed. So observed high-resolution SCF is first resampled to low-resolution, obtaining LR SCF. Then for all low resolution pixels with a similar SCF, the snow presence probablity is computed.\nThe distribution computation can be done once, and only changes when sufficient new data is available.\nOriginal code for computing distribution:: https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/downscaling.py#L115\nOriginal code to fill in high-resolution gaps based on computed distribution: https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/historical_block.py#L97\n\n\nDistribution computation already exists: https://github.com/SNOWCOP/openeo_mountains_snow/blob/9df6ed19dd5904cd82d764867daeb92c8249af3d/src/openeo_mountains_snow/snowcoverarea_reconstruction/downscaling_distribution.py#L174-L173\nActual downscaling is a matter of merging the distribution cube with MODIS time series upsampled to 20m, apply mask for gaps to be filled, and then filling the actual gaps.\n\n\n\n\nOriginal paper runs the ‘historic block’ two times.",
+    "crumbs": [
+      "Timeseries reconstruction"
+    ]
+  },
+  {
+    "objectID": "timeseries_reconstruction.html#data-sources",
+    "href": "timeseries_reconstruction.html#data-sources",
+    "title": "Algorithm to reconstruct a snow cover timeseries with high spatiotemporal resolution",
+    "section": "",
+    "text": "High spatial, low temporal resolution: Landsat and Sentinel-2 Low spatial, high temporal resolution: MODIS snow cover fraction\nLong timeseries needed to have sufficient input for statistical methods.",
+    "crumbs": [
+      "Timeseries reconstruction"
+    ]
+  },
+  {
+    "objectID": "timeseries_reconstruction.html#step-1-high-resolution-gap-filling",
+    "href": "timeseries_reconstruction.html#step-1-high-resolution-gap-filling",
+    "title": "Algorithm to reconstruct a snow cover timeseries with high spatiotemporal resolution",
+    "section": "",
+    "text": "For each partially clouded high-resolution image, compare it to every other HR observation in the timeseries and compute similarity. Fill in gaps if similarity is above a certain threshold.\nOriginal code: https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/gapfilling.py#L40\n\n\nWe need the full scene for spatial similarity metric and we need the full timeseries. So a callback using apply_neighborhood seems in order.\nUsing a UDF will allow us to start from the original code, maintaining similar performance. Biggest drawback is higher memory use, but other methods seem to imply a high degree of data movement, making it hard to achieve similar performance.",
+    "crumbs": [
+      "Timeseries reconstruction"
+    ]
+  },
+  {
+    "objectID": "timeseries_reconstruction.html#step-2-downscaling-of-low-resolution-time-series-to-high-resolution",
+    "href": "timeseries_reconstruction.html#step-2-downscaling-of-low-resolution-time-series-to-high-resolution",
+    "title": "Algorithm to reconstruct a snow cover timeseries with high spatiotemporal resolution",
+    "section": "",
+    "text": "For each high-resolution pixel, the probability distribution of snow cover based on the low-resolution snow cover fraction is computed. So observed high-resolution SCF is first resampled to low-resolution, obtaining LR SCF. Then for all low resolution pixels with a similar SCF, the snow presence probablity is computed.\nThe distribution computation can be done once, and only changes when sufficient new data is available.\nOriginal code for computing distribution:: https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/downscaling.py#L115\nOriginal code to fill in high-resolution gaps based on computed distribution: https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2cc5f6/historical_block.py#L97\n\n\nDistribution computation already exists: https://github.com/SNOWCOP/openeo_mountains_snow/blob/9df6ed19dd5904cd82d764867daeb92c8249af3d/src/openeo_mountains_snow/snowcoverarea_reconstruction/downscaling_distribution.py#L174-L173\nActual downscaling is a matter of merging the distribution cube with MODIS time series upsampled to 20m, apply mask for gaps to be filled, and then filling the actual gaps.",
+    "crumbs": [
+      "Timeseries reconstruction"
+    ]
+  },
+  {
+    "objectID": "timeseries_reconstruction.html#step-3-improving-lr-time-series-and-running-again",
+    "href": "timeseries_reconstruction.html#step-3-improving-lr-time-series-and-running-again",
+    "title": "Algorithm to reconstruct a snow cover timeseries with high spatiotemporal resolution",
+    "section": "",
+    "text": "Original paper runs the ‘historic block’ two times.",
+    "crumbs": [
+      "Timeseries reconstruction"
+    ]
+  }
+]
