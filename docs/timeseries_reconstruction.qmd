@@ -43,8 +43,29 @@ https://github.com/vpremier/dailyHR_SCA/blob/07f0bc37eb55a1dd13606b325ce801790c2
 
 ### Proposed openEO implementation
 
+Distribution computation already exists:
+https://github.com/SNOWCOP/openeo_mountains_snow/blob/9df6ed19dd5904cd82d764867daeb92c8249af3d/src/openeo_mountains_snow/snowcoverarea_reconstruction/downscaling_distribution.py#L174-L173
+
+Actual downscaling is a matter of merging the distribution cube with MODIS time series upsampled to 20m, apply mask for gaps to be filled, and then filling the actual gaps.
+
+## Step 3: Improving LR time series and running again
+
+Original paper runs the 'historic block' two times.
 
 
+## Step 4: run pyGAM to fill remaining gaps
+
+This step fills remainging gaps. It can also be avoided by simply relaxing the threshold for step 2.
+
+Run inference based on input features:
+
+- NDVI
+- NDSI
+- CP
+- SCA
+
+
+https://github.com/vpremier/dailyHR_SCA/blob/c0728dfdb9d1a9b46b9ff33a710d178dab7a1baa/gam.py#L484
 
 
 
