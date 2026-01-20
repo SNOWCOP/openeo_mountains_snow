@@ -45,12 +45,12 @@ def apply_datacube(cube: xr.DataArray, context: Dict) -> xr.DataArray:
     
     # Extract all data needed
     # Historical snow maps (bands 1-10 from first timestep)
-    hist_snow_bands = cube.isel(time=0, band=slice(2, 12)).values  # (10, y, x)
-    hist_occ_bands = cube.isel(time=0, band=slice(12, 22)).values  # (10, y, x)
+    hist_snow_bands = cube.isel(t=0, bands=slice(2, 12)).values  # (10, y, x)
+    hist_occ_bands = cube.isel(t=0, bands=slice(12, 22)).values  # (10, y, x)
     
     # Current snow maps for all timesteps
-    snow_current = cube.isel(band=0).values  # HR snow maps
-    scf_current = cube.isel(band=1).values   # MODIS SCF
+    snow_current = cube.isel(bands=0).values  # HR snow maps
+    scf_current = cube.isel(bands=1).values   # MODIS SCF
     
    # Choose reconstruction mode
     if mode == 'hr':
@@ -64,11 +64,15 @@ def apply_datacube(cube: xr.DataArray, context: Dict) -> xr.DataArray:
             SCF_RANGES
         )
     
+    
+    # Expand results to include band dimension
+    results = np.expand_dims(results, axis=1)  # shape becomes (t, bands, y, x)
     return xr.DataArray(
         results,
-        dims=("t", "y", "x"),
+        dims=("t", "bands", "y", "x"),
         coords={
             "t": cube.coords["t"],
+            "bands": np.arange(1),
             "y": cube.coords["y"],
             "x": cube.coords["x"]
         }

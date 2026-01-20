@@ -62,7 +62,8 @@ def generate_ranges(delta: int, epsilon: int):
 range_definitions, range_keys = generate_ranges(DELTA, EPSILON)
 
 #%%
-
+connection = openeo.connect(BACKEND)
+connection.authenticate_oidc()
 
 def create_sentinel2_snow_cube(connection: openeo.Connection,
                                       temporal_extent: List[str],
@@ -182,11 +183,9 @@ def create_modis_scf_cube(connection: openeo.Connection,
     return final_cube
 
 
-#%% TODO this workflow needs to run itteratively 
 
 
-connection = openeo.connect(BACKEND)
-connection.authenticate_oidc()
+
     
 # Define spatial extent
 spatial_extent = {
@@ -248,19 +247,26 @@ reconstruct_udf = openeo.UDF.from_file(
     "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\gap_fill_udf.py",
 )
 
-filled_cube = reconstruction_cube.apply_dimension(
-    dimension="t",
-    process=reconstruct_udf
+#filled_cube = reconstruction_cube.apply_dimension(
+#    dimension="t",
+#    process=reconstruct_udf
+#)
+
+filled_cube = reconstruction_cube.apply_neighborhood(
+    process=reconstruct_udf,
+    context={'mode': 'scf'},
+    size=[
+        {"dimension": "x", "value": 16, "unit": "px"},
+        {"dimension": "y", "value": 16, "unit": "px"}
+    ]
 )
 
 filled_cube
 
 #%%
 job_options = {
-    "executor-memoryOverhead": "6G",
-    "python-memory": "disable", #the default is in fact to derive this from executor-memoryOverhead
-
-
+    "executor-memoryOverhead": "12G",
+    "python-memory": "disable",
 }
 filled_cube.execute_batch()
 
