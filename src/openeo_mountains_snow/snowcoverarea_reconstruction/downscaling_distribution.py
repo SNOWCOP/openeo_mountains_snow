@@ -184,9 +184,6 @@ def create_modis_scf_cube(connection: openeo.Connection,
 
 
 
-
-
-    
 # Define spatial extent
 spatial_extent = {
     "west": WEST,
@@ -244,30 +241,23 @@ daily_input = daily_hr_snow.merge_cubes(daily_hr_scf)
 reconstruction_cube = daily_input.merge_cubes(historic_cube)
 
 reconstruct_udf = openeo.UDF.from_file(
-    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\gap_fill_udf.py",
+    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\hist_rec_udf.py",
 )
 
-#filled_cube = reconstruction_cube.apply_dimension(
-#    dimension="t",
-#    process=reconstruct_udf
-#)
+
 
 filled_cube = reconstruction_cube.apply_neighborhood(
     process=reconstruct_udf,
-    context={'mode': 'scf'},
     size=[
-        {"dimension": "x", "value": 16, "unit": "px"},
-        {"dimension": "y", "value": 16, "unit": "px"}
+        {"dimension": "x", "value": 32, "unit": "px"},
+        {"dimension": "y", "value": 32, "unit": "px"},
+        {"dimension": "t", "value": "P1D"}
     ]
 )
 
 filled_cube
-
 #%%
-job_options = {
-    "executor-memoryOverhead": "12G",
-    "python-memory": "disable",
-}
+
 filled_cube.execute_batch()
 
 #%%
