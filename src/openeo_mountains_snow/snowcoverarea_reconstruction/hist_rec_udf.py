@@ -20,57 +20,55 @@ MAX_ITERATIONS = 2
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
-    Complete hist_rec implementation that:
-    1. Calls HR reconstruction (cloud gap-filling)
-    2. Calls SCF reconstruction (downscaling)
-    3. Repeats in a while loop until convergence or max iterations
+    Simplified version assuming apply_neighborhood with P1D.
+    Each call processes exactly one day/timestep.
     """
-    logger.info(f"Starting hist_rec with cube shape: {cube.shape}, dims: {cube.dims}")
+    logger.info(f"Processing single timestep, shape: {cube.shape}")
     
-    # Fill NaN (your standard approach)
+    # Fill NaN
     cube = cube.fillna(NO_DATA).astype(np.uint8)
     
-    # Extract bands following your pattern
-    snow_current = cube.sel(bands=cube.bands[0]).values
-    scf_current = cube.sel(bands=cube.bands[1]).values
+    # Extract data - assume t dimension exists but has size 1
+    snow_map = cube.isel(bands=0, t=0).values if 't' in cube.dims else cube.isel(bands=0).values
+    scf_map = cube.isel(bands=1, t=0).values if 't' in cube.dims else cube.isel(bands=1).values
     
-    # Historical CP and occurrence maps, time index is fictive here
-    hist_cp_maps = cube.isel(bands=slice(2, 12), t=0).values.squeeze()  # 10 CP maps
-    hist_occ_maps = cube.isel(bands=slice(12, 22), t=0).values.squeeze()  # 10 occurrence maps
+    # Historical maps
+    hist_cp_maps = cube.isel(bands=slice(2, 12), t=0).values.squeeze() if 't' in cube.dims else cube.isel(bands=slice(2, 12)).values.squeeze()
+    hist_occ_maps = cube.isel(bands=slice(12, 22), t=0).values.squeeze() if 't' in cube.dims else cube.isel(bands=slice(12, 22)).values.squeeze()
     
-    # Process each timestep (try to parallelize with apply_meighborhoud P1D)
-    results = []
-    for t in range(snow_current.shape[0]):
-        logger.info(f"Processing timestep {t+1}/{snow_current.shape[0]}")
-        
-        snow_map = snow_current[t].copy()
-        scf_map = scf_current[t].copy()
-        
-        # Run iterative reconstruction
-        reconstructed_snow = hist_rec_iterative(
-            snow_map=snow_map,
-            scf_map=scf_map,
-            hist_cp_maps=hist_cp_maps,
-            hist_occ_maps=hist_occ_maps,
-            scf_ranges=SCF_RANGES
-        )
-        
-        results.append(reconstructed_snow)
-    
-    # Expand results to include band dimension
-    results = np.stack(results, axis=0)
-    results = np.expand_dims(results, axis=1)
-    
-    return xr.DataArray(
-        results,
-        dims=("t", "bands", "y", "x"),
-        coords={
-            "t": cube.coords["t"],
-            "bands": ["reconstructed_snow"],
-            "y": cube.coords["y"],
-            "x": cube.coords["x"]
-        }
+    # Process
+    reconstructed_snow = hist_rec_iterative(
+        snow_map=snow_map,
+        scf_map=scf_map,
+        hist_cp_maps=hist_cp_maps,
+        hist_occ_maps=hist_occ_maps,
+        scf_ranges=SCF_RANGES
     )
+    
+    # Prepare output - maintain same dimensions as input
+    if 't' in cube.dims:
+        result = xr.DataArray(
+            np.expand_dims(np.expand_dims(reconstructed_snow, axis=0), axis=0),
+            dims=("t", "bands", "y", "x"),
+            coords={
+                "t": cube.coords["t"],
+                "bands": ["reconstructed_snow"],
+                "y": cube.coords["y"],
+                "x": cube.coords["x"]
+            }
+        )
+    else:
+        result = xr.DataArray(
+            np.expand_dims(reconstructed_snow, axis=0),
+            dims=("bands", "y", "x"),
+            coords={
+                "bands": ["reconstructed_snow"],
+                "y": cube.coords["y"],
+                "x": cube.coords["x"]
+            }
+        )
+    
+    return result
 
 def hist_rec_iterative(snow_map, scf_map, hist_cp_maps, hist_occ_maps, scf_ranges):
     """

@@ -14,15 +14,15 @@ BACKEND = 'https://openeo.dataspace.copernicus.eu/'
 WEST = 636800.0
 SOUTH = 5152700.0
 EAST = 641800.0
-NORTH = 5177700.0
+NORTH = 5207700.0
 CRS = 32632  # UTM zone 32N
 
 # Temporal extents
-HIST_START = '2022-12-01'  # Historical period for distribution
+HIST_START = '2022-06-01'  # Historical period for distribution
 HIST_END = '2022-12-31'
 
 DAILY_START = '2023-01-01'  # Period to downscale
-DAILY_END = '2023-01-13'
+DAILY_END = '2023-01-30'
 
 # Resolution
 HR_RESOLUTION = 20.0  # meters (Sentinel-2)
