@@ -1,224 +1,263 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 22 20:16:37 2025
-
-@author: vpremier
-"""
-from typing import Tuple
+#%%
 
 import openeo
 
-import os
-from dotenv import load_dotenv
-from shapely import box
-
-
-load_dotenv(dotenv_path="../.env")
-
-import xarray as xr
-
-import geopandas as gpd
-from openeo.processes import (and_, is_nan, is_valid, not_, is_nodata, or_, 
-                              if_, array_create, ProcessBuilder)
-
-from snowcoverarea_openeo.utils_gapfilling import *
-from snowcoverarea_openeo.utils import *
-
-
-# ==============================
-# User Configuration Section
-# ==============================
-
+from openeo import DataCube
+from openeo.processes import (if_, and_, or_, eq, gte, lte, gt, 
+                              ProcessBuilder)
+from typing import Dict, List
 
 # openEO backend
-backend = 'https://openeo.dataspace.copernicus.eu/'
+BACKEND = 'https://openeo.dataspace.copernicus.eu/'
 
-# out directory
-os.makedirs("../results", exist_ok=True)
+# Spatial extent (Senales catchment example)
+WEST = 636800.0
+SOUTH = 5152700.0
+EAST = 641800.0
+NORTH = 5207700.0
+CRS = 32632  # UTM zone 32N
 
-# period to be downloaded
-startdate = '2021-02-01'
-enddate = '2025-06-30'
+# Temporal extents
+HIST_START = '2022-06-01'  # Historical period for distribution
+HIST_END = '2022-12-31'
 
-# cloud probability 
-cloud_prob = 80
+DAILY_START = '2023-01-01'  # Period to downscale
+DAILY_END = '2023-01-30'
 
-# extent
-west=631800.
-south=5167700.
-east=655800.
-north=5184200.
+# Resolution
+HR_RESOLUTION = 20.0  # meters (Sentinel-2)
+LR_RESOLUTION = 500.0  # meters (MODIS)
 
-# resolution
-res = 20.
+# Snow parameters
+CLOUD_VALUE = 205  # Code for cloud/invalid pixels
+WATER_VALUE = 210  # Code for water pixels
+CLOUD_PROB_THRESHOLD = 50  # Cloud probability threshold (%)
 
-# Ratio betweeen the size of a LR and a HR pixel, e.g., 500 m and 20 m.
-pixel_ratio = 25 
-# non-valid values
-codes = [205, 210, 254, 255] 
-nv_value = 205
-# Threshold of non valid HR pixels allowed within a LR pixel [%]
-nv_thres = 10 
+# Distribution parameters
+DELTA = 10  # SCF range step size
+EPSILON = 10  # Buffer for SCF ranges
+PIXEL_RATIO = int(LR_RESOLUTION / HR_RESOLUTION)  # 500m / 20m = 25
 
-# delta and epsilon: are used to define the SCF ranges. 
-# The delta defines the steps, while epsilon represents a security buffer
-delta = 10
-epsilon = 10
-
-
-def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, list]:
-
-    snow = calculate_snow(connection,[startdate, enddate],dict( west=west,
-                                 south=south,
-                                 east=east,
-                                 north=north,
-                                 crs=32632), cloud_prob)
-
-    # resample to 20 m spatial resolution
-    # snow_rsmpl = snow.resample_spatial(resolution=res,
-    #                                    projection=32632,
-    #                                    method="near")
-    # snow_rsmpl.download('../results/snow_rsmpl.nc')
+# Downscaling thresholds
+MIN_OCCURRENCES = 10  # Minimum historical occurrences
+SNOW_PROB_THRESHOLD = 0.9  # Probability threshold for snow
+NO_SNOW_PROB_THRESHOLD = 0.1  # Probability threshold for no-snow
 
 
-    # mask with valid and snow pixels
-    total_mask = create_mask(snow)
+def generate_ranges(delta: int, epsilon: int):
+    range_definitions = []
+    range_keys = []
 
-    scf_lr_masked = low_resolution_snow_cover_fraction_mask(connection, total_mask)
+    for base_low in range(0, 100, delta):
+        base_high = min(base_low + delta, 100)
+        eps_low = max(base_low - epsilon, 0)
+        eps_high = min(base_high + epsilon, 100)
 
-    # ==============================
-    # Conditional probabilities
-    # ==============================
-    scf_dic = get_scf_ranges(delta, epsilon)
+        key = f"{eps_low}_{eps_high}"
+        range_definitions.append((key, eps_low, eps_high))
+        range_keys.append(key)
 
-    # we need to add the dimension bands before applying the function
-    # scf_lr_masked = scf_lr_masked.add_dimension(type="bands",name="bands",label='scf')
+    return range_definitions, range_keys
 
-    def scf_to_bands(scf_lr_masked):
-        result = []
-        for i, key in enumerate(scf_dic):
-            # range with a buffer - to be considered for the CP computation
-            scf_1 = int(key.split('_')[0])
-            scf_2 = int(key.split('_')[1])
-            print(f'Computing CP by considering {scf_1}<SCF<={scf_2}')
+range_definitions, range_keys = generate_ranges(DELTA, EPSILON)
 
-            # define the mask scf_1 < scf <= scf_2
-            if scf_1 == 0:
-                mask_scf = (scf_lr_masked >= scf_1).and_(scf_lr_masked <= scf_2) * 1.0
-            else:
-                mask_scf = (scf_lr_masked > scf_1).and_(scf_lr_masked <= scf_2) * 1.0
+#%%
+connection = openeo.connect(BACKEND)
+connection.authenticate_oidc()
 
-            result.append(mask_scf)
-
-        return array_create(result)
-
-
-    # new labels for SCF masks
-    labels_scf = [f'scf_{v[0]}_{v[1]}' for v in scf_dic.values()]
-
-
-    # apply dimension should be applied over bands
-    all_scf_masks = scf_lr_masked.apply_dimension(scf_to_bands, dimension='bands')
-
-    # rename labels
-    all_scf_masks = all_scf_masks.rename_labels(dimension = "bands", target =labels_scf)
-
-    # upsample back to HR
-    mask_scf_hr = all_scf_masks.resample_spatial(resolution=20,
-                          projection=32632,
-                          method="near").resample_cube_spatial(snow)
-
-    return mask_scf_hr.merge_cubes(total_mask), labels_scf
-
-
-def low_resolution_snow_cover_fraction_mask(connection, total_mask):
-    modis = connection.load_stac("https://stac.eurac.edu/collections/MOD10A1v61",
-                                 temporal_extent=["2023-01-20", "2023-01-21"])
-    # modis.download('../results/modis.nc')
-    # get SCF
-    average = total_mask.resample_cube_spatial(modis, method="average")
-
-
-
-    def create_scf_lr_masked(average_bands: ProcessBuilder):
-        # SCF [0-1]
-        snow_band = average_bands["snow"]
-        valid_band = average_bands["valid"]
-
-        scf_lr = 100.0 * snow_band / valid_band
-        scf_lr = if_(is_nan(scf_lr), 205, scf_lr)
-
-        # Compute the minimum SCF (SCF that you would obtain if the non valid pixels are replaced with 0-snow free)
-        # SCF min and max are not used here (but will be used in another step of the workflow..)
-        # scf_min = snow_band
-        # scf_max = 1 - valid_band + snow_band
-        # Replace pixels with non valid data < threshold with 205
-        valid_threshold = 1 - nv_thres / 100
-        scf_lr_masked = if_(valid_band <= valid_threshold, nv_value, scf_lr)
-
-        return scf_lr_masked
-
-    scf_lr_masked = average.apply_dimension(dimension="bands", process=create_scf_lr_masked)
-    scf_lr_masked = scf_lr_masked.rename_labels(dimension="bands", target=['scf'])
-    return scf_lr_masked
-
-
-if __name__ == "__main__":
-    # ==============================
-    # Authentication
-    # ==============================
-
-    eoconn = openeo.connect(backend, auto_validate=False)
-    eoconn.authenticate_oidc()
-
-    all_masks, labels_scf = compute_scf_masks(eoconn)
-
-    def merge_masks(all_masks):
-        # multiply x snow
-        return all_masks.and_(all_masks.array_element(label="snow")) * 1.0
-
-    # all_masks.download("../results/all_masks.nc")
-
-    mask_cp_snow = all_masks.apply(process=merge_masks)
-    mask_cp_snow = mask_cp_snow.filter_bands(bands = labels_scf)
-
-    # sum of all the snow pixels over time
-    sum_cp_snow = mask_cp_snow.reduce_dimension(reducer="sum",
-                                                dimension="t")
-
-
-    # mask of all the scf occurences over time
-    occurences = all_masks.reduce_dimension(reducer="sum",
-                                                dimension="t")
-    occurences = occurences.filter_bands(bands = labels_scf)
-
-    # conditional probabilities
-    cp = sum_cp_snow/occurences
-
-    #job = cp.create_job(title="cp")
-    #job.start()
-
-
-    job = cp.execute_batch("../results/scf_lr_masked_new.nc",title="scf_lr_masked_new", job_options={"executor-memory":"8G", "executor-memoryOverhead": "4G", "python-memory": "disable"})
-
-    ds = xr.open_dataset(r'../results/cp_test3.nc')
-    ds.scf_60_70.plot()
-
-    ds = xr.open_dataset(r'../results/cp_test1.nc')
-    ds.scf_60_70.plot()
-
-    ds = xr.open_dataset(r'../results/scf_lr_masked_old.nc')
-    ds.scf_60_70.plot()
-
-    ds.snow.sel(t='2025-04-02').plot()
-
-
-
-    """
-    # To dos
-    - fare il downscaling di modis una volta che sono pronte le CP
-    - provare a caricare MOD10A1
-    - landsat?
+def create_sentinel2_snow_cube(connection: openeo.Connection,
+                                      temporal_extent: List[str],
+                                      spatial_extent: Dict) -> DataCube:
+    
     
     """
+    Calculates snow from Sentinel-2 L2A scene classification.
+    This method is less reliable because snow and clouds are mixed up in scene classification.
+
+    """
+    # ==============================
+    # Load collections
+    # ==============================
+
+    scl = connection.load_collection(
+        "SENTINEL2_L2A",
+        temporal_extent=temporal_extent,
+        spatial_extent=spatial_extent,
+        bands=['SCL'],
+        max_cloud_cover=CLOUD_PROB_THRESHOLD,
+    )
+
+    scl = scl.resample_spatial(resolution=20,
+                          projection=32632,
+                          method="near")
+
+    # ==============================
+    # Get the snow cover information
+    # ==============================
+
+    def snow_callback(scl_data: openeo.processes.ProcessBuilder):
+        classification: openeo.processes.ProcessBuilder = scl_data["SCL"]
+        snow_pixel = (classification == 11) * 100.0
+        return if_((classification == 7).or_(classification == 8).or_(classification == 9), CLOUD_VALUE, snow_pixel)
+
+    snow = scl.apply_dimension(dimension="bands", process=snow_callback)
+    snow = snow.rename_labels(dimension="bands", target=["snow"])
+
+
+    return snow
+
+
+def create_modis_scf_cube(connection: openeo.Connection,
+
+                          temporal_extent: List[str],
+                          spatial_extent: Dict) -> DataCube:
+    """
+    Load and prepare MODIS snow cover fraction (SCF) data.
+    
+    Args:
+        connection: openEO connection
+        temporal_extent: [start_date, end_date]
+        spatial_extent: Dictionary with bbox and crs
+        
+    Returns:
+        DataCube with single band 'scf' containing:
+        - 0-100: Valid snow cover fraction percentage
+        - 205: Invalid/cloud/water pixels
+    """
+    
+    
+    # Load MODIS from the STAC endpoint
+    modis_cube = connection.load_stac(
+        url="https://stac.eurac.edu/collections/MOD10A1v61",
+        temporal_extent=temporal_extent,
+        spatial_extent=spatial_extent,
+        bands=["SCF"]  # MODIS Snow Cover Fraction band
+    )
+    
+    def clean_modis_scf(pixel: ProcessBuilder) -> ProcessBuilder:
+        """
+        Clean MODIS SCF values by handling invalid data codes.
+        
+        MODIS SCF values:
+        - 0-100: Valid snow cover fraction (%)
+        - 205: Cloud (preserved as is)
+        - 254: Water
+        - 255: No data
+  
+        """
+        scf_value = pixel.array_element(index=0)  # SCF band
+        
+        # Check for invalid values that need to be replaced
+        is_water = eq(scf_value, 254)
+        is_no_data = eq(scf_value, 255)
+        is_other_invalid = gt(scf_value, 100)  # Values > 100 are invalid
+        
+        should_replace = or_(
+            is_water,
+            or_(
+                is_no_data,
+                is_other_invalid
+            )
+        )
+        
+        # Replace invalid values with CLOUD_VALUE, keep others as-is
+        return if_(
+            should_replace,
+            CLOUD_VALUE,  # 205 for invalid/water/no-data
+            scf_value     # Original value for valid SCF (0-100, 205)
+        )
+    
+    # Apply cleaning to all pixels
+    cleaned_cube = modis_cube.apply(clean_modis_scf)
+    
+    # Resample to consistent resolution (500m for MODIS)
+    cleaned_cube = cleaned_cube.resample_spatial(
+        resolution=LR_RESOLUTION,
+        projection=CRS,
+        method="near"
+    )
+    
+    # Rename the output band for clarity
+    final_cube = cleaned_cube.rename_labels(dimension="bands", target=["scf"])
+    
+    return final_cube
+
+
+
+# Define spatial extent
+spatial_extent = {
+    "west": WEST,
+    "south": SOUTH,
+    "east": EAST,
+    "north": NORTH,
+    "crs": f"EPSG:{CRS}"
+}
+
+temporal_extent_history = [HIST_START, HIST_END]
+temporal_extent_daily = [DAILY_START, DAILY_END]
+
+# Create input history DataCubes
+hr_snow = create_sentinel2_snow_cube(connection, temporal_extent_history, spatial_extent)
+lr_scf = create_modis_scf_cube(connection, temporal_extent_history, spatial_extent)
+
+# Upsample MODIS to Sentinel-2 resolution 
+hr_scf = lr_scf.resample_spatial(
+    resolution=HR_RESOLUTION,
+    projection=CRS,
+    method="near"
+)
+
+historic_cube = hr_snow.merge_cubes(hr_scf)
+
+context_cp = {
+    "epsilon": EPSILON,
+    "delta": DELTA
+}
+
+# Step 4: Define the UDF that computes everything
+udf = openeo.UDF.from_file(
+    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\conditional_probability_udf.py",
+    context=context_cp)
+
+    # Apply UDF
+historic_cube = historic_cube.reduce_dimension(
+    reducer=udf,
+    dimension="t"
+)
+
+historic_cube = historic_cube.rename_labels(dimension="bands", target=range_keys + [f"occ_{k}" for k in range_keys])
+
+
+daily_scf = create_modis_scf_cube(connection, temporal_extent_daily, spatial_extent)
+daily_hr_snow = create_sentinel2_snow_cube(connection, temporal_extent_daily, spatial_extent)
+    
+daily_hr_scf = daily_scf.resample_spatial(
+    resolution=HR_RESOLUTION,
+    projection=CRS,
+    method="near"
+)
+    
+daily_input = daily_hr_snow.merge_cubes(daily_hr_scf)
+reconstruction_cube = daily_input.merge_cubes(historic_cube)
+
+reconstruct_udf = openeo.UDF.from_file(
+    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\hist_rec_udf.py",
+)
+
+
+
+filled_cube = reconstruction_cube.apply_neighborhood(
+    process=reconstruct_udf,
+    size=[
+        {"dimension": "x", "value": 32, "unit": "px"},
+        {"dimension": "y", "value": 32, "unit": "px"},
+        {"dimension": "t", "value": "P1D"}
+    ]
+)
+
+filled_cube
+#%%
+
+filled_cube.execute_batch()
+
+#%%
