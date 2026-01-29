@@ -22,8 +22,7 @@ import geopandas as gpd
 from openeo.processes import (and_, is_nan, is_valid, not_, is_nodata, or_, 
                               if_, array_create, ProcessBuilder)
 
-from snowcoverarea_openeo.utils_gapfilling import *
-from snowcoverarea_openeo.utils import *
+from openeo_mountains_snow.snowcoverarea_reconstruction.utils_gapfilling import *
 
 
 # ==============================
