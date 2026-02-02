@@ -11,38 +11,35 @@ from typing import Dict, List
 BACKEND = 'https://openeo.dataspace.copernicus.eu/'
 
 # Spatial extent (Senales catchment example)
-WEST = 636800.0
-SOUTH = 5152700.0
-EAST = 641800.0
-NORTH = 5207700.0
+WEST = 631800.0
+SOUTH = 5170700.0
+EAST = 635800.0
+NORTH = 5174200.0
 CRS = 32632  # UTM zone 32N
 
 # Temporal extents
-HIST_START = '2022-06-01'  # Historical period for distribution
-HIST_END = '2022-12-31'
-
-DAILY_START = '2023-01-01'  # Period to downscale
-DAILY_END = '2023-01-30'
+HIST_START = '2022-02-01'  # Historical period for distribution
+HIST_END = '2025-06-30'
 
 # Resolution
 HR_RESOLUTION = 20.0  # meters (Sentinel-2)
 LR_RESOLUTION = 500.0  # meters (MODIS)
+PIXEL_RATIO = int(LR_RESOLUTION / HR_RESOLUTION)  # 500m / 20m = 25
 
 # Snow parameters
 CLOUD_VALUE = 205  # Code for cloud/invalid pixels
 WATER_VALUE = 210  # Code for water pixels
+NO_DATA = 255
 CLOUD_PROB_THRESHOLD = 50  # Cloud probability threshold (%)
 
-# Distribution parameters
-DELTA = 10  # SCF range step size
-EPSILON = 10  # Buffer for SCF ranges
-PIXEL_RATIO = int(LR_RESOLUTION / HR_RESOLUTION)  # 500m / 20m = 25
 
 # Downscaling thresholds
 MIN_OCCURRENCES = 10  # Minimum historical occurrences
 SNOW_PROB_THRESHOLD = 0.9  # Probability threshold for snow
 NO_SNOW_PROB_THRESHOLD = 0.1  # Probability threshold for no-snow
 
+DELTA = 10
+EPSILON = 10
 
 def generate_ranges(delta: int, epsilon: int):
     range_definitions = []
@@ -163,14 +160,14 @@ def create_modis_scf_cube(connection: openeo.Connection,
         # Replace invalid values with CLOUD_VALUE, keep others as-is
         return if_(
             should_replace,
-            CLOUD_VALUE,  # 205 for invalid/water/no-data
+            NO_DATA,  #TODO correct? 205 for invalid/water/no-data 
             scf_value     # Original value for valid SCF (0-100, 205)
         )
     
     # Apply cleaning to all pixels
     cleaned_cube = modis_cube.apply(clean_modis_scf)
     
-    # Resample to consistent resolution (500m for MODIS)
+    # TODO necessary? Resample to consistent resolution (500m for MODIS)
     cleaned_cube = cleaned_cube.resample_spatial(
         resolution=LR_RESOLUTION,
         projection=CRS,
@@ -182,7 +179,7 @@ def create_modis_scf_cube(connection: openeo.Connection,
     
     return final_cube
 
-
+#%%
 
 # Define spatial extent
 spatial_extent = {
@@ -194,64 +191,47 @@ spatial_extent = {
 }
 
 temporal_extent_history = [HIST_START, HIST_END]
-temporal_extent_daily = [DAILY_START, DAILY_END]
 
 # Create input history DataCubes
-hr_snow = create_sentinel2_snow_cube(connection, temporal_extent_history, spatial_extent)
-lr_scf = create_modis_scf_cube(connection, temporal_extent_history, spatial_extent)
-
-# Upsample MODIS to Sentinel-2 resolution 
-hr_scf = lr_scf.resample_spatial(
+historic_hr_snow = create_sentinel2_snow_cube(connection, temporal_extent_history, spatial_extent)
+historic_lr_scf = create_modis_scf_cube(connection, temporal_extent_history, spatial_extent)
+    
+historic_hr_scf = historic_lr_scf.resample_spatial(
     resolution=HR_RESOLUTION,
     projection=CRS,
     method="near"
 )
-
-historic_cube = hr_snow.merge_cubes(hr_scf)
-
-context_cp = {
-    "epsilon": EPSILON,
-    "delta": DELTA
-}
-
-# Step 4: Define the UDF that computes everything
+    
+historic_input = historic_hr_snow.merge_cubes(historic_lr_scf).rename_labels(dimension="bands", target=["snow", "scf"])
+# Step 4: Define the UDF that computes everything --> see if we can replace this by the code from Jeroen D / Valentina
 udf = openeo.UDF.from_file(
-    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\conditional_probability_udf.py",
-    context=context_cp)
+    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\low_resolution_conditional_probability_udf.py")
 
-    # Apply UDF
-historic_cube = historic_cube.reduce_dimension(
+# Apply UDF
+cp_cube = historic_input.reduce_dimension(
     reducer=udf,
     dimension="t"
 )
 
-historic_cube = historic_cube.rename_labels(dimension="bands", target=range_keys + [f"occ_{k}" for k in range_keys])
+cp_cube = cp_cube.rename_labels(dimension="bands", target=range_keys + [f"occ_{k}" for k in range_keys])
 
 
-daily_scf = create_modis_scf_cube(connection, temporal_extent_daily, spatial_extent)
-daily_hr_snow = create_sentinel2_snow_cube(connection, temporal_extent_daily, spatial_extent)
+#%%
+historic_input
     
-daily_hr_scf = daily_scf.resample_spatial(
-    resolution=HR_RESOLUTION,
-    projection=CRS,
-    method="near"
-)
-    
-daily_input = daily_hr_snow.merge_cubes(daily_hr_scf)
-reconstruction_cube = daily_input.merge_cubes(historic_cube)
-
+reconstruction_cube = historic_input.merge_cubes(cp_cube)
+#TODO workflow is different as HR reconstruction works on full historic data for comparisson. 
+#Hence we need to adjust the UDF to e.g. pick the last timestep as 'daily'
 reconstruct_udf = openeo.UDF.from_file(
-    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\hist_rec_udf.py",
+    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\historical_reconstruction_udf.py",
 )
-
 
 
 filled_cube = reconstruction_cube.apply_neighborhood(
     process=reconstruct_udf,
     size=[
-        {"dimension": "x", "value": 32, "unit": "px"},
-        {"dimension": "y", "value": 32, "unit": "px"},
-        {"dimension": "t", "value": "P1D"}
+        {"dimension": "x", "value": 16, "unit": "px"},
+        {"dimension": "y", "value": 16, "unit": "px"},
     ]
 )
 

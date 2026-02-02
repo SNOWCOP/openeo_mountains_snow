@@ -1,3 +1,4 @@
+#itterative reconstruction
 import xarray as xr
 import numpy as np
 import logging
@@ -16,7 +17,7 @@ SCF_RANGES = [
 ]
 
 # Maximum iterations for the while loop
-MAX_ITERATIONS = 2
+MAX_ITERATIONS = 3
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
@@ -26,16 +27,52 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     logger.info(f"Processing single timestep, shape: {cube.shape}")
     
     # Fill NaN
-    cube = cube.fillna(NO_DATA).astype(np.uint8)
+    cube = cube.fillna(NO_DATA)
+
+    n_days = context.get("n_days_to_reconstruct", 15)
+    logger.info(f"Reconstructing last {n_days} days")
+
+    # Check if we have enough data
+    total_days = cube.shape[0]
+    if total_days <= n_days:
+        logger.warning(f"Not enough data: {total_days} total, {n_days} requested")
+        # Return original last N days
+        return cube.isel(t=slice(-n_days, None))
     
-    # Extract data - assume t dimension exists but has size 1
-    snow_map = cube.isel(bands=0, t=0).values if 't' in cube.dims else cube.isel(bands=0).values
-    scf_map = cube.isel(bands=1, t=0).values if 't' in cube.dims else cube.isel(bands=1).values
-    
-    # Historical maps
+    # Split data
+    hist_snow = cube.isel(t=slice(0, -n_days), bands=0).values #dropping last n days
+    #hist_scf = cube.isel(t=slice(0, -n_days), bands=1).values 
+
     hist_cp_maps = cube.isel(bands=slice(2, 12), t=0).values.squeeze() if 't' in cube.dims else cube.isel(bands=slice(2, 12)).values.squeeze()
     hist_occ_maps = cube.isel(bands=slice(12, 22), t=0).values.squeeze() if 't' in cube.dims else cube.isel(bands=slice(12, 22)).values.squeeze()
     
+    rec_snow = cube.isel(t=slice(-n_days, None), bands=0).values
+    rec_scf = cube.isel(t=slice(-n_days, None), bands=1).values
+
+    # Reconstruct each target day
+    reconstructed_days = []
+
+    for day_idx in range(n_days):
+        logger.info(f"Processing day {day_idx+1}/{n_days}")
+
+        snow_map = rec_snow[day_idx]
+        scf_map = rec_scf[day_idx]
+
+         # Reconstruct this day
+        reconstructed_day = hist_rec_iterative(
+            snow_map=snow_map,
+            scf_map=scf_map,
+            hist_snow= hist_snow,
+            hist_cp_maps=hist_cp_maps,
+            hist_occ_maps=hist_occ_maps,
+            scf_ranges=SCF_RANGES
+        )
+        
+        reconstructed_days.append(reconstructed_day)
+
+
+    # Historical maps
+
     # Process
     reconstructed_snow = hist_rec_iterative(
         snow_map=snow_map,
@@ -70,12 +107,14 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     
     return result
 
-def hist_rec_iterative(snow_map, scf_map, hist_cp_maps, hist_occ_maps, scf_ranges):
+
+def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps, scf_ranges):
     """
     Iterative reconstruction following the original hist_rec pattern.
     Calls HR and SCF reconstruction functions in a loop.
     """
     iteration = 0
+
     
     # Main while loop with max iterations
     while iteration < MAX_ITERATIONS:
@@ -86,16 +125,16 @@ def hist_rec_iterative(snow_map, scf_map, hist_cp_maps, hist_occ_maps, scf_range
         
         # Check if we have clouds to process
         if not cloud_mask.any():
-            logger.info("    No clouds remaining - stopping iterations")
+            logger.info("No clouds remaining - stopping iterations")
             break
         
         # ----- Step 1: HR cloud reconstruction -----
-        logger.info("    Running HR cloud reconstruction")
+        logger.info("Running HR cloud reconstruction")
         
-        # Create a single timestep version of your hr_reconstruction
+        # Create a single timestep version of your hr_reconstruction #TODO  make clear that historic cp_maps are here the high resolution data along the entire timeline
         reconstructed_hr = hr_reconstruction_single(
-            snow_map, 
-            hist_cp_maps,
+            snow_map,
+            hist_snow,
             similarity_threshold=0.05,  # Your default value
             min_similar_scenes=5        # Your default value
         )
@@ -121,7 +160,7 @@ def hist_rec_iterative(snow_map, scf_map, hist_cp_maps, hist_occ_maps, scf_range
             )
             
             # Update snow map with SCF reconstruction
-            update_mask_scf = cloud_mask & (reconstructed_scf != NO_DATA)
+            update_mask_scf = cloud_mask & (reconstructed_scf != CLOUD)
             snow_map[update_mask_scf] = reconstructed_scf[update_mask_scf]
         
         # Check for convergence (no clouds left)
@@ -133,6 +172,8 @@ def hist_rec_iterative(snow_map, scf_map, hist_cp_maps, hist_occ_maps, scf_range
     logger.info(f" Completed after {iteration} iterations")
     return snow_map
 
+#check gap filling; this is also done it in a loop.
+# this is also an itteration in a loop based on this daily date thing
 def hr_reconstruction_single(current_map, historical_maps, similarity_threshold=0.05, min_similar_scenes=5):
     """
     Single-map version of your HR reconstruction function.
@@ -140,7 +181,7 @@ def hr_reconstruction_single(current_map, historical_maps, similarity_threshold=
     """
     cloud_mask = current_map == CLOUD
     
-    if not cloud_mask.any():
+    if not cloud_mask.any(): #SHould come down to the same critery for if date
         return current_map
     
     # Calculate current SCA from clear pixels
@@ -183,6 +224,10 @@ def hr_reconstruction_single(current_map, historical_maps, similarity_threshold=
     
     return reconstructed
 
+
+#Need to check the selection criteria between jumping form HR and LR
+#compute CP dynamically with new cloud masks and see if we can calculate new information. Uncertain if required (MVP) at some point the gap does not become much smaller. 
+#track decrease in cliud mask or so or how many pixels ar echanged per iteration and put a treshold on that.
 def scf_reconstruction_single(snow_map, scf_map, hist_snow, hist_occ, scf_ranges):
     """
     Single-map version of your SCF reconstruction function.
