@@ -217,10 +217,12 @@ filled_cube = input_cube.apply_dimension(
     dimension="t"
 )
 
+filled_cube = filled_cube.rename_labels(dimension="bands", target=["reconstructed_snow"])
+
 
 filled_cube
 #%%
 
-filled_cube.execute_batch()
+input_cube.execute_batch()
 
 #%%

@@ -21,6 +21,9 @@ SCF_RANGES = [
 # Maximum iterations for the while loop
 MAX_ITERATIONS = 3
 
+MAX_HR_ITERATIONS = 5  # Maximum HR attempts per main iteration
+MIN_PIXEL_CHANGED = 10  # Stop if fewer than X pixels change in HR reconstruction
+
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
@@ -132,19 +135,39 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
             break
         
         # ----- Step 1: HR cloud reconstruction -----
-        logger.info("Running HR cloud reconstruction")
+        # Run HR reconstruction multiple times until little change
+        hr_iteration = 0
+
         
-        # Create a single timestep version of your hr_reconstruction #TODO  make clear that historic cp_maps are here the high resolution data along the entire timeline
-        reconstructed_hr = hr_reconstruction_single(
-            snow_map,
-            hist_snow,
-            similarity_threshold=0.05,  # Your default value
-            min_similar_scenes=5        # Your default value
-        )
-        
-        # Update snow map with HR reconstruction
-        update_mask = cloud_mask & (reconstructed_hr != CLOUD)
-        snow_map[update_mask] = reconstructed_hr[update_mask]
+        while hr_iteration < MAX_HR_ITERATIONS:
+            hr_iteration += 1
+            logger.info(f"  HR sub-iteration {hr_iteration}")
+            
+            cloud_mask_before = snow_map == CLOUD
+            clouds_before = np.sum(cloud_mask_before)
+            
+            if clouds_before == 0:
+                break
+            
+            # Run HR reconstruction
+            reconstructed_hr = hr_reconstruction_single(
+                snow_map,
+                hist_snow,
+                similarity_threshold=0.05,
+                min_similar_scenes=5
+            )
+            
+            # Update snow map
+            update_mask = cloud_mask_before & (reconstructed_hr != CLOUD)
+            pixels_changed = np.sum(update_mask)
+            snow_map[update_mask] = reconstructed_hr[update_mask]
+            
+            logger.info(f"HR changed {pixels_changed} pixels")
+            
+            # Check if HR is still making progress
+            if pixels_changed < MIN_PIXEL_CHANGED:
+                logger.info(f"HR convergence - only {pixels_changed} pixels changed")
+                break
         
         # Update cloud mask after HR reconstruction
         cloud_mask = snow_map == CLOUD
@@ -183,6 +206,7 @@ def hr_reconstruction_single(current_map, historical_maps, similarity_threshold=
     Adapted from your hr_reconstruction function.
     """
     cloud_mask = current_map == CLOUD
+    logger.info(f"HR reconstruction: {np.sum(cloud_mask)} cloudy pixels to process")
     
     if not cloud_mask.any(): #SHould come down to the same critery for if date
         return current_map
