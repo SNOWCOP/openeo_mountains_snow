@@ -18,7 +18,7 @@ NORTH = 5174200.0
 CRS = 32632  # UTM zone 32N
 
 # Temporal extents
-HIST_START = '2022-02-01'  # Historical period for distribution
+HIST_START = '2021-02-01'  # Historical period for distribution
 HIST_END = '2025-06-30'
 
 # Resolution
@@ -193,47 +193,30 @@ spatial_extent = {
 temporal_extent_history = [HIST_START, HIST_END]
 
 # Create input history DataCubes
-historic_hr_snow = create_sentinel2_snow_cube(connection, temporal_extent_history, spatial_extent)
-historic_lr_scf = create_modis_scf_cube(connection, temporal_extent_history, spatial_extent)
+hr_snow = create_sentinel2_snow_cube(connection, temporal_extent_history, spatial_extent)
+lr_scf = create_modis_scf_cube(connection, temporal_extent_history, spatial_extent)
     
-historic_hr_scf = historic_lr_scf.resample_spatial(
+hr_scf = lr_scf.resample_spatial(
     resolution=HR_RESOLUTION,
     projection=CRS,
     method="near"
 )
+
     
-historic_input = historic_hr_snow.merge_cubes(historic_lr_scf).rename_labels(dimension="bands", target=["snow", "scf"])
-# Step 4: Define the UDF that computes everything --> see if we can replace this by the code from Jeroen D / Valentina
-udf = openeo.UDF.from_file(
-    "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\low_resolution_conditional_probability_udf.py")
-
-# Apply UDF
-cp_cube = historic_input.reduce_dimension(
-    reducer=udf,
-    dimension="t"
-)
-
-cp_cube = cp_cube.rename_labels(dimension="bands", target=range_keys + [f"occ_{k}" for k in range_keys])
+input_cube = hr_snow.merge_cubes(hr_scf).rename_labels(dimension="bands", target=["snow", "scf"])
 
 
-#%%
-historic_input
-    
-reconstruction_cube = historic_input.merge_cubes(cp_cube)
 #TODO workflow is different as HR reconstruction works on full historic data for comparisson. 
 #Hence we need to adjust the UDF to e.g. pick the last timestep as 'daily'
 reconstruct_udf = openeo.UDF.from_file(
     "C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\snowcoverarea_reconstruction\historical_reconstruction_udf.py",
 )
 
-
-filled_cube = reconstruction_cube.apply_neighborhood(
+filled_cube = input_cube.apply_dimension(
     process=reconstruct_udf,
-    size=[
-        {"dimension": "x", "value": 16, "unit": "px"},
-        {"dimension": "y", "value": 16, "unit": "px"},
-    ]
+    dimension="t"
 )
+
 
 filled_cube
 #%%

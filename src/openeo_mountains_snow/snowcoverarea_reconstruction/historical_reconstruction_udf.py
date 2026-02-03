@@ -2,6 +2,8 @@
 import xarray as xr
 import numpy as np
 import logging
+from openeo.metadata import CubeMetadata
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +21,18 @@ SCF_RANGES = [
 # Maximum iterations for the while loop
 MAX_ITERATIONS = 3
 
+
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
-    Simplified version assuming apply_neighborhood with P1D.
-    Each call processes exactly one day/timestep.
-    """
-    logger.info(f"Processing single timestep, shape: {cube.shape}")
-    
+    Main UDF function to apply iterative historical reconstruction."""    
     # Fill NaN
     cube = cube.fillna(NO_DATA)
+    logger.info(f"Reconstructing cube with shape {cube.shape}")
+    logger.info(f"Cube dimensions: {cube.dims}")
+    logger.info(f"Cube coordinates: {cube.coords}")
+    
 
-    n_days = context.get("n_days_to_reconstruct", 15)
+    n_days = context.get("n_days_to_reconstruct", 10)
     logger.info(f"Reconstructing last {n_days} days")
 
     # Check if we have enough data
@@ -40,14 +43,22 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
         return cube.isel(t=slice(-n_days, None))
     
     # Split data
-    hist_snow = cube.isel(t=slice(0, -n_days), bands=0).values #dropping last n days
-    #hist_scf = cube.isel(t=slice(0, -n_days), bands=1).values 
-
-    hist_cp_maps = cube.isel(bands=slice(2, 12), t=0).values.squeeze() if 't' in cube.dims else cube.isel(bands=slice(2, 12)).values.squeeze()
-    hist_occ_maps = cube.isel(bands=slice(12, 22), t=0).values.squeeze() if 't' in cube.dims else cube.isel(bands=slice(12, 22)).values.squeeze()
+    hist_end = total_days - n_days
+    historical_cube = cube.isel(t=slice(0, hist_end))
+    reconstruction_cube = cube.isel(t=slice(hist_end, total_days))
     
-    rec_snow = cube.isel(t=slice(-n_days, None), bands=0).values
-    rec_scf = cube.isel(t=slice(-n_days, None), bands=1).values
+    logger.info(f"Historical days for CP maps: {historical_cube.shape[0]}")
+    logger.info(f"Reconstruction days: {reconstruction_cube.shape[0]}")
+    
+    # PRE-COMPUTE CP MAPS ONCE from historical period
+    historical_snow = historical_cube.isel(bands=0).values
+    historical_scf = historical_cube.isel(bands=1).values
+    
+    historical_cp_maps, historical_occ_maps = compute_historical_cp_maps(
+        historical_snow=historical_snow,
+        historical_scf=historical_scf
+    )
+
 
     # Reconstruct each target day
     reconstructed_days = []
@@ -55,40 +66,32 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     for day_idx in range(n_days):
         logger.info(f"Processing day {day_idx+1}/{n_days}")
 
-        snow_map = rec_snow[day_idx]
-        scf_map = rec_scf[day_idx]
+        snow_map = reconstruction_cube.isel(t=day_idx, bands=0).values
+        scf_map = reconstruction_cube.isel(t=day_idx, bands=1).values
+
 
          # Reconstruct this day
         reconstructed_day = hist_rec_iterative(
             snow_map=snow_map,
             scf_map=scf_map,
-            hist_snow= hist_snow,
-            hist_cp_maps=hist_cp_maps,
-            hist_occ_maps=hist_occ_maps,
+            hist_snow= historical_snow,
+            hist_cp_maps=historical_cp_maps,
+            hist_occ_maps=historical_occ_maps,
             scf_ranges=SCF_RANGES
         )
         
         reconstructed_days.append(reconstructed_day)
 
-
-    # Historical maps
-
-    # Process
-    reconstructed_snow = hist_rec_iterative(
-        snow_map=snow_map,
-        scf_map=scf_map,
-        hist_cp_maps=hist_cp_maps,
-        hist_occ_maps=hist_occ_maps,
-        scf_ranges=SCF_RANGES
-    )
+    reconstructed_snow = np.stack(reconstructed_days, axis=0)
+    
     
     # Prepare output - maintain same dimensions as input
     if 't' in cube.dims:
         result = xr.DataArray(
-            np.expand_dims(np.expand_dims(reconstructed_snow, axis=0), axis=0),
+            np.expand_dims(reconstructed_snow, axis=1),
             dims=("t", "bands", "y", "x"),
             coords={
-                "t": cube.coords["t"],
+                "t": cube.coords["t"].values[-n_days:],
                 "bands": ["reconstructed_snow"],
                 "y": cube.coords["y"],
                 "x": cube.coords["x"]
@@ -119,7 +122,7 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
     # Main while loop with max iterations
     while iteration < MAX_ITERATIONS:
         iteration += 1
-        logger.info(f"  Iteration {iteration}")
+        logger.info(f"Iteration {iteration}")
         
         cloud_mask = snow_map == CLOUD
         
@@ -166,7 +169,7 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
         # Check for convergence (no clouds left)
         cloud_mask = snow_map == CLOUD
         if not cloud_mask.any():
-            logger.info(" All clouds processed - stopping iterations")
+            logger.info("All clouds processed - stopping iterations")
             break
     
     logger.info(f" Completed after {iteration} iterations")
@@ -203,10 +206,10 @@ def hr_reconstruction_single(current_map, historical_maps, similarity_threshold=
     similar_indices = np.where(np.abs(h_scas - current_sca) < similarity_threshold)[0]
     
     if len(similar_indices) < min_similar_scenes:
-        logger.info("    Not enough similar scenes, skipping HR reconstruction")
+        logger.info("Not enough similar scenes, skipping HR reconstruction")
         return current_map
     
-    logger.info(f"    Found {len(similar_indices)} similar scenes for HR reconstruction")
+    logger.info(f"Found {len(similar_indices)} similar scenes for HR reconstruction")
     
     # Reconstruct using similar scenes
     similar_scenes = historical_maps[similar_indices]
@@ -284,3 +287,59 @@ def get_scf_minmax(snow_map, mode='min'):
     else:
         n_cloud = np.sum(snow_map == CLOUD)
         return ((n_snow + n_cloud) / (n_valid + n_cloud)) * 100
+    
+def compute_historical_cp_maps(historical_snow, historical_scf):
+    """
+    Compute conditional probability maps ONCE from historical data.
+    Returns snow classification (100 or 0) based on probability threshold.
+    """
+    n_ranges = len(SCF_RANGES)
+    n_days = historical_snow.shape[0]
+    y_size = historical_snow.shape[1]
+    x_size = historical_snow.shape[2]
+    
+    logger.info(f"Computing CP maps from {n_days} historical days")
+    
+    # Initialize arrays
+    snow_counts = np.zeros((n_ranges, y_size, x_size), dtype=np.uint32)
+    occ_counts = np.zeros((n_ranges, y_size, x_size), dtype=np.uint32)
+    
+    # Accumulate counts over all historical days
+    for day_idx in range(n_days):
+        scf_day = historical_scf[day_idx]
+        snow_day = historical_snow[day_idx]
+        
+        # Only consider valid pixels (not cloud/no data)
+        valid_mask = (scf_day <= 100) & (snow_day <= 100)
+        
+        for i, (r_min, r_max) in enumerate(SCF_RANGES):
+            # Create mask for this SCF range
+            if r_min == 0:
+                in_range = (scf_day >= r_min) & (scf_day <= r_max)
+            else:
+                in_range = (scf_day > r_min) & (scf_day <= r_max)
+            
+            combined_mask = in_range & valid_mask
+            
+            # Accumulate occurrence count
+            occ_counts[i][combined_mask] += 1
+            
+            # Accumulate snow count
+            is_snow = snow_day == SNOW
+            snow_counts[i][combined_mask & is_snow] += 1
+    
+    # Compute probabilities and convert to snow/no-snow classification
+    hist_cp_maps = np.zeros((n_ranges, y_size, x_size), dtype=np.uint8)
+    hist_occ_maps = occ_counts.astype(np.uint16)
+    
+    for i in range(n_ranges):
+        with np.errstate(divide='ignore', invalid='ignore'):
+            probability = np.divide(snow_counts[i], occ_counts[i])
+            probability = np.nan_to_num(probability, nan=0.0)
+        
+        # Convert probability to snow classification (threshold at 50%)
+        # 100 = snow, 0 = no snow
+        hist_cp_maps[i] = (probability > 0.5) * SNOW
+    
+    logger.info("CP maps computation completed")
+    return hist_cp_maps, hist_occ_maps
