@@ -223,6 +223,6 @@ filled_cube = filled_cube.rename_labels(dimension="bands", target=["reconstructe
 filled_cube
 #%%
 
-input_cube.execute_batch()
+filled_cube.execute_batch()
 
 #%%
