@@ -2,7 +2,6 @@
 import xarray as xr
 import numpy as np
 import logging
-from openeo.metadata import CubeMetadata
 
 
 logger = logging.getLogger(__name__)
@@ -19,17 +18,14 @@ SCF_RANGES = [
 ]
 
 # Maximum iterations for the while loop
-MAX_ITERATIONS = 3
-
-MAX_HR_ITERATIONS = 5  # Maximum HR attempts per main iteration
-MIN_PIXEL_CHANGED = 10  # Stop if fewer than X pixels change in HR reconstruction
+MAX_ITERATIONS = 100
 
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
     Main UDF function to apply iterative historical reconstruction."""    
     # Fill NaN
-    cube = cube.fillna(NO_DATA)
+    cube = cube.fillna(CLOUD)
     logger.info(f"Reconstructing cube with shape {cube.shape}")
     logger.info(f"Cube dimensions: {cube.dims}")
     logger.info(f"Cube coordinates: {cube.coords}")
@@ -134,66 +130,49 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
             break
         
         # ----- Step 1: HR cloud reconstruction -----
-        # Run HR reconstruction multiple times until little change
-        hr_iteration = 0
-
-        while hr_iteration < MAX_HR_ITERATIONS:
-            hr_iteration += 1
-            logger.info(f"HR sub-iteration {hr_iteration}")
-            
-           
-            # Run HR reconstruction
-            reconstructed_hr = hr_reconstruction_single(
-                snow_map,
-                hist_snow,
-                similarity_threshold=0.05,
-                min_similar_scenes=5
-            )
-            
-            # Update snow map
-            update_mask = cloud_mask & (reconstructed_hr != CLOUD)
-            pixels_changed = np.sum(update_mask)
-            snow_map[update_mask] = reconstructed_hr[update_mask]
-            
-            logger.info(f"HR changed {pixels_changed} pixels")
-            
-            # Check if HR is still making progress
-            if pixels_changed < MIN_PIXEL_CHANGED:
-                logger.info(f"HR convergence - only {pixels_changed} pixels changed")
-                break
+        # TODO run in itterations>
+        # Run HR reconstruction
+        reconstructed_hr = hr_reconstruction_single(
+            snow_map,
+            hist_snow,
+            similarity_threshold=0.05,
+            min_similar_scenes=5
+        )
+        
+        # Update snow map
+        update_mask = cloud_mask & (reconstructed_hr != NO_DATA)
+        snow_map[update_mask] = reconstructed_hr[update_mask]
+        
+        logger.info(f"HR changed {np.sum(update_mask)} pixels")
         
         # Update cloud mask after HR reconstruction
         cloud_mask = snow_map == CLOUD
         
         # ----- Step 2: SCF-based reconstruction -----
-        if cloud_mask.any():
-            logger.info(" Running SCF-based reconstruction")
-            
-            # Call your scf_reconstruction function
-            reconstructed_scf = scf_reconstruction_single(
-                snow_map,
-                scf_map,
-                hist_cp_maps,
-                hist_occ_maps,
-                scf_ranges
-            )
-            
-            # Update snow map with SCF reconstruction
-            update_mask_scf = cloud_mask & (reconstructed_scf != CLOUD)
-            snow_map[update_mask_scf] = reconstructed_scf[update_mask_scf]
-        
-        # Check for convergence (no clouds left)
-        cloud_mask = snow_map == CLOUD
         if not cloud_mask.any():
-            logger.info("All clouds processed - stopping iterations")
+            logger.info("No clouds remaining - stopping iterations")
             break
-    
+            
+        # Call your scf_reconstruction function
+        reconstructed_scf = scf_reconstruction_single(
+            snow_map,
+            scf_map,
+            hist_cp_maps,
+            hist_occ_maps,
+            scf_ranges
+        )
+        
+        # Update snow map with SCF reconstruction
+        update_mask_scf = cloud_mask & (reconstructed_scf != NO_DATA) 
+        snow_map[update_mask_scf] = reconstructed_scf[update_mask_scf]
+        
+        
     logger.info(f" Completed after {iteration} iterations")
     return snow_map
 
 #check gap filling; this is also done it in a loop.
 # this is also an itteration in a loop based on this daily date thing
-def hr_reconstruction_single(current_map,
+def hr_reconstruction_single(snow_map,
                              historical_maps,
                              similarity_threshold=0.05,
                              min_similar_scenes=5,
@@ -204,30 +183,31 @@ def hr_reconstruction_single(current_map,
     cloud contamination rejection
     """
 
-    cloud_mask = current_map == CLOUD
+    cloud_mask = snow_map == CLOUD
     logger.info(f"HR reconstruction: {np.sum(cloud_mask)} cloudy pixels to process")
 
     if not cloud_mask.any():
-        return current_map
+        return snow_map
 
     # -----------------------------
     # VALID PIXELS (partial_SCA logic)
     # -----------------------------
-    valid_mask = (current_map <= 100) & (~cloud_mask)
+    valid_mask = (snow_map <= 100) & (~cloud_mask)
 
     N_total = np.sum(~cloud_mask)
     N_valid = np.sum(valid_mask)
 
-    if N_total == 0:
-        return current_map
+    if N_total == 0 or N_valid == 0:
+        return snow_map
 
     cloud_fraction = (N_total - N_valid) / N_total
 
-    if cloud_fraction >= cloud_thres:
-        logger.info("Too cloudy - skipping HR reconstruction")
-        return current_map
+    # currently skipping as this is quite agressive patch based
+    #if cloud_fraction >= cloud_thres:
+    #    logger.info("Too cloudy - skipping HR reconstruction")
+    #    return current_map
 
-    current_sca = np.sum(current_map[valid_mask]) / N_valid
+    current_sca = np.sum(snow_map[valid_mask]) / N_valid
 
     h_valid = (historical_maps <= 100) & valid_mask
     h_valid_counts = np.sum(h_valid, axis=(1, 2))
@@ -240,25 +220,21 @@ def hr_reconstruction_single(current_map,
     with np.errstate(divide='ignore', invalid='ignore'):
         h_scas = h_sca_sums / h_valid_counts
 
-    h_scas = np.nan_to_num(h_scas, nan=-1.0, posinf=-1.0, neginf=-1.0) #inflate the abs difference if valid counts was 0
-
-    similar_indices = np.where(
-        np.abs(h_scas - current_sca) < similarity_threshold
-    )[0]
+    similar_indices = np.where((h_valid_counts > 0) & (np.abs(h_scas - current_sca) < similarity_threshold))[0]
 
     if len(similar_indices) < min_similar_scenes:
         logger.info("Not enough similar scenes, skipping HR reconstruction")
-        return current_map
+        return snow_map
 
     logger.info(f"Found {len(similar_indices)} similar scenes")
 
     similar_scenes = historical_maps[similar_indices]
 
-    snow_counts = np.sum(similar_scenes == SNOW, axis=0).astype(np.uint16)
-    valid_counts = np.sum(similar_scenes <= 100, axis=0).astype(np.uint16)
+    snow_counts = np.sum(similar_scenes == SNOW, axis=0)
+    valid_counts = np.sum(similar_scenes <= 100, axis=0)
 
-    reconstructed = current_map.copy()
-
+    reconstructed = np.full(snow_map.shape, NO_DATA)
+    
     is_always_snow = (snow_counts == valid_counts) & (valid_counts > 0)
     is_always_clear = (snow_counts == 0) & (valid_counts > 0)
 
@@ -292,7 +268,7 @@ def scf_reconstruction_single(snow_map, scf_map, hist_snow, hist_occ, scf_ranges
     scf_adj[hr_valid_mask] = snow_map[hr_valid_mask]
     
     # Initialize reconstruction map
-    reconstructed = np.full(snow_map.shape, NO_DATA, dtype=np.uint8)
+    reconstructed = np.full(snow_map.shape, NO_DATA)
     reconstructed[scf_adj == 100] = SNOW
     reconstructed[scf_adj == 0] = 0
     
@@ -305,9 +281,10 @@ def scf_reconstruction_single(snow_map, scf_map, hist_snow, hist_occ, scf_ranges
         # Historical conditions
         h_snow = hist_snow[i]
         h_occ = hist_occ[i]
+        logger.info(f"SCF range {r_min}-{r_max}: historical occurrences = {np.sum(h_occ)}")
         
         # Combine conditions
-        update_mask = in_range & (reconstructed == NO_DATA) & (h_occ > 10) & (snow_map > 100)
+        update_mask = in_range & (reconstructed == CLOUD) & (h_occ > 10) & (snow_map > 100)
         
         # Apply historical snow patterns
         reconstructed[update_mask & (h_snow == SNOW)] = SNOW
@@ -344,8 +321,8 @@ def compute_historical_cp_maps(historical_snow, historical_scf):
     logger.info(f"Computing CP maps from {n_days} historical days")
     
     # Initialize arrays
-    snow_counts = np.zeros((n_ranges, y_size, x_size), dtype=np.uint32)
-    occ_counts = np.zeros((n_ranges, y_size, x_size), dtype=np.uint32)
+    snow_counts = np.zeros((n_ranges, y_size, x_size))
+    occ_counts = np.zeros((n_ranges, y_size, x_size))
     
     # Accumulate counts over all historical days
     for day_idx in range(n_days):
@@ -372,7 +349,7 @@ def compute_historical_cp_maps(historical_snow, historical_scf):
             snow_counts[i][combined_mask & is_snow] += 1
     
     # Compute probabilities and convert to snow/no-snow classification
-    hist_cp_maps = np.zeros((n_ranges, y_size, x_size), dtype=np.uint8)
+    hist_cp_maps = np.zeros((n_ranges, y_size, x_size))
     hist_occ_maps = occ_counts.astype(np.uint16)
     
     for i in range(n_ranges):
