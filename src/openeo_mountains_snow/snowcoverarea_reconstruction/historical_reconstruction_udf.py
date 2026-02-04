@@ -287,6 +287,9 @@ def scf_reconstruction_single(snow_map, scf_map, hist_snow, hist_occ, scf_ranges
     
     # Adjust MODIS SCF to be within bounds
     scf_adj = np.clip(scf_map, s_min, s_max)
+
+    hr_valid_mask = snow_map != 255
+    scf_adj[hr_valid_mask] = snow_map[hr_valid_mask]
     
     # Initialize reconstruction map
     reconstructed = np.full(snow_map.shape, NO_DATA, dtype=np.uint8)
