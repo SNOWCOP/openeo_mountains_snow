@@ -252,21 +252,24 @@ sum_cp_snow = mask_cp_snow.reduce_dimension(reducer="sum",
 
 
 # mask of all the scf occurences over time
-occurences = all_masks.reduce_dimension(reducer="sum",
-                                            dimension="t")
+occurences = all_masks.reduce_dimension(reducer="sum", dimension="t")
 occurences = occurences.filter_bands(bands = labels_scf)
+occurences = occurences.rename_labels(dimension="bands", target = [f"occ_{b}" for b in labels_scf])
 
 # conditional probabilities
 cp = sum_cp_snow/occurences
+cp = cp.rename_labels(dimension="bands", target = [f"cp_{b}" for b in labels_scf])
 
+#HR sentinel-2 snow
+hr_snow = calculate_snow(eoconn,[startdate, enddate],spatial_extent).rename_labels(dimension="bands", target=["snow"])
 
-hr_snow = calculate_snow(eoconn,[startdate, enddate],spatial_extent)
-
+#HR modis scf
 hr_scf = create_modis_scf_cube(eoconn,
-                          [startdate, enddate], spatial_extent)
-
+                          [startdate, enddate], spatial_extent).rename_labels(dimension="bands", target=["scf"])
 
 total_cube = hr_snow.merge_cubes(hr_scf).merge_cubes(cp).merge_cubes(occurences)
+
+# historic block reconstruction UDF
 reconstruct_udf = openeo.UDF.from_file(
     "C:\\Git_projects\\openeo_mountains_snow\\src\\openeo_mountains_snow\\snowcoverarea_reconstruction\\historical_reconstruction_udf.py",
 )
