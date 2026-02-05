@@ -32,7 +32,7 @@ backend = 'https://openeo.dataspace.copernicus.eu/'
 os.makedirs("../results", exist_ok=True)
 
 # period to be downloaded
-startdate = '2021-02-01'
+startdate = '2023-02-01'
 enddate = '2025-06-30'
 
 # cloud probability 
