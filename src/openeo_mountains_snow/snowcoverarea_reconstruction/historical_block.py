@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#%%!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Apr 22 20:16:37 2025
@@ -37,12 +37,20 @@ enddate = '2025-06-30'
 
 # cloud probability 
 cloud_prob = 80
-
+crs = 32632
 # extent
 west=631800.
-south=5167700.
-east=655800.
-north=5184200.
+south=5170700.
+east=635800.
+north=5174200.
+
+spatial_extent = {
+    "west": west,
+    "south": south,
+    "east": east,
+    "north": north,
+    "crs": f"EPSG:{crs}"
+}
 
 # resolution
 res = 20.
@@ -63,11 +71,7 @@ epsilon = 10
 
 def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, list]:
 
-    snow = calculate_snow(connection,[startdate, enddate],dict( west=west,
-                                 south=south,
-                                 east=east,
-                                 north=north,
-                                 crs=32632), cloud_prob)
+    snow = calculate_snow(connection,[startdate, enddate],spatial_extent, cloud_prob)
 
     # resample to 20 m spatial resolution
     # snow_rsmpl = snow.resample_spatial(resolution=res,
@@ -118,15 +122,15 @@ def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, l
     all_scf_masks = all_scf_masks.rename_labels(dimension = "bands", target =labels_scf)
 
     # upsample back to HR
-    mask_scf_hr = all_scf_masks.resample_spatial(resolution=20,
-                          projection=32632,
+    mask_scf_hr = all_scf_masks.resample_spatial(resolution=res,
+                          projection=crs,
                           method="near").resample_cube_spatial(snow)
 
     return mask_scf_hr.merge_cubes(total_mask), labels_scf
 
 
 def low_resolution_snow_cover_fraction_mask(connection, total_mask):
-    #TODO why specifically for this date?
+    #TODO why specifically for this date? and no spatial coord?
     modis = connection.load_stac("https://stac.eurac.edu/collections/MOD10A1v61",
                                  temporal_extent=["2023-01-20", "2023-01-21"])
     # get SCF
@@ -229,7 +233,6 @@ def create_modis_scf_cube(connection: openeo.Connection,
     return final_cube
 
 
-#%%=====================
 
 eoconn = openeo.connect(backend, auto_validate=False)
 eoconn.authenticate_oidc()
@@ -257,12 +260,10 @@ occurences = occurences.filter_bands(bands = labels_scf)
 cp = sum_cp_snow/occurences
 
 
-hr_snow = calculate_snow(eoconn,[startdate, enddate],dict( west=west,
-                                 south=south,east=east, north=north))
+hr_snow = calculate_snow(eoconn,[startdate, enddate],spatial_extent)
 
 hr_scf = create_modis_scf_cube(eoconn,
-                          [startdate, enddate], dict( west=west,
-                                 south=south, east=east, north=north))
+                          [startdate, enddate], spatial_extent)
 
 
 total_cube = hr_snow.merge_cubes(hr_scf).merge_cubes(cp).merge_cubes(occurences)
