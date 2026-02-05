@@ -269,19 +269,19 @@ total_cube = hr_snow.merge_cubes(hr_scf).merge_cubes(cp).merge_cubes(occurences)
 reconstruct_udf = openeo.UDF.from_file(
     "C:\\Git_projects\\openeo_mountains_snow\\src\\openeo_mountains_snow\\snowcoverarea_reconstruction\\historical_reconstruction_udf.py",
 )
-filled_cube = total_cube.apply_dimension(
+reconstructed_cube = total_cube.apply_dimension(
     process=reconstruct_udf,
     dimension="t"
 )
 
-filled_cube = filled_cube.rename_labels(dimension="bands", target='reconstructed_snow')
+reconstructed_cube = reconstructed_cube.rename_labels(dimension="bands", target=["reconstructed_snow"])
 
 
-filled_cube
+reconstructed_cube
 
 #%%
 
-filled_cube.execute_batch(
+reconstructed_cube.execute_batch(
         title="historical_block",
         job_options={
             "executor-memory": "8G",
