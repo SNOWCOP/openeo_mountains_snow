@@ -293,3 +293,8 @@ reconstructed_cube.execute_batch(
             "python-memory": "disable"
         }
     )
+
+#%%
+
+scf_dic = get_scf_ranges(10, 10)
+scf_dic
