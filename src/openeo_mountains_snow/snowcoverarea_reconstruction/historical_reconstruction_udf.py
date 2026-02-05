@@ -49,7 +49,7 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     
     historical_snow = cube.isel(bands=0).values    
     historical_cp_maps = cube.isel(t=0,bands=slice(2, 2 + n_ranges -1)).values
-    historical_occ_maps = cube.isel(t=0,bands=slice(2 + n_ranges, 2 + 2 * n_ranges)).values()
+    historical_occ_maps = cube.isel(t=0,bands=slice(2 + n_ranges, 2 + 2 * n_ranges)).values
 
     # Reconstruct each target day
     reconstructed_days = []
