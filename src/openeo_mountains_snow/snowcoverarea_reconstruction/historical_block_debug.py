@@ -1,3 +1,4 @@
+
 #%%!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -19,6 +20,58 @@ from typing import Dict
 
 from utils_gapfilling import *
 
+import datetime
+import hashlib
+import openeo
+import os
+import boto3
+
+
+#%% boiler plate code to generate temporal S3 bucket on which we can save intermediate results from the UDF
+#We hardcode these into the UDF; in the future we could consider passing them as parameter. 
+
+region = "waw3-1"
+otc_prod_url = f"https://openeo.prod.{region}.openeo-int.v1.dataspace.copernicus.eu/openeo/"
+sts_url = f"https://sts.{region}.openeo.v1.dataspace.copernicus.eu"
+s3_url = sts_url.replace('sts', 's3')
+connection = openeo.connect(otc_prod_url).authenticate_oidc()
+
+token_parts = connection.auth.bearer.split('/')
+sts = boto3.client(
+    "sts",
+    endpoint_url=sts_url
+)
+role_arn = f"arn:openeo:iam:::role/openeo-artifacts-{region}"
+bucket_name = f"openeo-artifacts-{region}"
+response = sts.assume_role_with_web_identity(
+    RoleArn=role_arn,
+    RoleSessionName='petertest',
+    WebIdentityToken=token_parts[2],
+    DurationSeconds=3600*12
+)
+assert 'Credentials' in response, f"Invalid creds {response}"
+creds=response['Credentials']
+
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url=s3_url
+)
+def get_upload_prefix(subject_from_web_identity_token: bytes):
+    _user_prefix = hashlib.sha1(subject_from_web_identity_token).hexdigest()
+    return f"{_user_prefix}/{datetime.datetime.utcnow().strftime('%Y/%m/%d')}/"
+upload_prefix = get_upload_prefix(response['SubjectFromWebIdentityToken'].encode())
+
+
+
+print(" Access Key: " + creds['AccessKeyId'])
+print(" Secret Access Key: " + creds['SecretAccessKey'])
+print(" Session Token: " + creds['SessionToken'])
+print(" Upload Prefix: " + upload_prefix)
+
+
+#%%
+
 
 # ==============================
 # User Configuration Section
@@ -32,7 +85,7 @@ backend = 'https://openeo.dataspace.copernicus.eu/'
 os.makedirs("../results", exist_ok=True)
 
 # period to be downloaded
-startdate = '2021-02-01'
+startdate = '2023-02-01'
 enddate = '2025-06-30'
 
 # cloud probability 
@@ -232,8 +285,6 @@ def create_modis_scf_cube(connection: openeo.Connection,
     
     return final_cube
 
-
-
 eoconn = openeo.connect(backend, auto_validate=False)
 eoconn.authenticate_oidc()
 
@@ -268,14 +319,29 @@ hr_scf = create_modis_scf_cube(eoconn,
                           [startdate, enddate], spatial_extent).rename_labels(dimension="bands", target=["scf"])
 
 total_cube = hr_snow.merge_cubes(hr_scf).merge_cubes(cp).merge_cubes(occurences)
+time_string = datetime.datetime.now().strftime("%H%M%S")
 
 # historic block reconstruction UDF
 reconstruct_udf = openeo.UDF.from_file(
-    "C:\\Git_projects\\openeo_mountains_snow\\src\\openeo_mountains_snow\\snowcoverarea_reconstruction\\historical_reconstruction_udf.py",
+    "C:\\Git_projects\\openeo_mountains_snow\\src\\openeo_mountains_snow\\snowcoverarea_reconstruction\\historical_reconstruction_udf_debug.py",
+    context={
+        "n_days_to_reconstruct": 10,
+        "checkpoint_config": {
+            "access_key": creds['AccessKeyId'],
+            "secret_key": creds['SecretAccessKey'],
+            "token": creds['SessionToken'],
+            "bucket": "openeo-artifacts-waw3-1",
+            "prefix": f"{upload_prefix}{time_string}",
+            "endpoint": "https://s3.waw3-1.openeo.v1.dataspace.copernicus.eu",
+        }}
 )
-reconstructed_cube = total_cube.apply_dimension(
+reconstructed_cube = total_cube.apply_neighborhood(
     process=reconstruct_udf,
-    dimension="t"
+    size=[
+            {'dimension': 'x', 'value': 512, 'unit': 'px'},
+            {'dimension': 'y', 'value': 512, 'unit': 'px'},
+        ],
+
 )
 
 reconstructed_cube = reconstructed_cube.rename_labels(dimension="bands", target=["reconstructed_snow"])
@@ -283,57 +349,132 @@ reconstructed_cube = reconstructed_cube.rename_labels(dimension="bands", target=
 
 reconstructed_cube
 
+
+
+
 #%%
 
-total_cube.execute_batch(
+reconstructed_cube.execute_batch(
         title="total_cube",
         job_options={
             "executor-memory": "8G",
-            "executor-memoryOverhead": "4G",
-            "python-memory": "disable"
+            "executor-memoryOverhead": "500m",
+            "python-memory": "8G"
         }
     )
+
+#%% recombine the intermediate results in a single cube
+
+
+
+import re
+import os
+import tempfile
+from collections import defaultdict
+
+import s3fs
+import xarray as xr
+
+# ----------------------------------------------------------------------
+# CONFIGURATION – set your S3 credentials and prefix here
+# ----------------------------------------------------------------------
+
+
+# Output directory for merged NetCDF files
+OUTPUT_DIR = 'merged_netcdf'
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+# ----------------------------------------------------------------------
+# Connect to S3
+# ----------------------------------------------------------------------
+fs = s3fs.S3FileSystem(
+    key=creds['AccessKeyId'],
+    secret=creds['SecretAccessKey'],
+    token=creds['SessionToken'],
+    client_kwargs={'endpoint_url': "https://s3.waw3-1.openeo.v1.dataspace.copernicus.eu"}
+)
+
+bucket = "openeo-artifacts-waw3-1"
+prefix = f"{upload_prefix}{f'101835'}"
+# ----------------------------------------------------------------------
+# List all .nc files under the prefix
+# ----------------------------------------------------------------------
+s3_path = f"{bucket}/{prefix}"
+all_files = fs.ls(s3_path)
+nc_files = [f for f in all_files if f.endswith('.nc')]
+print(f"Found {len(nc_files)} NetCDF files in total.")
+
+# ----------------------------------------------------------------------
+# Helper: extract base identifier from filename
+# ----------------------------------------------------------------------
+def base_id_from_filename(filename):
+    """Return the part of the filename before the first spatial/temporal token."""
+    name = filename.rstrip('.nc')
+    parts = name.split('_')
+    base_parts = []
+    for p in parts:
+        if re.match(r'^[xy]\d+', p) or re.match(r'^t\d{8}', p):
+            break
+        base_parts.append(p)
+    return '_'.join(base_parts)
+
+# ----------------------------------------------------------------------
+# Group files by base identifier
+# ----------------------------------------------------------------------
+groups = defaultdict(list)
+for s3_key in nc_files:
+    fname = s3_key.split('/')[-1]
+    base_id = base_id_from_filename(fname)
+    groups[base_id].append(s3_key)
+
+print(f"Found {len(groups)} distinct checkpoint groups.")
+
+#%%
+# ----------------------------------------------------------------------
+# Process each group: download all tiles, merge, save
+# ----------------------------------------------------------------------
+for base_id, s3_keys in groups.items():
+    if len(s3_keys) == 1:
+        print(f"Skipping {base_id} – only one tile (already full extent).")
+        continue
+
+    print(f"\nProcessing {base_id} ({len(s3_keys)} tiles) ...")
+
+    datasets = []
+    for s3_key in s3_keys:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.nc') as tmp:
+            tmp_path = tmp.name
+        try:
+            fs.get(s3_key, tmp_path)
+            ds = xr.open_dataset(tmp_path, engine = 'netcdf4')
+            ds.load()      # Load into memory
+            ds.close()     # Release file lock
+            datasets.append(ds)
+        except Exception as e:
+            print(f"  Error loading {s3_key}: {e}")
+        finally:
+            os.unlink(tmp_path)
+
+    if not datasets:
+        print(f"  No datasets loaded for {base_id}, skipping.")
+        continue
+
+    # Merge along all coordinates (x, y, t, bands)
+    try:
+        combined = xr.combine_by_coords(datasets, combine_attrs='drop_conflicts')
+        out_path = os.path.join(OUTPUT_DIR, f"{base_id}.nc")
+        combined.to_netcdf(out_path)
+        print(f"  ✓ Saved merged file: {out_path}")
+    except Exception as e:
+        print(f"  ✗ Merge failed for {base_id}: {e}")
+
+print("\nAll groups processed.")
+
+#%%
+
 
 
 # %%
 
-import openeo
-import datetime
-import hashlib
-import openeo
-import os
-import boto3
 
-
-region = "waw3-1"
-otc_prod_url = f"https://openeo.prod.{region}.openeo-int.v1.dataspace.copernicus.eu/openeo/"
-sts_url = f"https://sts.{region}.openeo.v1.dataspace.copernicus.eu"
-s3_url = sts_url.replace('sts', 's3')
-connection = openeo.connect(otc_prod_url).authenticate_oidc()
-
-token_parts = connection.auth.bearer.split('/')
-sts = boto3.client(
-    "sts",
-    endpoint_url=sts_url
-)
-role_arn = f"arn:openeo:iam:::role/openeo-artifacts-{region}"
-bucket_name = f"openeo-artifacts-{region}"
-response = sts.assume_role_with_web_identity(
-    RoleArn=role_arn,
-    RoleSessionName='petertest',
-    WebIdentityToken=token_parts[2],
-    DurationSeconds=3600*12
-)
-assert 'Credentials' in response, f"Invalid creds {response}"
-creds=response['Credentials']
-
-s3 = boto3.client(
-    "s3",
-    endpoint_url=s3_url
-)
-def get_upload_prefix(subject_from_web_identity_token: bytes):
-    _user_prefix = hashlib.sha1(subject_from_web_identity_token).hexdigest()
-    return f"{_user_prefix}/{datetime.datetime.utcnow().strftime('%Y/%m/%d')}/"
-upload_prefix = get_upload_prefix(response['SubjectFromWebIdentityToken'].encode())
-print(f's3://{bucket_name}/{upload_prefix}')
  
