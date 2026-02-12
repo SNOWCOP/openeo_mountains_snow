@@ -27,19 +27,15 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     # Fill NaN
     cube = cube.fillna(NO_DATA)
     logger.info(f"Reconstructing cube with shape {cube.shape}")
-    logger.info(f"Cube dimensions: {cube.dims}")
-    logger.info(f"Cube coordinates: {cube.coords}")
-    
 
     n_days = context.get("n_days_to_reconstruct", 10)
     n_ranges = len(SCF_RANGES)
-
-    logger.info(f"Reconstructing last {n_days} days")
 
     # Check if we have enough data
     total_days = cube.shape[0]
     if total_days <= n_days:
         logger.warning(f"Not enough data: {total_days} total, {n_days} requested")
+        logger.warning(f"The cube has the following dimensions: {cube.dims} and coordinates: {cube.coords}")
         # Return original last N days
         return cube.isel(t=slice(-n_days, None))
     
@@ -213,7 +209,7 @@ def hr_reconstruction_single(snow_map,
     with np.errstate(divide='ignore', invalid='ignore'):
         h_scas = h_sca_sums / h_valid_counts
 
-    similar_indices = np.where((h_valid_counts > 0) & (np.abs(h_scas - current_sca) < similarity_threshold))[0]
+    similar_indices = np.where((h_valid_counts > 0) & (np.sum(np.abs(h_scas - current_sca)) < similarity_threshold))[0] #TODO probably need agglomerated statistiscs on the difference
 
     if len(similar_indices) < min_similar_scenes:
         logger.info("Not enough similar scenes, skipping HR reconstruction")

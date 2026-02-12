@@ -32,7 +32,7 @@ backend = 'https://openeo.dataspace.copernicus.eu/'
 os.makedirs("../results", exist_ok=True)
 
 # period to be downloaded
-startdate = '2023-02-01'
+startdate = '2021-02-01'
 enddate = '2025-06-30'
 
 # cloud probability 
@@ -213,7 +213,7 @@ def create_modis_scf_cube(connection: openeo.Connection,
         # Replace invalid values with CLOUD_VALUE, keep others as-is
         return if_(
             should_replace,
-            nv_value,  
+            205,  #TODO should this not be 255? for invalid pixels
             scf_value     # Original value for valid SCF (0-100, 205)
         )
     
@@ -285,8 +285,8 @@ reconstructed_cube
 
 #%%
 
-reconstructed_cube.execute_batch(
-        title="historical_block",
+total_cube.execute_batch(
+        title="total_cube",
         job_options={
             "executor-memory": "8G",
             "executor-memoryOverhead": "4G",
@@ -294,7 +294,46 @@ reconstructed_cube.execute_batch(
         }
     )
 
-#%%
 
-scf_dic = get_scf_ranges(10, 10)
-scf_dic
+# %%
+
+import openeo
+import datetime
+import hashlib
+import openeo
+import os
+import boto3
+
+
+region = "waw3-1"
+otc_prod_url = f"https://openeo.prod.{region}.openeo-int.v1.dataspace.copernicus.eu/openeo/"
+sts_url = f"https://sts.{region}.openeo.v1.dataspace.copernicus.eu"
+s3_url = sts_url.replace('sts', 's3')
+connection = openeo.connect(otc_prod_url).authenticate_oidc()
+
+token_parts = connection.auth.bearer.split('/')
+sts = boto3.client(
+    "sts",
+    endpoint_url=sts_url
+)
+role_arn = f"arn:openeo:iam:::role/openeo-artifacts-{region}"
+bucket_name = f"openeo-artifacts-{region}"
+response = sts.assume_role_with_web_identity(
+    RoleArn=role_arn,
+    RoleSessionName='petertest',
+    WebIdentityToken=token_parts[2],
+    DurationSeconds=3600*12
+)
+assert 'Credentials' in response, f"Invalid creds {response}"
+creds=response['Credentials']
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url=s3_url
+)
+def get_upload_prefix(subject_from_web_identity_token: bytes):
+    _user_prefix = hashlib.sha1(subject_from_web_identity_token).hexdigest()
+    return f"{_user_prefix}/{datetime.datetime.utcnow().strftime('%Y/%m/%d')}/"
+upload_prefix = get_upload_prefix(response['SubjectFromWebIdentityToken'].encode())
+print(f's3://{bucket_name}/{upload_prefix}')
+ 
