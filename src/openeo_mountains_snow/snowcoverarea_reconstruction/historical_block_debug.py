@@ -10,12 +10,13 @@ from typing import Tuple
 
 import openeo
 
+
 import os
 
 from openeo.processes import (eq, is_nan, gt, or_, 
                               if_, array_create, ProcessBuilder)
-
 from openeo import DataCube
+
 from typing import Dict
 
 from utils_gapfilling import *
@@ -25,6 +26,11 @@ import hashlib
 import openeo
 import os
 import boto3
+
+import openeo
+
+from downscale_variables import downscale_shortwave_radiation, downscale_temperature_humidity
+
 
 
 #%% boiler plate code to generate temporal S3 bucket on which we can save intermediate results from the UDF
@@ -63,7 +69,6 @@ def get_upload_prefix(subject_from_web_identity_token: bytes):
 upload_prefix = get_upload_prefix(response['SubjectFromWebIdentityToken'].encode())
 
 
-
 print(" Access Key: " + creds['AccessKeyId'])
 print(" Secret Access Key: " + creds['SecretAccessKey'])
 print(" Session Token: " + creds['SessionToken'])
@@ -85,7 +90,7 @@ backend = 'https://openeo.dataspace.copernicus.eu/'
 os.makedirs("../results", exist_ok=True)
 
 # period to be downloaded
-startdate = '2023-02-01'
+startdate = '2021-02-01'
 enddate = '2025-06-30'
 
 # cloud probability 
@@ -180,7 +185,6 @@ def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, l
                           method="near").resample_cube_spatial(snow)
 
     return mask_scf_hr.merge_cubes(total_mask), labels_scf
-
 
 def low_resolution_snow_cover_fraction_mask(connection, total_mask):
     #TODO why specifically for this date? and no spatial coord?
@@ -318,14 +322,31 @@ hr_snow = calculate_snow(eoconn,[startdate, enddate],spatial_extent).rename_labe
 hr_scf = create_modis_scf_cube(eoconn,
                           [startdate, enddate], spatial_extent).rename_labels(dimension="bands", target=["scf"])
 
-total_cube = hr_snow.merge_cubes(hr_scf).merge_cubes(cp).merge_cubes(occurences)
-time_string = datetime.datetime.now().strftime("%H%M%S")
 
+# Add time dimension to cp and occurences using the process
+first_date = hr_snow.metadata.temporal_dimension.extent[0]  
+
+cp_with_time = cp.add_dimension(
+    name='time', 
+    label=first_date, 
+    type='temporal'
+)
+
+occurences_with_time = occurences.add_dimension(
+    name='time', 
+    label=first_date,
+    type='temporal'
+)
+
+sca_inputcube = hr_snow.merge_cubes(hr_scf).merge_cubes(cp_with_time).merge_cubes(occurences_with_time)
+
+
+time_string = datetime.datetime.now().strftime("%H%M%S")
 # historic block reconstruction UDF
 reconstruct_udf = openeo.UDF.from_file(
     "C:\\Git_projects\\openeo_mountains_snow\\src\\openeo_mountains_snow\\snowcoverarea_reconstruction\\historical_reconstruction_udf_debug.py",
     context={
-        "n_days_to_reconstruct": 10,
+        "n_days_to_reconstruct": 30,
         "checkpoint_config": {
             "access_key": creds['AccessKeyId'],
             "secret_key": creds['SecretAccessKey'],
@@ -335,19 +356,49 @@ reconstruct_udf = openeo.UDF.from_file(
             "endpoint": "https://s3.waw3-1.openeo.v1.dataspace.copernicus.eu",
         }}
 )
-reconstructed_cube = total_cube.apply_neighborhood(
+sca = sca_inputcube.apply_neighborhood(
     process=reconstruct_udf,
     size=[
-            {'dimension': 'x', 'value': 512, 'unit': 'px'},
-            {'dimension': 'y', 'value': 512, 'unit': 'px'},
+            {'dimension': 'x', 'value': 256, 'unit': 'px'},
+            {'dimension': 'y', 'value': 256, 'unit': 'px'},
         ],
 
 )
 
-reconstructed_cube = reconstructed_cube.rename_labels(dimension="bands", target=["reconstructed_snow"])
+sca = sca.rename_labels(dimension="bands", target=["sca"])
 
 
-reconstructed_cube
+#agera
+dem = eoconn.load_collection("COPERNICUS_30", spatial_extent=spatial_extent) #eocloud instead?
+
+agera = eoconn.load_collection("AGERA5", spatial_extent=spatial_extent, temporal_extent=[startdate, enddate], bands=["temperature-mean","dewpoint-temperature","solar-radiation-flux"])
+agera.result_node().update_arguments(featureflags={"tilesize": 1})
+
+geopotential = eoconn.load_stac("https://artifactory.vgt.vito.be/artifactory/auxdata-public/geopotential.json", spatial_extent=spatial_extent, bands=["geopotential"])
+geopotential.result_node().update_arguments(featureflags={"tilesize": 1})
+geopotential.metadata = geopotential.metadata.add_dimension("t", label="2025-09-29", type="temporal")
+
+agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
+
+# SW
+
+aspect = eoconn.load_stac(
+        "https://stac.openeo.vito.be/collections/DEM_aspec_30m",
+        spatial_extent=spatial_extent
+    ).reduce_dimension(dimension='t', reducer='mean')
+
+slope = eoconn.load_stac(
+    "https://stac.openeo.vito.be/collections/DEM_slope_30m",
+    spatial_extent=spatial_extent
+).reduce_dimension(dimension='t', reducer='mean')
+
+slope_aspect = aspect.merge_cubes(slope).rename_labels(dimension="bands", target=["aspect", "slope"])
+
+shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
+
+
+reconstructed_cube = sca.merge_cubes(agera_downscaled).merge_cubes(shortwave_rad_cube)
+
 
 
 
@@ -355,11 +406,12 @@ reconstructed_cube
 #%%
 
 reconstructed_cube.execute_batch(
-        title="total_cube",
+        title="reconstructed_cube",
         job_options={
             "executor-memory": "8G",
             "executor-memoryOverhead": "500m",
-            "python-memory": "8G"
+            "python-memory": "15G",
+            "load_stac_apply_lcfm_improvements":True
         }
     )
 
