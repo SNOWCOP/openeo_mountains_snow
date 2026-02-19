@@ -64,7 +64,7 @@ EPSILON = 10  # Security buffer for SCF ranges (%)
 # openEO Backend Configuration
 # ==============================
 
-BACKEND = "https://openeo.dataspace.copernicus.eu/"
+BACKEND = "https://openeofed.dataspace.copernicus.eu"
 
 # ==============================
 # Reconstruction Parameters
