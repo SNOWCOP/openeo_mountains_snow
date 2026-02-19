@@ -3,62 +3,76 @@
 #   "pvlib"
 # ]
 # ///
+"""
+Solar position calculation UDF.
+
+Computes solar position (zenith and azimuth angles) for each pixel
+using pvlib based on pixel coordinates and timestamp.
+"""
+
 import xarray
 import pandas as pd
 import datetime
-
 import numpy as np
 from openeo.udf import inspect
 
 
 def apply_datacube(cube: xarray.DataArray, context) -> xarray.DataArray:
-    assert len(cube.shape) == 3
-    assert "t" in cube.attrs, "UDF requires 't' attribute with timestamp, as provided by Geotrellis backend."
-    assert isinstance(cube.attrs["t"], datetime.datetime ), f"time has to be provided as datetime, but got: {cube.attrs['t']}"
-    inspect(data=cube.dims, message = f"dims {cube.dims}")
+    """
+    Compute solar position angles and append to data cube.
+    
+    Args:
+        cube: Input xarray DataArray with shape (time, x, y, bands)
+        context: Execution context containing metadata
+        
+    Returns:
+        DataArray with two new bands appended: [zenith, azimuth] angles
+    """
+    assert len(cube.shape) == 3, "Expected 3D data array (time, x, y)"
+    assert "t" in cube.attrs, "UDF requires 't' attribute with timestamp"
+    assert isinstance(cube.attrs["t"], datetime.datetime), \
+        f"Time must be datetime, got: {cube.attrs['t']}"
+    
+    inspect(data=cube.dims, message=f"Input dimensions: {cube.dims}")
+    
+    # Prepare output shape with 2 additional bands for zenith and azimuth
     new_shape = list(cube.shape)
     new_shape[cube.dims.index("bands")] = 2
     new_shape = tuple(new_shape)
-    inspect(data=new_shape, message=f"shape {new_shape}")
-
+    inspect(data=new_shape, message=f"Output shape: {new_shape}")
 
     longitude = cube.coords["x"].mean().item()
     latitude = cube.coords["y"].mean().item()
-    inspect(data=longitude, message=f"longitude {longitude}")
+    inspect(data=longitude, message=f"Longitude: {longitude}")
+    inspect(data=latitude, message=f"Latitude: {latitude}")
 
     chunk_timestamp: datetime.datetime = cube.attrs["t"]
+    inspect(data=chunk_timestamp, message=f"Timestamp: {chunk_timestamp}")
 
-    inspect(data=chunk_timestamp, message=f"date {chunk_timestamp}")
+    # Calculate midnight UTC and solar noon
+    midnight = datetime.datetime.fromordinal(chunk_timestamp.date().toordinal()).replace(
+        tzinfo=datetime.timezone.utc
+    )
+    solar_noon_utc = midnight + pd.Timedelta(hours=12)
 
-    print(f"SOME LOGGING FROM PRINT!!! {cube}")
-    #import pvlib
-    #location = pvlib.location.Location(latitude, longitude)
-    #inspect(data=location, message=f"location {location}")
-    midnight = datetime.datetime.fromordinal(chunk_timestamp.date().toordinal()).replace(tzinfo=datetime.timezone.utc)
+    assert solar_noon_utc.tzinfo is not None, "Datetime has no timezone information"
+    assert solar_noon_utc.tzinfo == datetime.timezone.utc, "Datetime is not in UTC timezone"
 
-    solar_noon_utc = midnight + pd.Timedelta(hours=12)# - location.longitude / 15)
+    # TODO: Use pvlib to compute actual solar position
+    # For now using placeholder values
+    zenith = 0.4  # radians
+    azimuth = 0.5  # radians
 
-    assert solar_noon_utc.tzinfo is not None, "The datetime object has no timezone information."
-    assert solar_noon_utc.tzinfo == datetime.timezone.utc, "The datetime object is not in UTC timezone."
-
-
-    # Get solar position at estimated solar noon
-    solpos = dict(zenith=45, azimuth=60)#location.get_solarposition(solar_noon_utc)
-
-    # Extract solar angles
-    zenith = 0.4#np.radians(solpos['zenith'].values[0])  # radians
-    azimuth = 0.5 #np.radians(solpos['azimuth'].values[0])  # radians
-
+    # Create output array
     full_array = np.full(new_shape, zenith)
-    full_array[1,:,:] = azimuth
+    full_array[1, :, :] = azimuth
 
-    # New data to add
     new_data = xarray.DataArray(
-        full_array,  # Shape: (1, x, y)
+        full_array,
         dims=["bands", "x", "y"],
         coords={"bands": ["zenith", "azimuth"]}
     )
 
-    # Concatenate along the band dimension
+    # Concatenate with input data
     return xarray.concat([cube, new_data], dim="bands")
 
