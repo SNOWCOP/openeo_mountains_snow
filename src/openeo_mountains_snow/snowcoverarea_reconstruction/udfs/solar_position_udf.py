@@ -75,4 +75,3 @@ def apply_datacube(cube: xarray.DataArray, context) -> xarray.DataArray:
 
     # Concatenate with input data
     return xarray.concat([cube, new_data], dim="bands")
-

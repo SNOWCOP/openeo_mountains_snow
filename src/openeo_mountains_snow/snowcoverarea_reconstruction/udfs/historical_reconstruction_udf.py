@@ -424,4 +424,3 @@ def get_scf_minmax(snow_map, mode='min'):
     else:
         n_cloud = np.sum(snow_map == CLOUD)
         return ((n_snow + n_cloud) / (n_valid + n_cloud)) * 100
-    
