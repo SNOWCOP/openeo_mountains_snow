@@ -11,6 +11,8 @@ from openeo import DataCube, UDF
 from openeo.processes import ProcessBuilder, array_create, exp, clip
 import numpy as np
 
+from config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
+
 # Vapor pressure coefficients for Northern and Southern hemispheres
 VP_COEFF_NOHEM = np.array([0.41, 0.42, 0.40, 0.39, 0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40]) / 1000.0
 VP_COEFF_SOHEM = np.array([0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40, 0.41, 0.42, 0.40, 0.39]) / 1000.0
@@ -139,17 +141,12 @@ def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
     Returns:
         DataCube with topographically corrected shortwave radiation
     """
-    # Get path relative to this module
-    module_dir = Path(__file__).parent
-    solar_position_udf_path = module_dir / "solar_position_udf.py"
-    incidence_angle_udf_path = module_dir / "incidence_angle_udf.py"
-    
-    compute_solarposition = UDF.from_file(str(solar_position_udf_path))
+    compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     agera_with_sunpos = agera.apply_dimension(dimension="bands", process=compute_solarposition)
 
     return agera_with_sunpos
 
-    compute_incidence = UDF.from_file(str(incidence_angle_udf_path))
+    compute_incidence = UDF.from_file(str(INCIDENCE_ANGLE_UDF))
     radiation_with_incidence = (agera_with_sunpos.resample_cube_spatial(slope_aspect)
                                 .merge_cubes(slope_aspect)
                                 .apply_dimension(dimension="bands", process=compute_incidence))
