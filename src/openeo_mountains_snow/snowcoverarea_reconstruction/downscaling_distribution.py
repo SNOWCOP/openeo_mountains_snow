@@ -1,6 +1,9 @@
-#%%
-
 """
+Snow cover fraction downscaling and distribution analysis.
+
+Computes conditional probabilities of high-resolution snow cover based on
+low-resolution snow cover fractions.
+
 Created on Tue Apr 22 20:16:37 2025
 @author: vpremier
 """
@@ -17,16 +20,16 @@ from utils_gapfilling import *
 
 
 # ==============================
-# User Configuration
+# Configuration Parameters
 # ==============================
 
-backend = "https://openeo.dataspace.copernicus.eu/"
+BACKEND = "https://openeo.dataspace.copernicus.eu/"
 os.makedirs("../results", exist_ok=True)
 
-# temporal + spatial as parameters
-temporal_extent = ("2021-02-01", "2025-06-30")
+# Temporal and spatial extent
+TEMPORAL_EXTENT = ("2021-02-01", "2025-06-30")
 
-spatial_extent = dict(
+SPATIAL_EXTENT = dict(
     west=631800.,
     south=5167700.,
     east=655800.,
@@ -34,34 +37,44 @@ spatial_extent = dict(
     crs=32632
 )
 
-cloud_prob = 80
+# Processing parameters
+CLOUD_PROB = 80  # Maximum cloud probability (%)
+RESOLUTION = 20.  # Output resolution (m)
+PIXEL_RATIO = 25  # Ratio between LR and HR pixel sizes
+INVALID_CODES = [205, 210, 254, 255]  # No-data value codes
+INVALID_VALUE = 205  # No-data fill value
+INVALID_THRESHOLD = 10  # Max % invalid pixels allowed in LR pixel
 
-res = 20.
-
-pixel_ratio = 25
-codes = [205, 210, 254, 255]
-nv_value = 205
-nv_thres = 10
-
-delta = 10
-epsilon = 10
-
+# SCF range parameters
+DELTA = 10  # Step size for SCF ranges (%)
+EPSILON = 10  # Security buffer for SCF ranges (%)
 
 # ==============================
-# Main processing functions
+# Main Processing Functions
 # ==============================
+
 
 def compute_scf_masks(
     connection: openeo.Connection,
     temporal_extent: Tuple[str, str],
     spatial_extent: dict
 ) -> Tuple[openeo.DataCube, list]:
-
+    """
+    Compute snow cover fraction masks at multiple resolution levels.
+    
+    Args:
+        connection: openEO Connection object
+        temporal_extent: Temporal extent as (start_date, end_date)
+        spatial_extent: Spatial extent dictionary with bounds and CRS
+        
+    Returns:
+        Tuple of (merged SCF masks, list of SCF range labels)
+    """
     snow = calculate_snow(
         connection,
         temporal_extent,
         spatial_extent,
-        cloud_prob
+        CLOUD_PROB
     )
 
     total_mask = create_mask(snow)
@@ -73,9 +86,10 @@ def compute_scf_masks(
         spatial_extent
     )
 
-    scf_dic = get_scf_ranges(delta, epsilon)
+    scf_dic = get_scf_ranges(DELTA, EPSILON)
 
     def scf_to_bands(scf_lr_masked):
+        """Convert SCF map to binary bands for each SCF range."""
         result = []
 
         for key in scf_dic:
@@ -113,7 +127,7 @@ def compute_scf_masks(
 
     mask_scf_hr = (
         all_scf_masks
-        .resample_spatial(resolution=res, projection=32632, method="near")
+        .resample_spatial(resolution=RESOLUTION, projection=32632, method="near")
         .resample_cube_spatial(snow)
     )
 
@@ -126,7 +140,18 @@ def low_resolution_snow_cover_fraction_mask(
     temporal_extent,
     spatial_extent
 ):
-
+    """
+    Calculate low-resolution snow cover fraction (SCF) from MODIS data.
+    
+    Args:
+        connection: openEO Connection object
+        total_mask: Valid and snow pixel masks
+        temporal_extent: Temporal extent
+        spatial_extent: Spatial extent
+        
+    Returns:
+        Low-resolution SCF data cube
+    """
     modis = connection.load_stac(
         "https://stac.eurac.edu/collections/MOD10A1v61",
         temporal_extent=temporal_extent,
@@ -136,18 +161,18 @@ def low_resolution_snow_cover_fraction_mask(
     average = total_mask.resample_cube_spatial(modis, method="average")
 
     def create_scf_lr_masked(average_bands: ProcessBuilder):
-
+        """Compute SCF from valid and snow pixel fractions."""
         snow_band = average_bands["snow"]
         valid_band = average_bands["valid"]
 
         scf_lr = 100.0 * snow_band / valid_band
-        scf_lr = if_(is_nan(scf_lr), nv_value, scf_lr)
+        scf_lr = if_(is_nan(scf_lr), INVALID_VALUE, scf_lr)
 
-        valid_threshold = 1 - nv_thres / 100
+        valid_threshold = 1 - INVALID_THRESHOLD / 100
 
         scf_lr_masked = if_(
             valid_band <= valid_threshold,
-            nv_value,
+            INVALID_VALUE,
             scf_lr
         )
 
@@ -165,23 +190,24 @@ def low_resolution_snow_cover_fraction_mask(
 
     return scf_lr_masked
 
-
 # ==============================
 # Execution
 # ==============================
 
+
 if __name__ == "__main__":
 
-    eoconn = openeo.connect(backend, auto_validate=False)
+    eoconn = openeo.connect(BACKEND, auto_validate=False)
     eoconn.authenticate_oidc()
 
     all_masks, labels_scf = compute_scf_masks(
         eoconn,
-        temporal_extent,
-        spatial_extent
+        TEMPORAL_EXTENT,
+        SPATIAL_EXTENT
     )
 
     def merge_masks(all_masks):
+        """Merge masks with snow pixels."""
         return all_masks.and_(
             all_masks.array_element(label="snow")
         ) * 1.0
