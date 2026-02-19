@@ -27,7 +27,7 @@ snowcoverarea_reconstruction/
 ├── utils_gapfilling.py                    # General gap-filling utilities
 ├── utils_scf.py                           # SCF utility functions
 ├── run_agera_downscaler.py                # AGERA5 downscaling runner
-├── incidence_angle_udf.py                 #                                  #  User-Defined Functions folder
+├── udfs.py                     #  User-Defined Functions folder
     ├── __init__.py
     ├── historical_reconstruction_udf.py   # Main reconstruction UDF
     ├── solar_position_udf.py              # Solar position calculation
@@ -140,13 +140,6 @@ Snow Cover Fraction computation functions using MODIS data.
 - `low_resolution_snow_cover_fraction_mask(connection, total_mask)` - MODIS-based SCF
 - `create_modis_scf_cube(connection, temporal_extent, spatial_extent)` - Load and clean MODIS data
 
-### `s3_utils.py`
-AWS S3 credential management for checkpoint storage during processing.
-
-**Key Class**: `S3Manager`
-- `authenticate()` - OIDC → STS → S3FS setup
-- `get_checkpoint_config()` - Return config dict for UDF context
-- `print_credentials_info()` - Debug output
 
 ### `downscale_variables.py`
 Climate data downscaling using lapse rates and topographic corrections.
@@ -191,32 +184,15 @@ Computes solar incidence angle on sloped terrain from slope, aspect, and solar a
 
 **Key Function**: `apply_datacube(cube, context)` - Return incidence angle
 
-## Data Flows
+## Data Spurces
 
 ### Input Data Sources
-- **Sentinel-2**: High-resolution (10-20m) multispectral imagery
-- **MODIS**: Low-resolution (500m) snow cover and conditional probabilities
-- **AGERA5**: Coarse climate data (temperature, humidity, radiation)
-- **COPERNICUS DEM**: Elevation and slope/aspect data
+- **Sentinel-2**: High-resolution (10-20m) multispectral imagery (CDSE)
+- **MODIS**: Low-resolution (500m) snow cover and conditional probabilities (EODC)
+- **AGERA5**: Coarse climate data (temperature, humidity, radiation) (openEOCLOUD)
+- **COPERNICUS DEM**: Elevation and slope/aspect data (openEOCLOUD)
 - **Geopotential**: Static atmospheric geopotential data
 
-### Processing Steps
-
-```
-1. Load MODIS data → Compute SCF masks & conditional probabilities
-                  ↓
-2. Load Sentinel-2 data → Extract snow cover band
-                       ↓
-3. Merge with conditional probabilities & historical patterns
-                       ↓
-4. Apply Historical Reconstruction UDF (distributed on openEO backend)
-                       ↓
-5. Load AGERA5 climate data
-                       ↓
-6. Downscale to DEM resolution (with topographic corrections)
-                       ↓
-7. Execute batch job and save results
-```
 
 ## Key Concepts
 
@@ -237,39 +213,6 @@ Adjusts shortwave radiation based on:
 - Terrain slope and aspect
 - Solar incidence angle
 
-## Configuration Examples
-
-### Adjusting Temporal Periods
-To reconstruct a different time period with different climate data:
-
-```python
-# config.py
-START_DATE = '2022-10-01'
-END_DATE = '2023-09-30'
-AGERA_TEMPORAL_EXTENT = ['2022-07-01', '2023-07-01']  # Climate period
-```
-
-### Changing Spatial Extent
-Update coordinates in SPATIAL_EXTENT for different mountain regions:
-
-```python
-SPATIAL_EXTENT = {
-    "west": 631800.,      # Western boundary
-    "south": 5170700.,    # Southern boundary
-    "east": 635800.,      # Eastern boundary
-    "north": 5174200.,    # Northern boundary
-    "crs": "EPSG:32632"   # UTM Zone 32N
-}
-```
-
-### Adjusting Processing Parameters
-Fine-tune for different conditions:
-
-```python
-CLOUD_PROB = 50              # More lenient cloud filtering
-PIXEL_RATIO = 20             # Finer high-res resolution
-N_DAYS_TO_RECONSTRUCT = 20   # Longer reconstruction window
-```
 
 ## Dependencies
 
