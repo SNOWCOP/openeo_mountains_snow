@@ -21,7 +21,7 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     # Extract bands (assuming this order - adjust indices if needed)
     sca = cube.isel(bands=0)  # SCA band
     ta = cube.isel(bands=1)   # temperature band
-    pr = cube.isel(bands=2)    # precipitation band
+    era5 = cube.isel(bands=2)    # precipitation band
     sw = cube.isel(bands=3)    # shortwave radiation band
     
     
@@ -29,12 +29,12 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     # pr = pr * 1000  # uncomment if needed
     
     # Step 1: Get status and delta
-    status, delta, pr_reprojected = get_status_and_delta(sca, ta, pr)
+    status, delta = get_status_and_delta(ta, era5)
     
     # Step 2: Compute melt using Pomeroy scheme
     TF = 1.2  # melt factor mm / (°C day)
     SRF = 0.2256  # radiation melt factor
-    melt = get_melt_pomeroy(sca, ta, pr_reprojected, sw, status, TF=TF, SRF=SRF)
+    melt = get_melt_pomeroy(sca, ta, era5, sw, status, TF=TF, SRF=SRF)
     
     # Step 3: Compute cumulative state and accumulation
     sca_sum_xr, tot_acc_xr = compute_state_and_accumulation(sca, melt, status, delta)
@@ -45,9 +45,9 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     # Convert to xarray DataArray with proper dimensions
     result = xr.DataArray(
         swe,
-        dims=("time", "y", "x"),
+        dims=("t", "y", "x"),
         coords={
-            "time": cube.coords["t"].values,
+            "t": cube.coords["t"].values,
             "y": cube.coords["y"].values,
             "x": cube.coords["x"].values
         },
@@ -59,14 +59,14 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
         }
     )
     
-    # Add bands dimension for openEO compatibility
+    # Add bands dimension for openEO compatibility (insert after t dimension)
     result = result.expand_dims(bands=["swe"], axis=1)
     
     logger.info("SWE computation complete")
     return result
 
 
-def get_status_and_delta(SCA, ta, era5, temp_thres=1.0, prec_thres=1.0):
+def get_status_and_delta(ta, era5, temp_thres=1.0, prec_thres=1.0):
     """
     Compute:
       (1) Boolean accumulation mask: True = accumulation, False = melting/other
@@ -97,25 +97,22 @@ def get_status_and_delta(SCA, ta, era5, temp_thres=1.0, prec_thres=1.0):
         Precipitation reprojected to SCA grid
     """
 
-    # ERA5 tp : precipitation
-    pr = era5
-    pr = pr.rio.write_crs("EPSG:4326", inplace=True)
-    
-    # Reproject onto SCA grid
-    pr_reprojected = pr.rio.reproject_match(SCA)
+    # ERA5 tp : precipitation pr_reprojected should already be correct after merge_cube
+
+   
 
     # Boolean accumulation mask
     status = xr.where(
-                    (ta < temp_thres) & (pr_reprojected > prec_thres),
+                    (ta < temp_thres) & (era5 > prec_thres),
                     1,
                     -1
                 ).astype('int8')
     
     # Masked precipitation
-    masked_pr = pr_reprojected.where(status == 1)
+    masked_pr = era5.where(status == 1)
     
     # Total accumulation per pixel (lazy reduction)
-    sum_pr = masked_pr.sum(dim='time')
+    sum_pr = masked_pr.sum(dim='t')
 
     # Safe denominator → avoid division by zero
     safe_sum_pr = sum_pr.where(sum_pr > 0)
@@ -126,12 +123,7 @@ def get_status_and_delta(SCA, ta, era5, temp_thres=1.0, prec_thres=1.0):
     # No accumulation → 0
     delta = delta.fillna(0).astype('float32')
 
-    # Load explicitly for speed in later computations
-    status = status.load()
-    delta = delta.load()
-    pr_reprojected = pr_reprojected.load()
-
-    return status, delta, pr_reprojected
+    return status, delta
 
 
 def compute_state_and_accumulation(SCA, melt, status, delta):
@@ -185,8 +177,8 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
     """
 
     # --- Initialize dimensions and arrays ---
-    time = SCA.time
-    dim = tuple(SCA.shape)  # (time, y, x)
+    time = SCA['t']
+    dim = tuple(SCA.shape)  # (t, y, x)
     
     sca_sum = np.zeros(dim, dtype=np.float32)
     tot_acc = np.zeros(dim, dtype=np.float32)
@@ -198,15 +190,15 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
         logger.info(f"Processing {i}: {date}")
     
         # Snow cover for previous and current day
-        snow_prev = SCA.isel(time=i).values
-        snow_curr = SCA.isel(time=i+1).values
+        snow_prev = SCA.isel(t=i).values
+        snow_curr = SCA.isel(t=i+1).values
         
         # Melt for the current day
-        melt_curr = melt.isel(time=i).values.copy()
+        melt_curr = melt.isel(t=i).values.copy()
 
         # --- Assign snow state transitions ---
         mask_snow = np.logical_or(snow_curr == 100, snow_curr == 205)
-        changes[i+1, :, :][mask_snow] = status.isel(time=i).values[mask_snow]
+        changes[i+1, :, :][mask_snow] = status.isel(t=i).values[mask_snow]
 
         # Start of new snow period
         mask_snow_start = np.logical_and(snow_curr == 100, snow_prev == 0)
@@ -224,8 +216,8 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
         tot_acc[i+1, :, :][mask_snow_start] = melt_curr[mask_snow_start]
 
         # --- Compute cumulative accumulation fraction (precipitation delta) ---
-        delta_sca = delta.isel(time=i+1).values.copy()
-        delta_sca[status.isel(time=i+1).values != 1] = 0
+        delta_sca = delta.isel(t=i+1).values.copy()
+        delta_sca[status.isel(t=i+1).values != 1] = 0
 
         sca_sum[i+1, :, :] = sca_sum[i, :, :] + delta_sca
         sca_sum[i+1, :, :][changes[i+1, :, :] == 0] = 0  # reset where snow-free
@@ -238,18 +230,18 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
     # --- Convert to xarray and interpolate missing periods ---
     sca_sum_xr = xr.DataArray(
         sca_sum, 
-        dims=('time', 'y', 'x'),
-        coords={'time': SCA.time, 'y': SCA.y, 'x': SCA.x}
+        dims=('t', 'y', 'x'),
+        coords={'t': SCA['t'], 'y': SCA.y, 'x': SCA.x}
     )
     tot_acc_xr = xr.DataArray(
         tot_acc, 
-        dims=('time', 'y', 'x'),
-        coords={'time': SCA.time, 'y': SCA.y, 'x': SCA.x}
+        dims=('t', 'y', 'x'),
+        coords={'t': SCA['t'], 'y': SCA.y, 'x': SCA.x}
     )
 
     # Fill missing (zero) values backward in time within snow events
-    sca_sum_xr = sca_sum_xr.where(sca_sum_xr != 0).bfill(dim='time')
-    tot_acc_xr = tot_acc_xr.where(tot_acc_xr != 0).bfill(dim='time')
+    sca_sum_xr = sca_sum_xr.where(sca_sum_xr != 0).bfill(dim='t')
+    tot_acc_xr = tot_acc_xr.where(tot_acc_xr != 0).bfill(dim='t')
 
     return sca_sum_xr, tot_acc_xr
 
@@ -284,22 +276,22 @@ def get_swe(SCA, melt, status, delta, sca_sum_xr, tot_acc_xr):
         Snow Water Equivalent array (time, y, x)
     """
 
-    dim = tuple(SCA.shape)  # (time, y, x)
+    dim = tuple(SCA.shape)  # (t, y, x)
     swe = np.zeros(dim, dtype=np.float32)
 
-    for i in range(len(SCA.time) - 1):
-        date = pd.Timestamp(SCA.time[i + 1].values).strftime("%Y-%m-%d")
+    for i in range(len(SCA['t']) - 1):
+        date = pd.Timestamp(SCA['t'][i + 1].values).strftime("%Y-%m-%d")
         logger.info(f"Processing SWE {i}: {date}")
 
-        melt_curr = melt.isel(time=i).values.copy()
-        snow_curr = SCA.isel(time=i+1).values
+        melt_curr = melt.isel(t=i).values.copy()
+        snow_curr = SCA.isel(t=i+1).values
 
         # Masks
-        mask_acc = status.isel(time=i+1).values == 1
-        mask_melt = status.isel(time=i+1).values == -1
+        mask_acc = status.isel(t=i+1).values == 1
+        mask_melt = status.isel(t=i+1).values == -1
 
         # Spatial increment for accumulation
-        dsca = delta.isel(time=i+1).values.copy() / sca_sum_xr.isel(time=i+1).values
+        dsca = delta.isel(t=i+1).values.copy() / sca_sum_xr.isel(t=i+1).values
         dsca[mask_melt] = 0  # zero where not accumulating
 
         # Update SWE
@@ -316,7 +308,7 @@ def get_swe(SCA, melt, status, delta, sca_sum_xr, tot_acc_xr):
     return swe
 
 
-def get_melt_pomeroy(SCA, ta, pr_reprojected, SW, status, TF=1.2, SRF=0.2256):
+def get_melt_pomeroy(SCA, ta, era5, SW, status, TF=1.2, SRF=0.2256):
     """
     Compute snowmelt over time and space using Pomeroy albedo scheme.
 
@@ -326,7 +318,7 @@ def get_melt_pomeroy(SCA, ta, pr_reprojected, SW, status, TF=1.2, SRF=0.2256):
         Snow-covered area dataset, must contain variable 'SCA' with dimensions (time, y, x).
     ta : xarray.DataArray
         Air temperature dataset (°C) with same dimensions as SCA.
-    pr_reprojected : xarray.DataArray
+    era5 : xarray.DataArray
         Precipitation (mm/day) with a 'time' dimension matching SCA.
     SW : xarray.DataArray
         Incoming shortwave radiation dataset (W/m² or MJ/m²/day).
@@ -352,11 +344,11 @@ def get_melt_pomeroy(SCA, ta, pr_reprojected, SW, status, TF=1.2, SRF=0.2256):
     Salb = 10  # 10 mm
 
     # --- Initialize output arrays ---
-    dim = tuple(SCA.shape)  # (time, y, x)
+    dim = tuple(SCA.shape)  # (t, y, x)
     albs = np.zeros(dim, dtype=np.float32) + 0.9
     melt = np.zeros(dim, dtype=np.float32)
 
-    time = SCA.time
+    time = SCA['t']
 
     # --- Time loop ---
     for i in range(len(time) - 1):
@@ -367,15 +359,14 @@ def get_melt_pomeroy(SCA, ta, pr_reprojected, SW, status, TF=1.2, SRF=0.2256):
         alb_prev = albs[i, :, :].copy()
 
         # Current timestep variables
-        sca_curr = SCA.isel(time=i+1).values
-        status_curr = status.isel(time=i+1).values
-        ta_prev = ta.isel(time=i).values
-        ta_curr = ta.isel(time=i+1).values
-        SW_prev = SW.isel(time=i).values
-        SW_curr = SW.isel(time=i+1).values
+        sca_curr = SCA.isel(t=i+1).values
+        status_curr = status.isel(t=i+1).values
+        ta_curr = ta.isel(t=i+1).values
+        SW_curr = SW.isel(t=i+1).values
 
         # Precipitation for current day
-        pr_curr = pr_reprojected.sel(time=date).where(status_curr == 1, 0).values
+        pr_curr = era5.isel(time=i+1).values.copy()
+        pr_curr = np.where(status_curr == 1, pr_curr, 0)
 
         # Compute only where snow cover > 0
         mask = sca_curr > 0
@@ -403,8 +394,8 @@ def get_melt_pomeroy(SCA, ta, pr_reprojected, SW, status, TF=1.2, SRF=0.2256):
     # --- Convert melt array to xarray.DataArray ---
     melt_da = xr.DataArray(
         melt,
-        dims=("time", "y", "x"),
-        coords={"time": SCA.time, "y": SCA.y, "x": SCA.x},
+        dims=("t", "y", "x"),
+        coords={"t": SCA['t'], "y": SCA.y, "x": SCA.x},
         name="melt",
         attrs={
             "units": "mm water equivalent/day",
