@@ -41,14 +41,12 @@ def main():
     # 1. Compute SCF Masks & Conditional Probabilities
     # ==============================
     
-    print("\nComputing SCF masks...")
     all_masks, labels_scf = compute_scf_masks(eoconn)
     
     # ==============================
     # 2. Compute Conditional Probabilities
     # ==============================
     
-    print("Computing conditional probabilities...")
     
     def merge_masks(all_masks):
         """Multiply masks with snow band."""
@@ -74,7 +72,6 @@ def main():
     # 3. Load High-Resolution Data
     # ==============================
     
-    print("Loading high-resolution data...")
     
     # HR Sentinel-2 snow
     hr_snow = calculate_snow(
@@ -109,7 +106,6 @@ def main():
     # 4. Historical Reconstruction via UDF
     # ==============================
     
-    print("Setting up historical reconstruction UDF...")
     
     checkpoint_config = s3_manager.get_checkpoint_config()
     
@@ -132,15 +128,30 @@ def main():
     # 5. Load and Downscale Climate Data
     # ==============================
     
-    print("Loading climate and DEM data...")
     
     dem = eoconn.load_collection("COPERNICUS_30", spatial_extent=SPATIAL_EXTENT)
+
+    dem = dem.add_dimension(
+        name='time',
+        label=first_date,
+        type='temporal'
+    )
+
     agera = eoconn.load_collection(
         "AGERA5",
         spatial_extent=SPATIAL_EXTENT,
-        temporal_extent=AGERA_TEMPORAL_EXTENT,
+        temporal_extent=[START_DATE, END_DATE], #TODO, use_agera_temporal_extent
         bands=["temperature-mean", "dewpoint-temperature", "solar-radiation-flux"]
     )
+
+    #TODO evaluate hack
+    agera = agera.reduce_dimension(dimension='t', reducer='mean')
+    agera = agera.add_dimension(
+        name='time',
+        label=first_date,
+        type='temporal'
+    )
+
     agera.result_node().update_arguments(featureflags={"tilesize": 1})
 
     geopotential = eoconn.load_stac(
@@ -150,17 +161,15 @@ def main():
     )
     geopotential.result_node().update_arguments(featureflags={"tilesize": 1})
     geopotential.metadata = geopotential.metadata.add_dimension(
-        "t", label=DEM_GEOPOTENTIAL_LABEL, type="temporal"
+        "t", label=first_date, type="temporal"
     )
     
-    print("Downscaling temperature and humidity...")
     agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
 
     # ==============================
     # 6. Downscale Shortwave Radiation
     # ==============================
     
-    print("Loading slope and aspect data...")
     
     aspect = eoconn.load_stac(
         "https://stac.openeo.vito.be/collections/DEM_aspec_30m",
@@ -176,14 +185,13 @@ def main():
         dimension="bands", target=["aspect", "slope"]
     )
 
-    print("Downscaling shortwave radiation...")
     shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
+
 
     # ==============================
     # 7. Merge All Results
     # ==============================
     
-    print("Merging all data cubes...")
     reconstructed_cube = (sca.merge_cubes(agera_downscaled)
                          .merge_cubes(shortwave_rad_cube))
 
@@ -191,13 +199,11 @@ def main():
     # 8. Execute Batch Job
     # ==============================
     
-    print("Submitting batch job...")
     reconstructed_cube.execute_batch(
-        title="reconstructed_cube_historical",
+        title="input_cube_swe",
         job_options=JOB_OPTIONS
     )
     
-    print("Batch job submitted successfully!")
 
 
 if __name__ == "__main__":
