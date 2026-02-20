@@ -1,3 +1,5 @@
+#%%
+
 """
 S3 utilities for checkpoint and artifact management.
 
@@ -9,6 +11,7 @@ import hashlib
 import boto3
 import s3fs
 from typing import Dict, Any
+
 
 
 class S3Manager:
@@ -111,3 +114,5 @@ class S3Manager:
         print(f"Access Key: {self.credentials['AccessKeyId']}")
         print(f"Bucket: {self.bucket_name}")
         print(f"Upload Prefix: {self.upload_prefix}")
+
+# %%

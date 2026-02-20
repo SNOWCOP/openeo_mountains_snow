@@ -50,7 +50,6 @@ def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, l
         for key in scf_dic:
             scf_1 = int(key.split('_')[0])
             scf_2 = int(key.split('_')[1])
-            print(f'Computing CP for {scf_1} < SCF ≤ {scf_2}')
 
             # Define mask for scf_1 < scf <= scf_2
             if scf_1 == 0:

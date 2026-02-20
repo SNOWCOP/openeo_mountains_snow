@@ -17,8 +17,8 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 # Temporal Configuration
 # ==============================
 
-START_DATE = '2023-02-01'
-END_DATE = '2025-06-30'
+START_DATE = '2023-09-01'
+END_DATE = '2024-09-30'
 
 # Separate temporal extent for MODIS data
 MODIS_TEMPORAL_EXTENT = ["2023-01-20", "2023-01-21"]
@@ -27,7 +27,7 @@ MODIS_TEMPORAL_EXTENT = ["2023-01-20", "2023-01-21"]
 AGERA_TEMPORAL_EXTENT = ['2024-07-01', '2024-07-05']
 
 # DEM is static with a fixed geopotential label
-DEM_GEOPOTENTIAL_LABEL = '2025-09-29'
+DEM_GEOPOTENTIAL_LABEL = '2024-09-29'
 
 # ==============================
 # Spatial Configuration
