@@ -12,7 +12,7 @@ from openeo import DataCube
 
 from utils_gapfilling import calculate_snow, create_mask, get_scf_ranges
 from config import (
-    START_DATE, END_DATE, SPATIAL_EXTENT, CLOUD_PROB, DELTA, EPSILON,
+    TEMPORAL_EXTENT, SPATIAL_EXTENT, CLOUD_PROB, DELTA, EPSILON,
     RESOLUTION, CRS, INVALID_THRESHOLD, INVALID_VALUE, MODIS_TEMPORAL_EXTENT,
     MODIS_RESOLUTION
 )
@@ -30,7 +30,7 @@ def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, l
     """
     snow = calculate_snow(
         connection,
-        [START_DATE, END_DATE],
+        TEMPORAL_EXTENT,
         SPATIAL_EXTENT,
         CLOUD_PROB
     )
