@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Buffered Andes Envelope",
+        "crs": "EPSG:4326"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-82.5, -57.5],
+          [-58.0, -57.5],
+          [-58.0, 13.5],
+          [-82.5, 13.5],
+          [-82.5, -57.5]
+        ]]
+      }
+    }
+  ]
+}

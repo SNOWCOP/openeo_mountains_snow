@@ -10,7 +10,7 @@ reconstructing snow cover, downscaling climate data, and executing batch jobs.
 import openeo
 
 from config import (
-    BACKEND, START_DATE, END_DATE, SPATIAL_EXTENT, JOB_OPTIONS, 
+    BACKEND, TEMPORAL_EXTENT, SPATIAL_EXTENT, JOB_OPTIONS, 
     N_DAYS_TO_RECONSTRUCT, NEIGHBORHOOD_SIZE, AGERA_TEMPORAL_EXTENT, 
     DEM_GEOPOTENTIAL_LABEL, HISTORICAL_RECONSTRUCTION_UDF
 )
@@ -75,12 +75,12 @@ def main():
     
     # HR Sentinel-2 snow
     hr_snow = calculate_snow(
-        eoconn, [START_DATE, END_DATE], SPATIAL_EXTENT
+        eoconn, TEMPORAL_EXTENT, SPATIAL_EXTENT
     ).rename_labels(dimension="bands", target=["snow"])
 
     # HR MODIS SCF
     hr_scf = create_modis_scf_cube(
-        eoconn, [START_DATE, END_DATE], SPATIAL_EXTENT
+        eoconn, TEMPORAL_EXTENT, SPATIAL_EXTENT
     ).rename_labels(dimension="bands", target=["scf"])
 
     # Add time dimension to cp and occurences
@@ -119,7 +119,10 @@ def main():
     
     sca = sca_inputcube.apply_neighborhood(
         process=reconstruct_udf,
-        size=[NEIGHBORHOOD_SIZE['x'], NEIGHBORHOOD_SIZE['y']],
+        size=[
+            {"dimension": "x", "value": NEIGHBORHOOD_SIZE['x'], "unit": "px"},
+            {"dimension": "y", "value": NEIGHBORHOOD_SIZE['y'], "unit": "px"},
+        ]
     )
     
     sca = sca.rename_labels(dimension="bands", target=["sca"])
@@ -130,24 +133,25 @@ def main():
     
     
     dem = eoconn.load_collection("COPERNICUS_30", spatial_extent=SPATIAL_EXTENT)
+    if dem.metadata.has_temporal_dimension():
+        dem = dem.reduce_dimension(dimension="t", reducer="max")
 
     dem = dem.add_dimension(
-        name='time',
+        name='t',
         label=first_date,
         type='temporal'
     )
 
-    agera = eoconn.load_collection(
-        "AGERA5",
+    agera = eoconn.load_stac(
+        "https://stac.openeo.vito.be/collections/agera5_daily",
         spatial_extent=SPATIAL_EXTENT,
-        temporal_extent=[START_DATE, END_DATE], #TODO, use_agera_temporal_extent
+        temporal_extent=AGERA_TEMPORAL_EXTENT, 
         bands=["temperature-mean", "dewpoint-temperature", "solar-radiation-flux"]
     )
-
-    #TODO evaluate hack
     agera = agera.reduce_dimension(dimension='t', reducer='mean')
+
     agera = agera.add_dimension(
-        name='time',
+        name='t',
         label=first_date,
         type='temporal'
     )
@@ -208,3 +212,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# %%
