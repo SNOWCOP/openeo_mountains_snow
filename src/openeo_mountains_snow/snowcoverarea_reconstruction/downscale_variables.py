@@ -142,6 +142,7 @@ def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
         DataCube with topographically corrected shortwave radiation
     """
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
+    
     agera_with_sunpos = agera.apply_dimension(dimension="bands", process=compute_solarposition)
 
     return agera_with_sunpos

@@ -23,7 +23,7 @@ TEMPORAL_EXTENT = ['2023-09-01', '2024-09-30']
 MODIS_TEMPORAL_EXTENT = ["2023-01-20", "2023-01-21"]
 
 # Separate temporal extent for climate data (AGERA5)
-AGERA_TEMPORAL_EXTENT = ['2024-07-01', '2024-07-05']
+AGERA_TEMPORAL_EXTENT = ['2023-07-01', '2023-07-05']
 
 # DEM is static with a fixed geopotential label
 DEM_GEOPOTENTIAL_LABEL = '2024-09-29'
@@ -70,10 +70,7 @@ BACKEND = "https://openeo.dataspace.copernicus.eu/"
 # ==============================
 
 N_DAYS_TO_RECONSTRUCT = 10
-NEIGHBORHOOD_SIZE = {
-    'x': {'value': 128, 'unit': 'px'},
-    'y': {'value': 128, 'unit': 'px'},
-}
+NEIGHBORHOOD_SIZE = 64
 
 # ==============================
 # Job Configuration
@@ -99,6 +96,7 @@ MODIS_RESOLUTION = 25  # meters
 from pathlib import Path
 
 UDF_DIR = Path(__file__).parent / 'udfs'
-HISTORICAL_RECONSTRUCTION_UDF = UDF_DIR / 'historical_reconstruction_udf.py'
+SCA_RECONSTRUCTION_UDF = UDF_DIR / 'historical_reconstruction_udf.py'
+SWE_RECONSTRUCTION_UDF = UDF_DIR / 'swe_udf.py'
 SOLAR_POSITION_UDF = UDF_DIR / 'solar_position_udf.py'
 INCIDENCE_ANGLE_UDF = UDF_DIR / 'incidence_angle_udf.py'
