@@ -120,9 +120,9 @@ def downscale_temperature_humidity(agera_cube, elevation_cube, geopotential_cube
     downscale_inputs = (t0_cube.resample_cube_spatial(elevation_cube, method="bilinear")
                         .merge_cubes(elevation_cube.max_time()))
 
-    downscaled = downscale_inputs.reduce_dimension(
+    downscaled = downscale_inputs.apply_dimension(
         dimension="bands",
-        reducer=lambda x: downscale_t_dewpoint(x, lapse_rate, temp_index="t0", dem_index="DEM")
+        process=lambda x: downscale_t_dewpoint(x, lapse_rate, temp_index="t0", dem_index="DEM")
     )
     return downscaled
 
@@ -164,4 +164,5 @@ def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
         Qsi_daily = ssrd * (cos_i / (cosZ + 1e-6))
         return Qsi_daily
 
-    return radiation_with_incidence.apply_dimension(dimension="bands", process=downscale_shortwave)
+    result = radiation_with_incidence.apply_dimension(dimension="bands", process=downscale_shortwave)
+    return result.rename_labels(dimension="bands", target=["shortwave_radiation_downscaled"])

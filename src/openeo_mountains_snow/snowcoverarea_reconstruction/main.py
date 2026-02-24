@@ -15,7 +15,7 @@ from config import (
     MODIS_TEMPORAL_EXTENT, SCA_RECONSTRUCTION_UDF, SWE_RECONSTRUCTION_UDF
 )
 from scf_processing import compute_scf_masks, create_modis_scf_cube
-from downscale_variables import downscale_shortwave_radiation, downscale_temperature_humidity
+from downscale_variables import downscale_shortwave_radiation, downscale_temperature_humidity, preprocess_low_resolution_agera
 from s3_utils import S3Manager
 from utils_gapfilling import calculate_snow
 
@@ -46,7 +46,6 @@ def main():
     # ==============================
     # 2. Compute Conditional Probabilities
     # ==============================
-    
     
     def merge_masks(all_masks):
         """Multiply masks with snow band."""
@@ -150,19 +149,17 @@ def main():
     agera = agera.filter_bands(bands=["2m_temperature_mean", "dewpoint_temperature_mean", "solar_radiation_flux"])
     agera = agera.rename_labels(dimension="bands", target=["temperature-mean", "dewpoint-temperature", "solar-radiation-flux"])
 
-    agera.result_node().update_arguments(featureflags={"tilesize": 1})
-
     geopotential = eoconn.load_stac(
         "https://artifactory.vgt.vito.be/artifactory/auxdata-public/geopotential.json",
         spatial_extent=SPATIAL_EXTENT,
         bands=["geopotential"]
     )
-    geopotential.result_node().update_arguments(featureflags={"tilesize": 1})
     geopotential.metadata = geopotential.metadata.add_dimension(
         "t", label=first_date, type="temporal"
     )
     
     agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
+    agera_downscaled = agera_downscaled.rename_labels(dimension="bands", target=["temperature_downscaled", "relative_humidity"])
 
 
     # ==============================
@@ -183,15 +180,13 @@ def main():
         dimension="bands", target=["aspect", "slope"]
     )
 
-    shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect) 
+    shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
+    shortwave_rad_cube = shortwave_rad_cube.rename_labels(dimension="bands", target= ["solar-radiation-flux-downscaled", "zenith", "azimuth"])
+   
     # ==============================
     # 7. Merge All Results
     # ==============================
-    
-    total_cube = (sca.merge_cubes(agera_downscaled)
-                         .merge_cubes(shortwave_rad_cube))
-    
-
+    total_cube = sca.merge_cubes(agera_downscaled)
     swe_udf = openeo.UDF.from_file(
         str(SWE_RECONSTRUCTION_UDF)
     )
@@ -203,12 +198,11 @@ def main():
             {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
         ]
     )
-
     # ==============================
     # 8. Execute Batch Job
     # ==============================
     
-    swe.execute_batch(
+    total_cube.execute_batch(
         title="input_cube_swe",
         job_options=JOB_OPTIONS
     )
@@ -217,54 +211,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# %%
-
-import openeo
-from config import BACKEND, SPATIAL_EXTENT, AGERA_TEMPORAL_EXTENT, JOB_OPTIONS
-
-eoconn = openeo.connect(BACKEND, auto_validate=False)
-eoconn.authenticate_oidc()
-first_date = "2023-07-01T00:00:00Z"
-
-agera = eoconn.load_stac(
-        "https://stac.openeo.vito.be/collections/agera5_daily",
-        spatial_extent=SPATIAL_EXTENT,
-        temporal_extent=AGERA_TEMPORAL_EXTENT, 
-    )
-agera = agera.filter_bands(bands=["2m_temperature_mean", "dewpoint_temperature_mean", "solar_radiation_flux"])
-agera = agera.rename_labels(dimension="bands", target=["temperature-mean", "dewpoint-temperature", "solar-radiation-flux"])
-
-geopotential = eoconn.load_stac(
-        "https://artifactory.vgt.vito.be/artifactory/auxdata-public/geopotential.json",
-        spatial_extent=SPATIAL_EXTENT,
-        bands=["geopotential"]
-    )
-geopotential.result_node().update_arguments(featureflags={"tilesize": 1})
-geopotential.metadata = geopotential.metadata.add_dimension(
-    "t", label=first_date, type="temporal"
-)
-
-dem = eoconn.load_collection("COPERNICUS_30", spatial_extent=SPATIAL_EXTENT)
-if dem.metadata.has_temporal_dimension():
-    dem = dem.reduce_dimension(dimension="t", reducer="max")
-
-dem = dem.add_dimension(
-    name='t',
-    label=first_date,
-    type='temporal'
-)
-
-agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
-
-
-
-sca = sca.rename_labels(dimension="bands", target=["sca"])
-
-agera_downscaled.execute_batch(
-        title="input_cube_swe",
-        job_options=JOB_OPTIONS
-    )
+#%%
 
 # %%
 
