@@ -124,7 +124,7 @@ def downscale_temperature_humidity(agera_cube, elevation_cube, geopotential_cube
         dimension="bands",
         process=lambda x: downscale_t_dewpoint(x, lapse_rate, temp_index="t0", dem_index="DEM")
     )
-    return downscaled
+    return downscaled.rename_labels(dimension="bands", target=["temperature_downscaled", "relative_humidity"])
 
 
 def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
@@ -140,12 +140,16 @@ def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
         
     Returns:
         DataCube with topographically corrected shortwave radiation
+
     """
+    solar_flux = agera.filter_bands(["solar-radiation-flux"])
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     
-    agera_with_sunpos = agera.apply_dimension(dimension="bands", process=compute_solarposition)
+    solar_flux_with_sunpos = solar_flux.apply_dimension(dimension="bands", process=compute_solarposition)
 
-    return agera_with_sunpos
+    return solar_flux_with_sunpos.rename_labels(dimension="bands", target= ["solar-radiation-flux", "zenith", "azimuth"])
+
+    #TODO include
 
     compute_incidence = UDF.from_file(str(INCIDENCE_ANGLE_UDF))
     radiation_with_incidence = (agera_with_sunpos.resample_cube_spatial(slope_aspect)
@@ -154,7 +158,7 @@ def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
 
     def downscale_shortwave(radiation_incidence: ProcessBuilder) -> ProcessBuilder:
         """Apply topographic correction to shortwave radiation."""
-        ssrd = radiation_incidence["shortwave"]
+        ssrd = radiation_incidence["solar-radiation-flux-downscaled"]
         incidence = radiation_incidence["incidence_angle"]
         zenith = radiation_incidence["zenith"]
 
