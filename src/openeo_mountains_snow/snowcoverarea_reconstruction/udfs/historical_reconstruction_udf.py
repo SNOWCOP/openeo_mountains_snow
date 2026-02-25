@@ -250,7 +250,7 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
 
     
 
-        if checkpoint:
+        #if checkpoint:
             #checkpoint.save(reconstructed_hr, name="reconstructed_hr", day=day_idx, iter=iteration, stage="hr")
 
         del reconstructed_hr
@@ -278,7 +278,7 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
         update_mask_scf = cloud_mask & (reconstructed_scf != NO_DATA) 
         snow_map[update_mask_scf] = reconstructed_scf[update_mask_scf]
 
-        if checkpoint:
+        #if checkpoint:
             #checkpoint.save(reconstructed_scf, name="reconstructed_scf", day=day_idx, iter=iteration, stage="scf")
         
         del reconstructed_scf
