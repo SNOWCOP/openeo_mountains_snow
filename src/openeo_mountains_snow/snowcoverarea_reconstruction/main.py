@@ -27,12 +27,10 @@ def main():
     # Authentication & Setup
     # ==============================
     
-    print("Authenticating with openEO...")
     eoconn = openeo.connect(BACKEND, auto_validate=False)
     eoconn.authenticate_oidc()
     
     # Initialize S3 manager for checkpoints
-    print("Setting up S3 credentials...")
     s3_manager = S3Manager()
     s3_manager.authenticate()
     s3_manager.print_credentials_info()
@@ -159,7 +157,6 @@ def main():
     )
     
     agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
-    agera_downscaled = agera_downscaled.rename_labels(dimension="bands", target=["temperature_downscaled", "relative_humidity"])
 
 
     # ==============================
@@ -181,14 +178,20 @@ def main():
     )
 
     shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
-    shortwave_rad_cube = shortwave_rad_cube.rename_labels(dimension="bands", target= ["solar-radiation-flux-downscaled", "zenith", "azimuth"])
    
     # ==============================
     # 7. Merge All Results
     # ==============================
-    total_cube = sca.merge_cubes(agera_downscaled)
+
+    agera_downscaled = agera_downscaled.resample_cube_spatial(target=sca, method="bilinear")
+    shortwave_rad_cube = shortwave_rad_cube.resample_cube_spatial(target=sca, method="bilinear")
+    total_cube = sca.merge_cubes(agera_downscaled).merge_cubes(shortwave_rad_cube)
+
     swe_udf = openeo.UDF.from_file(
-        str(SWE_RECONSTRUCTION_UDF)
+        str(SWE_RECONSTRUCTION_UDF),
+        context={
+            "checkpoint_config": checkpoint_config
+        }
     )
     
     swe = total_cube.apply_neighborhood(
@@ -196,18 +199,20 @@ def main():
         size=[
             {"dimension": "x", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
             {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
+            
         ]
     )
+
+    swe = swe.rename_labels(dimension="bands", target=["swe"])
     # ==============================
     # 8. Execute Batch Job
     # ==============================
     
-    total_cube.execute_batch(
+    swe.execute_batch(
         title="input_cube_swe",
         job_options=JOB_OPTIONS
     )
     
-
 
 if __name__ == "__main__":
     main()
@@ -234,3 +239,4 @@ print(data["type"], len(data["features"]))
 
 
 #%%
+

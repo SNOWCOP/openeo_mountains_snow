@@ -38,8 +38,8 @@ RESOLUTION = 20.  # Output resolution in meters
 SPATIAL_EXTENT = {
     "west": 631800.,
     "south": 5170700.,
-    "east": 635800.,
-    "north": 5174200.,
+    "east": 637800.,
+    "north": 5176200.,
     "crs": f"EPSG:{CRS}"
 }
 

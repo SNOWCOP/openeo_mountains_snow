@@ -43,7 +43,7 @@ def apply_datacube(cube: xarray.DataArray, context) -> xarray.DataArray:
 
     longitude = cube.coords["x"].mean().item()
     latitude = cube.coords["y"].mean().item()
-    inspect(data=longitude, message=f"Longitude: {longitude}")
+    inspect(data=longitude, message=f"Longitude: {longitude}") #check for correctness
     inspect(data=latitude, message=f"Latitude: {latitude}")
 
     chunk_timestamp: datetime.datetime = cube.attrs["t"]

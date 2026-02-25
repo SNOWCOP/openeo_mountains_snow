@@ -2,26 +2,149 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 import logging
+import boto3
+import tempfile
+import os
+
 
 logger = logging.getLogger(__name__)
+
+class Checkpoint:
+    def __init__(self, access_key, secret_key, token, bucket, prefix, endpoint):
+        self.bucket = bucket
+        self.prefix = prefix.rstrip('/')
+        self.t_coords = None
+        self.y_coords = None
+        self.x_coords = None
+
+        self.s3 = boto3.client(
+            's3',
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            aws_session_token=token,
+            endpoint_url=endpoint
+        )
+        logger.info(f"S3 checkpoint ready: {bucket}/{prefix}")
+
+    def set_reference(self, cube):
+        """Store reference coordinates from the input cube."""
+        if 't' in cube.coords:
+            self.t_coords = cube.t.values
+        if 'y' in cube.coords:
+            self.y_coords = cube.y.values
+        if 'x' in cube.coords:
+            self.x_coords = cube.x.values
+
+    def save(self, data, name, **tags):
+        """
+        Save data to S3 as NetCDF.
+        Works with numpy arrays or xarray DataArrays.
+        If numpy, uses stored coordinates to build a DataArray.
+        """
+        # Convert numpy to DataArray if possible
+        if isinstance(data, np.ndarray):
+            if self.y_coords is None or self.x_coords is None:
+                logger.warning("No reference coordinates. Call set_reference() first.")
+                return
+            # If 3D (t,y,x) and we have t coords
+            if data.ndim == 3 and self.t_coords is not None:
+                data = xr.DataArray(
+                    data,
+                    dims=('t', 'y', 'x'),
+                    coords={'t': self.t_coords, 'y': self.y_coords, 'x': self.x_coords}
+                )
+            elif data.ndim == 2:
+                data = xr.DataArray(
+                    data,
+                    dims=('y', 'x'),
+                    coords={'y': self.y_coords, 'x': self.x_coords}
+                )
+            else:
+                logger.error(f"Cannot save numpy array with shape {data.shape} – expected 2D or 3D")
+                return
+
+        if not isinstance(data, xr.DataArray):
+            logger.error(f"Expected DataArray, got {type(data)}")
+            return
+
+        # Build filename from tags, coordinates, and shape
+        parts = [name]
+        for key in sorted(tags.keys()):
+            val = tags[key]
+            if isinstance(val, int):
+                parts.append(f"{key}{val:03d}")
+            else:
+                parts.append(f"{key}_{val}")
+
+        # Add spatial anchor (top-left corner) for quick identification
+        if 'x' in data.coords and 'y' in data.coords:
+            x_min = int(data.x.values.min())
+            y_min = int(data.y.values.min())
+            parts.append(f"x{x_min}_y{y_min}")
+
+        # Add temporal anchor if present
+        if 't' in data.coords and len(data.t) > 0:
+            t_str = pd.to_datetime(data.t.values[0]).strftime('%Y%m%d')
+            parts.append(f"t{t_str}")
+
+        # Add shape
+        shape_str = "_".join(f"{d}{s}" for d, s in zip(data.dims, data.shape))
+        parts.append(shape_str)
+
+        filename = "_".join(parts) + ".nc"
+        key = f"{self.prefix}/{filename}"
+
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.nc') as tmp:
+                tmp_path = tmp.name
+                data.to_dataset(name='data').to_netcdf(tmp_path, format='NETCDF4', engine='netcdf4')
+
+            self.s3.upload_file(Filename=tmp_path, Bucket=self.bucket, Key=key)
+            os.unlink(tmp_path)
+            logger.info(f"✓ {filename}")
+            return filename
+        except Exception as e:
+            logger.error(f"✗ {filename}: {e}")
+            if 'tmp_path' in locals() and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            return None
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
     Compute SWE from a merged cube containing:
     - band 0: SCA (snow cover area, with values 0, 100, 205)
     - band 1: temperature (from agera, °C)
-    - band 2: shortwave radiation (W/m² or MJ/m²/day)
-    - band 3: precipitation (from ERA5, mm/day)
+    - band 2: humidity (from agera, %)
+    - band 3: shortwave radiation (W/m² or MJ/m²/day)
     
     The cube is expected to have dimensions (time, bands, y, x)
     """
+
+    cfg = context.get("checkpoint_config")
+    if cfg:
+        chk = Checkpoint(
+            access_key=cfg.get('access_key', ''),
+            secret_key=cfg.get('secret_key', ''),
+            token=cfg.get('token', ''),
+            bucket=cfg.get('bucket', 'openeo-artifacts-waw3-1'),
+            prefix=cfg.get('prefix', ''),
+            endpoint=cfg.get('endpoint', 'https://s3.waw3-1.openeo.v1.dataspace.copernicus.eu'),
+        )
+        chk.set_reference(cube)
+        # Save input cube metadata (full shape and coordinates)
+        chk.save(cube.isel(bands=0).drop_vars('bands'), name="input_sca", stage="input")
+    else:
+        chk = None
+        logger.info("No checkpoint config – running without S3 saves")
     
-    logger.info(f"Computing SWE from cube with shape {cube.shape}")
+    # Log full details about this tile
+    logger.info(f"Input cube shape: {cube.shape}, dims: {cube.dims}")
+    
     
     # Extract bands (assuming this order - adjust indices if needed)
     sca = cube.isel(bands=0)  # SCA band
     ta = cube.isel(bands=1)   # temperature band
-    era5 = cube.isel(bands=2)    # precipitation band
+    era5 = cube.isel(bands=2)    # humidity band
     sw = cube.isel(bands=3)    # shortwave radiation band
     
     
@@ -41,13 +164,15 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     
     # Step 4: Compute SWE
     swe = get_swe(sca, melt, status, delta, sca_sum_xr, tot_acc_xr)
+    swe = np.expand_dims(swe, axis=1)  # Add bands dimension at position 1
     
-    # Convert to xarray DataArray with proper dimensions
+    # Create result with same dimension order as input
     result = xr.DataArray(
         swe,
-        dims=("t", "y", "x"),
+        dims=("t", "bands", "y", "x"),  # Match input dimension order
         coords={
             "t": cube.coords["t"].values,
+            "bands": ["swe"],  # Single band
             "y": cube.coords["y"].values,
             "x": cube.coords["x"].values
         },
@@ -58,11 +183,29 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
             "long_name": "Snow Water Equivalent"
         }
     )
-    
-    # Add bands dimension for openEO compatibility (insert after t dimension)
-    result = result.expand_dims(bands=["swe"], axis=1)
-    
-    logger.info("SWE computation complete")
+
+    if chk:
+        # Loop over bands
+        for band_idx, band_name in enumerate(result.bands.values):
+            # Loop over time
+            for t_idx in range(result.shape[0]):
+                # Extract single timestep for this band
+                data_slice = result.isel(t=t_idx, bands=band_idx)  # Shape: (y, x)
+                
+                # Get date string
+                date_str = pd.Timestamp(result.t.values[t_idx]).strftime('%Y%m%d')
+                
+                # Save with band name and time in filename
+                chk.save(
+                    data_slice,
+                    name=band_name,
+                    stage="output",
+                    band=band_name,
+                    time_idx=t_idx,
+                    date=date_str
+                )
+
+    logger.info(f"Output SWE cube shape: {result.shape}, dims: {result.dims}")
     return result
 
 
@@ -187,7 +330,6 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
     # === Time iteration over SCA ===
     for i in range(len(time) - 1):
         date = pd.Timestamp(time[i + 1].values).strftime("%Y-%m-%d")
-        logger.info(f"Processing {i}: {date}")
     
         # Snow cover for previous and current day
         snow_prev = SCA.isel(t=i).values
@@ -273,7 +415,7 @@ def get_swe(SCA, melt, status, delta, sca_sum_xr, tot_acc_xr):
     Returns
     -------
     swe : np.ndarray
-        Snow Water Equivalent array (time, y, x)
+        Snow Water Equivalent array (band, time, y, x)
     """
 
     dim = tuple(SCA.shape)  # (t, y, x)
@@ -281,7 +423,6 @@ def get_swe(SCA, melt, status, delta, sca_sum_xr, tot_acc_xr):
 
     for i in range(len(SCA['t']) - 1):
         date = pd.Timestamp(SCA['t'][i + 1].values).strftime("%Y-%m-%d")
-        logger.info(f"Processing SWE {i}: {date}")
 
         melt_curr = melt.isel(t=i).values.copy()
         snow_curr = SCA.isel(t=i+1).values
@@ -295,7 +436,7 @@ def get_swe(SCA, melt, status, delta, sca_sum_xr, tot_acc_xr):
         dsca[mask_melt] = 0  # zero where not accumulating
 
         # Update SWE
-        swe[i+1][mask_acc] = swe[i][mask_acc] + dsca[mask_acc] * tot_acc_xr.isel(time=i+1).values[mask_acc]
+        swe[i+1][mask_acc] = swe[i][mask_acc] + dsca[mask_acc] * tot_acc_xr.isel(t=i+1).values[mask_acc]
         swe[i+1][mask_melt] = swe[i][mask_melt] - melt_curr[mask_melt]
 
         # Invalid snow codes (cloud / no data)
@@ -353,7 +494,6 @@ def get_melt_pomeroy(SCA, ta, era5, SW, status, TF=1.2, SRF=0.2256):
     # --- Time loop ---
     for i in range(len(time) - 1):
         date = pd.Timestamp(time[i + 1].values).strftime("%Y-%m-%d")
-        logger.info(f"Processing melt {i}: {date}")
 
         # Previous albedo
         alb_prev = albs[i, :, :].copy()
@@ -365,7 +505,7 @@ def get_melt_pomeroy(SCA, ta, era5, SW, status, TF=1.2, SRF=0.2256):
         SW_curr = SW.isel(t=i+1).values
 
         # Precipitation for current day
-        pr_curr = era5.isel(time=i+1).values.copy()
+        pr_curr = era5.isel(t=i+1).values.copy()
         pr_curr = np.where(status_curr == 1, pr_curr, 0)
 
         # Compute only where snow cover > 0
