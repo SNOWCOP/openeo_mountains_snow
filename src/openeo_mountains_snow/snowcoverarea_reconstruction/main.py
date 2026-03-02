@@ -30,12 +30,6 @@ def main():
     eoconn = openeo.connect(BACKEND, auto_validate=False)
     eoconn.authenticate_oidc()
     
-    # Initialize S3 manager for checkpoints
-    s3_manager = S3Manager()
-    s3_manager.authenticate()
-    s3_manager.print_credentials_info()
-    
-    
     # ==============================
     # 1. Compute SCF Masks & Conditional Probabilities
     # ==============================
@@ -96,7 +90,7 @@ def main():
         type='temporal'
     )
     
-    sca_inputcube = (hr_snow.merge_cubes(hr_scf)
+    sca = (hr_snow.merge_cubes(hr_scf)
                      .merge_cubes(cp_with_time)
                      .merge_cubes(occurences_with_time))
 
@@ -113,7 +107,7 @@ def main():
         }
     )
     
-    sca = sca_inputcube.apply_neighborhood(
+    sca = sca.apply_neighborhood(
         process=sca_udf,
         size=[
             {"dimension": "x", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
@@ -121,12 +115,14 @@ def main():
         ]
     )
     
-    sca = sca.rename_labels(dimension="bands", target=["sca"])
+    if sca.metadata.has_band_dimension():
+        sca = sca.rename_labels(dimension="bands", target=["sca"])
+    else:
+        sca = sca.add_dimension(name="bands", label="sca", type="bands")
 
     # ==============================
     # 5. Load and Downscale Climate Data
     # ==============================
-    
     
     dem = eoconn.load_collection("COPERNICUS_30", spatial_extent=SPATIAL_EXTENT)
     if dem.metadata.has_temporal_dimension():
@@ -209,7 +205,7 @@ def main():
     
     
     swe.execute_batch(
-        title="input_cube_swe",
+        title="swe",
         job_options=JOB_OPTIONS
     )
     

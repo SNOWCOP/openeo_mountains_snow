@@ -1,10 +1,7 @@
 
 
 import xarray as xr
-import boto3
 import logging
-import tempfile
-import os
 import numpy as np
 import pandas as pd
 import gc
@@ -39,27 +36,15 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     n_ranges = len(SCF_RANGES)
     total_days = cube.shape[0]
 
-    if total_days <= n_days:
-        logger.error(
-            f"Insufficient data: total days {total_days} <= requested reconstruction days {n_days}. "
-            "Cannot perform reconstruction. Returning NO_DATA."
-        )
-        # Use the last n_days time coordinates (or all if fewer exist)
-        t_coords = cube.coords["t"].values[-n_days:] if n_days > 0 else []
-        # Create result array filled with NO_DATA (255)
-        result = xr.DataArray(
-            np.full((n_days, 1, len(cube.y), len(cube.x)), NO_DATA, dtype=np.uint8),
-            dims=("t", "bands", "y", "x"),
-            coords={
-                "t": t_coords,
-                "bands": ["reconstructed_snow"],
-                "y": cube.coords["y"].values,
-                "x": cube.coords["x"].values,
-            }
-        )
-        return result
+    if total_days < 1:
+        raise ValueError("Cube must contain at least one time step ")
 
-    hist_end = total_days - n_days
+
+    n_days_actual = min(n_days, total_days - 1)
+    if n_days_actual < n_days:
+        logger.warning(f"Only {n_days_actual} of {n_days} requested days can be reconstructed since the patch has only {total_days} time steps")
+    
+    hist_end = total_days - n_days_actual
 
     historical_cp_maps = cube.isel(t=0, bands=slice(2, 2 + n_ranges)).values.astype(np.uint8)
     historical_occ_maps = cube.isel(t=0, bands=slice(2 + n_ranges, 2 + 2 * n_ranges)).values.astype(np.uint8)
@@ -69,13 +54,14 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     np.nan_to_num(historical_occ_maps, nan=NO_DATA, copy=False)
     np.nan_to_num(historical_snow, nan=NO_DATA, copy=False)
 
+    
+    coords_t = cube.coords["t"].values[hist_end:hist_end + n_days_actual]
     coords_y = cube.coords["y"].values
     coords_x = cube.coords["x"].values
-    coords_t = cube.coords["t"].values[hist_end:hist_end + n_days]
 
 
     reconstructed_days  = []
-    for day_idx in range(n_days):
+    for day_idx in range(n_days_actual):
 
         snow_map  = cube.isel(t=hist_end + day_idx, bands=0).values.astype(np.uint8)
         scf_map  = cube.isel(t=hist_end + day_idx, bands=1).values.astype(np.uint8)
@@ -105,11 +91,14 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
 
     # Build result
     reconstructed_snow = np.stack(reconstructed_days, axis=0)
+    reconstructed_snow = np.expand_dims(reconstructed_snow, axis=1)
     del reconstructed_days
     gc.collect()
 
+     # (n_days, 1, y, x)
+
     result = xr.DataArray(
-        np.expand_dims(reconstructed_snow, axis=1),
+        reconstructed_snow,
         dims=("t", "bands", "y", "x"),
         coords={
             "t": coords_t,
@@ -118,6 +107,7 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
             "x": coords_x
         }
     )
+
     return result
 
 
