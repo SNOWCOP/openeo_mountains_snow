@@ -29,115 +29,9 @@ MAX_ITERATIONS = 1
 
 logger = logging.getLogger(__name__)
 
-class Checkpoint:
-    
-    def __init__(self, access_key, secret_key, token, bucket, prefix, endpoint):
-        self.bucket = bucket
-        self.prefix = prefix.rstrip('/')
-        self.y_coords = None
-        self.x_coords = None
-        self.prefix = f"{self.prefix}"
-
-        
-        self.s3 = boto3.client(
-            's3',
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            aws_session_token=token,
-            endpoint_url=endpoint
-        )
-        logger.info(f"S3 checkpoint ready: {bucket}/{prefix}")
-    
-    def set_reference(self, cube):
-        """Store reference coordinates as plain numpy arrays (safe even after cube is closed)."""
-        if 'y' in cube.coords:
-            self.y_coords = cube.y.values
-        if 'x' in cube.coords:
-            self.x_coords = cube.x.values
-    
-    def save(self, data, **tags):
-        """Save data to S3 as NetCDF. Works with numpy arrays or xarray DataArrays."""
-
-        if isinstance(data, np.ndarray):
-            if self.y_coords is None or self.x_coords is None:
-                logger.warning("No reference coordinates. Call set_reference() first.")
-                return
-            data = xr.DataArray(
-                data,
-                dims=('y', 'x'),
-                coords={'y': self.y_coords, 'x': self.x_coords}
-            )
-        
-
-        if isinstance(data, xr.DataArray):
-            data = data.load()
-        else:
-            raise TypeError(f"Expected numpy.ndarray or xr.DataArray, got {type(data)}")
-        
-        parts = []
-        for key in sorted(tags.keys()):
-            val = tags[key]
-            if isinstance(val, int):
-                parts.append(f"{key}{val:03d}")
-            else:
-                parts.append(f"{key}_{val}")
-        
-        if 'x' in data.coords and 'y' in data.coords:
-            x_min = int(data.x.min())
-            y_min = int(data.y.min())
-            parts.append(f"x{x_min}_y{y_min}")
-        
-        if 't' in data.coords and len(data.t) > 0:
-            t_str = pd.to_datetime(data.t.values[0]).strftime('%Y%m%d')
-            parts.append(f"t{t_str}")
-        
-        parts.append("_".join(f"{d}{s}" for d, s in data.sizes.items()))
-        filename = "_".join(parts) + ".nc"
-        key = f"{self.prefix}/{filename}"
-        
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.nc') as tmp:
-                tmp_path = tmp.name
-            
-                data.to_dataset(name='data').to_netcdf(
-                    tmp_path,
-                    format='NETCDF4',
-                    engine='netcdf4'
-                )
-    
-            # Upload to S3 using boto3
-            self.s3.upload_file(
-                Filename=tmp_path,
-                Bucket=self.bucket,
-                Key=key
-            )
-            
-            # Clean up
-            os.unlink(tmp_path)
-            logger.info(f"✓ {filename}")
-            return filename
-            
-        except Exception as e:
-            logger.error(f"✗ {filename}: {e}")
-            if 'tmp_path' in locals() and os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-            return None
-
-
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
-
-    cfg = context.get("checkpoint_config", {})
     
-    chk = Checkpoint(
-        access_key=cfg.get('access_key', ''),
-        secret_key=cfg.get('secret_key', ''),
-        token=cfg.get('token', ''),
-        bucket=cfg.get('bucket', 'openeo-artifacts-waw3-1'),
-        prefix=cfg.get('prefix', ''),
-        endpoint=cfg.get('endpoint', 'https://s3.waw3-1.openeo.v1.dataspace.copernicus.eu'),
-    )
-    chk.set_reference(cube)
 
     logger.info(f"Reconstructing cube with shape {cube.shape}")
 
@@ -146,8 +40,24 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     total_days = cube.shape[0]
 
     if total_days <= n_days:
-        logger.warning(f"Not enough data: {total_days} total, {n_days} requested")
-        return cube.isel(t=slice(-n_days, None))
+        logger.error(
+            f"Insufficient data: total days {total_days} <= requested reconstruction days {n_days}. "
+            "Cannot perform reconstruction. Returning NO_DATA."
+        )
+        # Use the last n_days time coordinates (or all if fewer exist)
+        t_coords = cube.coords["t"].values[-n_days:] if n_days > 0 else []
+        # Create result array filled with NO_DATA (255)
+        result = xr.DataArray(
+            np.full((n_days, 1, len(cube.y), len(cube.x)), NO_DATA, dtype=np.uint8),
+            dims=("t", "bands", "y", "x"),
+            coords={
+                "t": t_coords,
+                "bands": ["reconstructed_snow"],
+                "y": cube.coords["y"].values,
+                "x": cube.coords["x"].values,
+            }
+        )
+        return result
 
     hist_end = total_days - n_days
 
@@ -181,7 +91,6 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
             hist_cp_maps=historical_cp_maps,
             hist_occ_maps=historical_occ_maps,
             scf_ranges=SCF_RANGES,
-            checkpoint=chk,
             day_idx=day_idx
         )
         reconstructed_days.append(reconstructed)  # reconstructed is already uint8
@@ -212,7 +121,7 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     return result
 
 
-def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps, scf_ranges, day_idx = None, checkpoint=None):
+def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps, scf_ranges, day_idx = None):
     """
     Iterative reconstruction following the original hist_rec pattern.
     Calls HR and SCF reconstruction functions in a loop.
@@ -248,11 +157,6 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
         snow_map[update_mask_hr] = reconstructed_hr[update_mask_hr]
         logger.info(f"HR update non NAN {np.sum((reconstructed_hr != NO_DATA))} pixels")
 
-    
-
-        #if checkpoint:
-            #checkpoint.save(reconstructed_hr, name="reconstructed_hr", day=day_idx, iter=iteration, stage="hr")
-
         del reconstructed_hr
         del update_mask_hr
         gc.collect()
@@ -277,9 +181,6 @@ def hist_rec_iterative(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps
         # Update snow map with SCF reconstruction
         update_mask_scf = cloud_mask & (reconstructed_scf != NO_DATA) 
         snow_map[update_mask_scf] = reconstructed_scf[update_mask_scf]
-
-        #if checkpoint:
-            #checkpoint.save(reconstructed_scf, name="reconstructed_scf", day=day_idx, iter=iteration, stage="scf")
         
         del reconstructed_scf
         del update_mask_scf

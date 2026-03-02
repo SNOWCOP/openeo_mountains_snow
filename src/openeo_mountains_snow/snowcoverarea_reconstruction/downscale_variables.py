@@ -65,8 +65,10 @@ def downscale_t_dewpoint(cube: ProcessBuilder, lapse_rate, temp_index="temperatu
         ProcessBuilder with downscaled temperature and relative humidity
     """
     temperature_downscaled = cube[temp_index] - lapse_rate * (cube[dem_index] - 0)
-    rh = relative_humidity_formula(temperature_downscaled - 273.15,
-                                    cube["dewpoint-temperature"],
+    temperature_c = temperature_downscaled - 273.15
+    dewpoint_c = cube["dewpoint-temperature"] - 273.15
+    rh = relative_humidity_formula(temperature_c,
+                                    dewpoint_c,
                                     cube[dem_index], 2)
     return array_create([temperature_downscaled, rh])
 
@@ -76,7 +78,7 @@ def relative_humidity_formula(temperature_downscaled, dewpoint_temperature_coars
     
     Args:
         temperature_downscaled: Downscaled temperature in Celsius
-        dewpoint_temperature_coarse: Coarse resolution dewpoint temperature
+        dewpoint_temperature_coarse: Coarse resolution dewpoint temperature in celcius
         elevation: Elevation in meters
         month_index: Month index (0-11) to select appropriate vapor pressure coefficient
         
@@ -87,7 +89,7 @@ def relative_humidity_formula(temperature_downscaled, dewpoint_temperature_coars
     vp_coeff = vp_coeff_all[month_index]
     d_t_lapse_rate = vp_coeff * MAGNUS_C / MAGNUS_B
 
-    D_down = dewpoint_temperature_coarse - d_t_lapse_rate * (elevation - 0) - 273.15
+    D_down = dewpoint_temperature_coarse - d_t_lapse_rate * (elevation - 0)
     es = MAGNUS_A * exp((MAGNUS_B * temperature_downscaled) / (temperature_downscaled + MAGNUS_C))
     e = MAGNUS_A * exp((MAGNUS_B * D_down) / (D_down + MAGNUS_C))
     return clip(100 * e / es, 0, 100)
