@@ -80,8 +80,6 @@ JOB_OPTIONS = {
     "executor-memory": "8G",
     "executor-memoryOverhead": "500m",
     "python-memory": "15G",
-    "load_stac_apply_lcfm_improvements": True,
-    "split_strategy": "crossbackend"
 }
 
 # ==============================
