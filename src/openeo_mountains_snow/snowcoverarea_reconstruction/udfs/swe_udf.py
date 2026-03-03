@@ -20,8 +20,8 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
     
     # Log full details about this tile
-    logger.info(f"Input cube shape: {cube.shape}, dims: {cube.dims}")
-    
+    logger.info(f"swe Input cube shape: {cube.shape}, dims: {cube.dims}")
+
     
     # Extract bands (assuming this order - adjust indices if needed)
     sca = cube.isel(bands=0)  # SCA band
@@ -50,23 +50,8 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     if swe is None or swe.size == 0:
         logger.error(f"SWE computation returned empty result for tile at {cube.coords['y'].mean().values:.2f}, {cube.coords['x'].mean().values:.2f}")
         # Create a dummy result with correct shape to avoid breaking the pipeline
-        swe = np.ones((len(cube.t), len(cube.y), len(cube.x)), dtype=np.float32)*255
+        swe = np.ones((len(cube.t), len(cube.y), len(cube.x)), dtype=np.uint8)*255
 
-    # Check for unexpected shapes
-    expected_shape = (len(cube.t), len(cube.y), len(cube.x))
-    if swe.shape != expected_shape:
-        logger.error(f"SWE shape mismatch! Expected {expected_shape}, got {swe.shape}")
-        # Try to reshape or fix
-        if swe.ndim == 0:  # Scalar!
-            logger.error(f"SCALAR RESULT DETECTED! This will cause recombination failure")
-            # Expand scalar to correct shape
-            swe = np.full(expected_shape, float(swe), dtype=np.float32)
-        elif swe.ndim == 1:
-            logger.error(f"1D result with shape {swe.shape}, cannot reshape to 3D")
-            # This will cause recombination failure
-        elif swe.ndim == 2:
-            logger.error(f"2D result with shape {swe.shape}, expanding to 3D with time dimension")
-            swe = np.broadcast_to(swe, expected_shape)
 
     swe = np.expand_dims(swe, axis=1)  # Add bands dimension at position 1
     
@@ -79,18 +64,13 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
             "bands": ["swe"],  # Single band
             "y": cube.coords["y"].values,
             "x": cube.coords["x"].values
-        },
-        name="swe",
-        attrs={
-            "units": "mm",
-            "description": "Snow Water Equivalent",
-            "long_name": "Snow Water Equivalent"
         }
+
     )
 
 
     logger.info(f"Output SWE cube shape: {result.shape}, dims: {result.dims}")
-    return sca_sum_xr
+    return result
 
 
 def get_status_and_delta(ta, era5, temp_thres=1.0, prec_thres=1.0):
