@@ -36,8 +36,18 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     n_ranges = len(SCF_RANGES)
     total_days = cube.shape[0]
 
-    if total_days < 1:
-        raise ValueError("Cube must contain at least one time step ")
+    if total_days < 2:
+        logger.error("Insufficient data: need at least 2 time steps to perform any reconstruction. Returning empty cube.")
+        return xr.DataArray(
+            np.empty((0, 1, len(cube.y), len(cube.x)), dtype=np.uint8),
+            dims=("t", "bands", "y", "x"),
+            coords={
+                "t": [],
+                "bands": ["reconstructed_snow"],
+                "y": cube.coords["y"].values,
+                "x": cube.coords["x"].values,
+            }
+        )
 
 
     n_days_actual = min(n_days, total_days - 1)
