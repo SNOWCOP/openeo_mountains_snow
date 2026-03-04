@@ -70,7 +70,7 @@ def downscale_t_dewpoint(cube: ProcessBuilder, lapse_rate, temp_index="temperatu
     rh = relative_humidity_formula(temperature_c,
                                     dewpoint_c,
                                     cube[dem_index], 2)
-    return array_create([temperature_downscaled, rh])
+    return array_create([temperature_c, rh])
 
 def relative_humidity_formula(temperature_downscaled, dewpoint_temperature_coarse, elevation, month_index):
     """
@@ -129,7 +129,7 @@ def downscale_temperature_humidity(agera_cube, elevation_cube, geopotential_cube
     return downscaled.rename_labels(dimension="bands", target=["temperature_downscaled", "relative_humidity"])
 
 
-def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
+def downscale_shortwave_radiation(sw: DataCube, slope_aspect: DataCube):
     """
     Downscale shortwave radiation using solar incidence angle correction.
     
@@ -137,14 +137,15 @@ def downscale_shortwave_radiation(agera: DataCube, slope_aspect: DataCube):
     based on solar incidence angle.
     
     Args:
-        agera: AGERA5 shortwave radiation DataCube
+        sw: AGERA5 shortwave radiation DataCube (J/m^2/day)
         slope_aspect: DataCube with slope and aspect bands in radians
         
     Returns:
         DataCube with topographically corrected shortwave radiation
 
     """
-    solar_flux = agera.filter_bands(["solar-radiation-flux"])
+    solar_flux = sw.filter_bands(["solar-radiation-flux"])
+    solar_flux = solar_flux / 1000000  # Scale to MJ/m^2 if needed
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     
     solar_flux_with_sunpos = solar_flux.apply_dimension(dimension="bands", process=compute_solarposition)
