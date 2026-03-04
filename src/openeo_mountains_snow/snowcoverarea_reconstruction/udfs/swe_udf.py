@@ -24,10 +24,15 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
 
     
     # Extract bands (assuming this order - adjust indices if needed)
-    sca = cube.isel(bands=0)  # SCA band
-    ta = cube.isel(bands=1)   # temperature band
-    era5 = cube.isel(bands=2)    # humidity band
-    sw = cube.isel(bands=3)    # shortwave radiation band
+    sca  = cube.isel(bands=0)       
+    ta   = cube.isel(bands=1).isel(t=0)
+    era5 = cube.isel(bands=2).isel(t=0)
+    sw   = cube.isel(bands=3).isel(t=0)
+
+    # Expand them back to match time dimension
+    ta   = ta.expand_dims(t=sca.t).transpose("t","y","x")
+    era5 = era5.expand_dims(t=sca.t).transpose("t","y","x")
+    sw   = sw.expand_dims(t=sca.t).transpose("t","y","x")
     
     
     # Ensure precipitation is in mm/day (if ERA5 tp in meters, convert)

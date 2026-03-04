@@ -16,7 +16,6 @@ from config import (
 )
 from scf_processing import compute_scf_masks, create_modis_scf_cube
 from downscale_variables import downscale_shortwave_radiation, downscale_temperature_humidity, preprocess_low_resolution_agera
-from s3_utils import S3Manager
 from utils_gapfilling import calculate_snow
 
 
@@ -207,9 +206,9 @@ def main():
     # ==============================
     # 9. Execute Batch Job
     # ==============================
+    total_cube = total_cube.save_result(format="netCDF")
     
-    
-    swe.execute_batch(
+    total_cube.execute_batch(
         title="swe",
         job_options=JOB_OPTIONS
     )
@@ -220,5 +219,56 @@ if __name__ == "__main__":
 #%%
 
 # %%
+#%%
 
+# %%
 
+import xarray as xr
+import matplotlib.pyplot as plt
+import math
+
+# Load dataset
+path = r"C:\Users\VROMPAYH\Downloads\openEO (20).nc"
+ds = xr.open_dataset(path)
+
+# Keep only spatial variables (exclude CRS)
+variables = [
+    v for v in ds.data_vars
+    if ds[v].dims == ("t", "y", "x")
+]
+
+n_vars = len(variables)
+
+cols = 3
+rows = math.ceil(n_vars / cols)
+
+fig, axes = plt.subplots(rows, cols, figsize=(5 * cols, 5 * rows))
+axes = axes.flatten()
+
+for i, var in enumerate(variables):
+    
+    # First variable -> timestep 5
+    if i == 0:
+        data = ds[var].isel(t=5)
+        timestep_used = 5
+    else:
+        data = ds[var].isel(t=0)
+        timestep_used = 0
+
+    # Compute min/max ignoring NaNs
+    vmin = float(data.min(skipna=True))
+    vmax = float(data.max(skipna=True))
+
+    im = axes[i].imshow(data, vmin=vmin, vmax=vmax)
+    axes[i].set_title(f"{var} (t={timestep_used})")
+    axes[i].axis("off")
+
+    plt.colorbar(im, ax=axes[i])
+
+# Hide unused axes
+for j in range(n_vars, len(axes)):
+    axes[j].axis("off")
+
+plt.tight_layout()
+plt.show()
+# %%
