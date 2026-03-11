@@ -19,15 +19,19 @@ SNOW = 100
 # HR parameters
 HR_SIMILARITY_THRESHOLD = 0.5
 HR_MIN_SIMILAR_SCENES = 5
+HR_CLOUD_THRESHOLD = 0.5
 
 
 # MODIS BASED SCF RECONSTRUCTION PARAMETERS
+
+SCF_OCC_THRESHOLD = 10
+
 SCF_RANGES = [
     (0, 20), (0, 30), (10, 40), (20, 50), (30, 60),
     (40, 70), (50, 80), (60, 90), (70, 100), (80, 100)
 ]
 
-SCF_OCC_THRESHOLD = 10
+
 
 
 
@@ -145,7 +149,9 @@ def hist_rec(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps):
         snow_map,
         hist_snow,
         similarity_threshold=HR_SIMILARITY_THRESHOLD,
-        min_similar_scenes=HR_MIN_SIMILAR_SCENES
+        min_similar_scenes=HR_MIN_SIMILAR_SCENES,
+        cloud_thres = HR_CLOUD_THRESHOLD
+    
     )
     
     # Update snow map
