@@ -33,8 +33,6 @@ SCF_RANGES = [
 
 
 
-
-
 logger = logging.getLogger(__name__)
 
 
