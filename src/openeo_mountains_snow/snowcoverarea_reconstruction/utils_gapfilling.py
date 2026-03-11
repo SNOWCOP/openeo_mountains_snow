@@ -85,7 +85,7 @@ def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0)
         temporal_extent=temporal_extent,
         spatial_extent=spatial_extent,
         bands=['SCL'],
-        max_cloud_cover=cloud_prob,
+        #max_cloud_cover=cloud_prob, #TODO reactivate
     )
 
     scl = scl.resample_spatial(resolution=20, projection=32632, method="near")
