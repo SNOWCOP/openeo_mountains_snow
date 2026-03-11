@@ -195,6 +195,8 @@ def main():
         ]
     )
 
+    sca_input = sca_input.save_result(format="netCDF")
+
 
     swe = swe.rename_labels(dimension="bands", target=["swe"])
 
@@ -205,8 +207,8 @@ def main():
     # ==============================
 
     
-    sca.execute_batch(
-        title="sca_reconstruction",
+    sca_input.execute_batch(
+        title="sca_input",
         job_options=JOB_OPTIONS
     )
     
