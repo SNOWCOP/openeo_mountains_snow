@@ -11,7 +11,7 @@ from openeo import DataCube, UDF
 from openeo.processes import ProcessBuilder, array_create, exp, clip
 import numpy as np
 
-from config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
+from .config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
 
 # Vapor pressure coefficients for Northern and Southern hemispheres
 VP_COEFF_NOHEM = np.array([0.41, 0.42, 0.40, 0.39, 0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40]) / 1000.0
@@ -129,7 +129,7 @@ def downscale_temperature_humidity(agera_cube, elevation_cube, geopotential_cube
     return downscaled.rename_labels(dimension="bands", target=["temperature_downscaled", "relative_humidity"])
 
 
-def downscale_shortwave_radiation(sw: DataCube, slope_aspect: DataCube):
+def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
     """
     Downscale shortwave radiation using solar incidence angle correction.
     
@@ -137,27 +137,27 @@ def downscale_shortwave_radiation(sw: DataCube, slope_aspect: DataCube):
     based on solar incidence angle.
     
     Args:
-        sw: AGERA5 shortwave radiation DataCube (J/m^2/day)
+        sw: AGERA5 shortwave radiation DataCube (J/m^2/day) at DEM resolution
         slope_aspect: DataCube with slope and aspect bands in radians
         
     Returns:
         DataCube with topographically corrected shortwave radiation
 
     """
-    solar_flux = sw.filter_bands(["solar-radiation-flux"])
+    solar_flux = sw#.filter_bands(["solar-radiation-flux"])
     solar_flux = solar_flux / 1000000  # Scale to MJ/m^2 if needed
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     
     solar_flux_with_sunpos = solar_flux.apply_dimension(dimension="bands", process=compute_solarposition)
 
-    return solar_flux_with_sunpos.rename_labels(dimension="bands", target= ["solar-radiation-flux", "zenith", "azimuth"])
-
-    #TODO include
+    solar_flux_with_sunpos = solar_flux_with_sunpos.rename_labels(dimension="bands", target= ["solar-radiation-flux", "zenith", "azimuth"])
 
     compute_incidence = UDF.from_file(str(INCIDENCE_ANGLE_UDF))
-    radiation_with_incidence = (agera_with_sunpos.resample_cube_spatial(slope_aspect)
+    shortwave_radiation_downscaled = (solar_flux_with_sunpos
                                 .merge_cubes(slope_aspect)
                                 .apply_dimension(dimension="bands", process=compute_incidence))
+
+    return shortwave_radiation_downscaled
 
     def downscale_shortwave(radiation_incidence: ProcessBuilder) -> ProcessBuilder:
         """Apply topographic correction to shortwave radiation."""
