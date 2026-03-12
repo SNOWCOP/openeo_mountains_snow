@@ -50,7 +50,6 @@ CLOUD_PROB = 80  # Maximum cloud probability (%)
 PIXEL_RATIO = 25  # Ratio between LR and HR pixel sizes
 
 # Non-valid values configuration
-INVALID_CODES = [205, 210, 254, 255]
 INVALID_VALUE = 255
 INVALID_THRESHOLD = 10  # % invalid pixels allowed in LR pixel
 
@@ -68,8 +67,8 @@ BACKEND = "https://openeo.dataspace.copernicus.eu/"
 # Reconstruction Parameters
 # ==============================
 
-N_DAYS_TO_RECONSTRUCT = 5
-NEIGHBORHOOD_SIZE = 32
+N_DAYS_TO_RECONSTRUCT = 20
+NEIGHBORHOOD_SIZE = 128
 
 # ==============================
 # Job Configuration
@@ -93,7 +92,7 @@ MODIS_RESOLUTION = 25  # meters
 from pathlib import Path
 
 UDF_DIR = Path(__file__).parent / 'udfs'
-SCA_RECONSTRUCTION_UDF = UDF_DIR / 'historical_reconstruction_udf.py'
+SCA_RECONSTRUCTION_UDF = UDF_DIR / 'sca_udf.py'
 SWE_RECONSTRUCTION_UDF = UDF_DIR / 'swe_udf.py'
 SOLAR_POSITION_UDF = UDF_DIR / 'solar_position_udf.py'
 INCIDENCE_ANGLE_UDF = UDF_DIR / 'incidence_angle_udf.py'

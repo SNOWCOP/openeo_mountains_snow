@@ -361,7 +361,6 @@ def get_melt_pomeroy(SCA, ta, era5, SW, status, TF=1.2, SRF=0.2256):
 
     # --- Time loop ---
     for i in range(len(time) - 1):
-        date = pd.Timestamp(time[i + 1].values).strftime("%Y-%m-%d")
 
         # Previous albedo
         alb_prev = albs[i, :, :].copy()

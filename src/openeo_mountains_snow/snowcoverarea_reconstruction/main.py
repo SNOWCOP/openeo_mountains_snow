@@ -111,7 +111,12 @@ def main():
         size=[
             {"dimension": "x", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
             {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
-        ]
+        ],
+        overlap=[
+            {"dimension": "x", "value": NEIGHBORHOOD_SIZE//4, "unit": "px"},
+            {"dimension": "y", "value": NEIGHBORHOOD_SIZE//4, "unit": "px"},
+        ],
+        
     )
     
 
@@ -195,7 +200,7 @@ def main():
         ]
     )
 
-    sca_input = sca_input.save_result(format="netCDF")
+    sca = sca.save_result(format="netCDF")
 
 
     swe = swe.rename_labels(dimension="bands", target=["swe"])
@@ -207,8 +212,8 @@ def main():
     # ==============================
 
     
-    sca_input.execute_batch(
-        title="sca_input",
+    sca.execute_batch(
+        title="sca",
         job_options=JOB_OPTIONS
     )
     
