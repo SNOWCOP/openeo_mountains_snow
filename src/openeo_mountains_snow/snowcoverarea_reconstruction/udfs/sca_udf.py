@@ -18,7 +18,7 @@ SNOW = 100
 # HR parameters
 HR_SIMILARITY_THRESHOLD = 0.05
 HR_MIN_SIMILAR_SCENES = 10
-INVALID_THRESHOLD = 0.75
+INVALID_THRESHOLD = 0.50
 
 MAX_ITER = 5
 
@@ -220,7 +220,7 @@ def hist_rec(snow_map, scf_map, hist_snow, hist_cp_maps, hist_occ_maps):
         if (np.sum(update_mask_hr) + np.sum(update_mask_scf)) < 0.01 * np.sum(cloud_mask):
             logger.info(f"Iteration {iteration + 1}: Minimal updates ({np.sum(update_mask_hr) + np.sum(update_mask_scf)} pixels) - stopping iterations")
             break
-        
+
         del update_mask_scf
         del update_mask_hr
 

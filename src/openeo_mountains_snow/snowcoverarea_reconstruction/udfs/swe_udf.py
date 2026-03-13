@@ -10,20 +10,26 @@ logger = logging.getLogger(__name__)
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
-    Compute SWE from a merged cube containing:
+    Compute SWE from a merged cube containing EXACTLY 4 bands:
     - band 0: SCA (snow cover area, with values 0, 100, 205)
-    - band 1: temperature (from agera, °C)
-    - band 2: humidity (from agera, %)
-    - band 3: shortwave radiation (W/m² or MJ/m²/day)
+    - band 1: temperature_downscaled (downscaled temperature, °C)
+    - band 2: Precipitation (mm/day)
+    - band 3: shortwave-radiation-flux-downscaled (downscaled shortwave radiation, W/m² or MJ/m²/day)
     
-    The cube is expected to have dimensions (time, bands, y, x)
+    The cube is expected to have dimensions (time, bands, y, x) with exactly 4 bands.
+    No additional bands should be provided.
     """
     
     # Log full details about this tile
     logger.info(f"swe Input cube shape: {cube.shape}, dims: {cube.dims}")
-
+    logger.info(f"swe Input bands: {cube.coords['bands'].values if 'bands' in cube.coords else 'No band labels'}")
     
-    # Extract bands (assuming this order - adjust indices if needed)
+    # Verify we have exactly 4 bands
+    if cube.shape[1] != 4:  # bands dimension is at index 1
+        logger.error(f"Expected exactly 4 bands, but got {cube.shape[1]} bands. Band labels: {cube.coords.get('bands', 'Unknown').values}")
+        raise ValueError(f"SWE UDF expects exactly 4 input bands, received {cube.shape[1]}")
+    
+    # Extract bands by index (in the order: sca, temperature, humidity, shortwave radiation)
     sca  = cube.isel(bands=0)       
     ta   = cube.isel(bands=1).isel(t=0)
     era5 = cube.isel(bands=2).isel(t=0)
@@ -108,8 +114,6 @@ def get_status_and_delta(ta, era5, temp_thres=1.0, prec_thres=1.0):
     pr_reprojected : xarray.DataArray
         Precipitation reprojected to SCA grid
     """
-
-    # ERA5 tp : precipitation pr_reprojected should already be correct after merge_cube
 
    
 

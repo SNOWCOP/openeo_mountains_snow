@@ -11,7 +11,7 @@ from openeo import DataCube, UDF
 from openeo.processes import ProcessBuilder, array_create, exp, clip
 import numpy as np
 
-from .config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
+from config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
 
 # Vapor pressure coefficients for Northern and Southern hemispheres
 VP_COEFF_NOHEM = np.array([0.41, 0.42, 0.40, 0.39, 0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40]) / 1000.0
@@ -144,8 +144,14 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
         DataCube with topographically corrected shortwave radiation
 
     """
-    solar_flux = sw#.filter_bands(["solar-radiation-flux"])
-    solar_flux = solar_flux / 1000000  # Scale to MJ/m^2 if needed
+    solar_flux = sw.filter_bands(["solar-radiation-flux"])
+    
+    # Scale to MJ/m^2 if needed
+    solar_flux = solar_flux / 1000000  
+
+    # NOW convert from MJ/m²/day to W/m²
+    # 1 MJ/m²/day = 1e6 J/m² per day = 1e6 / 86400 W/m² ≈ 11.574 W/m²
+    solar_flux = solar_flux* 11.574
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     
     solar_flux_with_sunpos = solar_flux.apply_dimension(dimension="bands", process=compute_solarposition)
@@ -157,19 +163,54 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
                                 .merge_cubes(slope_aspect)
                                 .apply_dimension(dimension="bands", process=compute_incidence))
 
+    # Ensure output is properly labeled
+    shortwave_radiation_downscaled = shortwave_radiation_downscaled.rename_labels(
+        dimension="bands", target=["shortwave-radiation-flux-downscaled"]
+    )
+    
     return shortwave_radiation_downscaled
 
-    def downscale_shortwave(radiation_incidence: ProcessBuilder) -> ProcessBuilder:
-        """Apply topographic correction to shortwave radiation."""
-        ssrd = radiation_incidence["solar-radiation-flux-downscaled"]
-        incidence = radiation_incidence["incidence_angle"]
-        zenith = radiation_incidence["zenith"]
 
-        cos_i = np.clip(np.cos(np.radians(incidence)), 0, 1)
-        cosZ = np.cos(zenith)
-        # Topographic correction
-        Qsi_daily = ssrd * (cos_i / (cosZ + 1e-6))
-        return Qsi_daily
+def downscale_precipitation(precip_cube, dem_cube, geopotential_cube, gamma):
+    """
+    Downscale precipitation using a constant gamma. #TODO expand for dyanamic gamma for multiple months
+    
+    Args:
+        precip_cube: Precipitation cube in meters (after scaling)
+        dem_cube: DEM cube (single band, e.g., "DEM")
+        geopotential_cube: Geopotential cube with band "geopotential"
+        gamma: Gamma value in m^-1 (e.g., june = 0.00025)
+    
+    Returns:
+        DataCube with downscaled precipitation in mm/day
+    """
+    # Convert geopotential to elevation (m)
+    elev_coarse = geopotential_cube.band("geopotential") / 9.81
+    
+    # Resample precipitation and coarse elevation to DEM grid
+    precip_resampled = precip_cube.resample_cube_spatial(dem_cube, method="bilinear")
+    elev_coarse_resampled = elev_coarse.resample_cube_spatial(dem_cube, method="bilinear")
+    
+    
+    # Compute elevation difference
+    dz = dem_cube - elev_coarse_resampled
+    
+    # Compute scaling factor: (1 + gamma * dz) / (1 + abs(gamma * dz))
+    # Use process builder expressions
+    gamma_dz = dz * gamma
+    numerator = 1 + gamma_dz
+    denominator = 1 + abs(gamma_dz)
+    factor = numerator / denominator
+    
+    # Apply factor to precipitation
+    precip_downscaled = precip_resampled * factor
+    
+    # Convert to mm/day
+    precip_mm = precip_downscaled * 1000
+    
+    # Rename band
+    precip_mm = precip_mm.rename_labels(dimension="bands", target=["precipitation_downscaled"])
+    
+    return precip_mm
 
-    result = radiation_with_incidence.apply_dimension(dimension="bands", process=downscale_shortwave)
-    return result.rename_labels(dimension="bands", target=["shortwave_radiation_downscaled"])
+    

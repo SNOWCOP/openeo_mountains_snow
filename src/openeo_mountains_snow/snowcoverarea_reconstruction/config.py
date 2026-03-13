@@ -68,7 +68,7 @@ BACKEND = "https://openeo.dataspace.copernicus.eu/"
 # ==============================
 
 N_DAYS_TO_RECONSTRUCT = 20
-NEIGHBORHOOD_SIZE = 128
+NEIGHBORHOOD_SIZE = 64
 
 # ==============================
 # Job Configuration

@@ -15,7 +15,7 @@ from config import (
     MODIS_TEMPORAL_EXTENT, SCA_RECONSTRUCTION_UDF, SWE_RECONSTRUCTION_UDF
 )
 from scf_processing import compute_scf_masks, create_modis_scf_cube
-from downscale_variables import downscale_shortwave_radiation, downscale_temperature_humidity, preprocess_low_resolution_agera
+from downscale_variables import downscale_precipitation, downscale_shortwave_radiation, downscale_temperature_humidity, preprocess_low_resolution_agera
 from utils_gapfilling import calculate_snow
 
 
@@ -98,7 +98,6 @@ def main():
     # ==============================
     
     
-    
     sca_udf = openeo.UDF.from_file(
         str(SCA_RECONSTRUCTION_UDF),
         context={
@@ -113,8 +112,8 @@ def main():
             {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
         ],
         overlap=[
-            {"dimension": "x", "value": NEIGHBORHOOD_SIZE//4, "unit": "px"},
-            {"dimension": "y", "value": NEIGHBORHOOD_SIZE//4, "unit": "px"},
+            {"dimension": "x", "value": NEIGHBORHOOD_SIZE//2, "unit": "px"},
+            {"dimension": "y", "value": NEIGHBORHOOD_SIZE//2, "unit": "px"},
         ],
         
     )
@@ -154,10 +153,29 @@ def main():
     )
     
     agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
+    temperature_downscaled =agera_downscaled.filter_bands(bands=["temperature_downscaled"])
 
 
     # ==============================
-    # 6. Downscale Shortwave Radiation
+    # 6. Downscale precipitation
+    # ==============================
+
+
+
+    precip = eoconn.load_collection(
+                    "https://stac.openeo.vito.be/collections/agera5_daily",                     # or "ERA5-LAND"
+                    spatial_extent=SPATIAL_EXTENT,
+                    temporal_extent=AGERA_TEMPORAL_EXTENT,
+                    bands=["total_precipitation"]          # typical band name for daily total
+                    )
+    
+ 
+    gamma_june = 0.00025   # m⁻¹
+
+    precip_downscaled = downscale_precipitation(precip, dem, geopotential, gamma_june)
+
+    # ==============================
+    # 7. Downscale Shortwave Radiation
     # ==============================
     
     aspect = eoconn.load_stac(
@@ -177,11 +195,16 @@ def main():
     shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
    
     # ==============================
-    # 7. Merge All Results
+    # 7. Merge All Results for SWE Computation
     # ==============================
+    # Merge cubes in specific order to provide exactly 4 bands to SWE UDF:
+    # Band 0: sca (1 band)
+    # Band 1: temperature_downscaled (from agera_downscaled)
+    # Band 2: precipitation 
+    # Band 3: shortwave-radiation-flux-downscaled (from shortwave_rad_cube)
+    # No additional bands should be included
 
-
-    total_cube = sca.merge_cubes(agera_downscaled).merge_cubes(shortwave_rad_cube)
+    total_cube = sca.merge_cubes(temperature_downscaled).merge_cubes(precip_downscaled).merge_cubes(shortwave_rad_cube)
 
     # ==============================
     # 7. Merge All Results
@@ -200,10 +223,8 @@ def main():
         ]
     )
 
-    sca = sca.save_result(format="netCDF")
-
-
     swe = swe.rename_labels(dimension="bands", target=["swe"])
+    swe = swe.save_result(format="netCDF")
 
 
 
@@ -212,8 +233,8 @@ def main():
     # ==============================
 
     
-    sca.execute_batch(
-        title="sca",
+    swe.execute_batch(
+        title="total_cube",
         job_options=JOB_OPTIONS
     )
     
@@ -222,3 +243,48 @@ if __name__ == "__main__":
     main()
 
 # %%
+
+import rasterio
+import matplotlib.pyplot as plt
+import numpy as np
+
+path1 = r"C:\Users\VROMPAYH\Downloads\openEO_2024-08-23Z.tif"
+path2 = r"C:\Users\VROMPAYH\Downloads\openEO_2023-07-01Z.tif"
+
+# Read band 1 from first file
+with rasterio.open(path1) as src:
+    sca = src.read(1)
+
+# Read bands 2–4 from second file
+with rasterio.open(path2) as src:
+    temp = src.read(2)
+    rh = src.read(3)
+    sw = src.read(4)
+
+data = [sca, temp, rh, sw]
+
+titles = [
+    "SCA",
+    "Temperature",
+    "Precipitation",
+    "Shortwave Radiation Flux"
+]
+
+units = ["", "°C", "%", "W m$^{-2}$"]
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+for i, ax in enumerate(axes.flat):
+
+    vmin, vmax = np.percentile(data[i], (2, 98))
+    im = ax.imshow(data[i], cmap="viridis", vmin=vmin, vmax=vmax)
+
+    ax.set_title(titles[i])
+    ax.axis("off")
+
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    if units[i]:
+        cbar.set_label(units[i])
+
+plt.tight_layout()
+plt.show()
