@@ -162,17 +162,20 @@ def main():
 
 
 
-    precip = eoconn.load_collection(
+    precip = eoconn.load_stac(
                     "https://stac.openeo.vito.be/collections/agera5_daily",                     # or "ERA5-LAND"
                     spatial_extent=SPATIAL_EXTENT,
                     temporal_extent=AGERA_TEMPORAL_EXTENT,
                     bands=["total_precipitation"]          # typical band name for daily total
                     )
     
+    precip = precip.reduce_dimension(dimension='t', reducer='mean') #TODO enable multiple moths with varying precep
+    
  
     gamma_june = 0.00025   # m⁻¹
 
-    precip_downscaled = downscale_precipitation(precip, dem, geopotential, gamma_june)
+    precip_downscaled = downscale_precipitation(precip, dem, geopotential.max_time(), gamma_june)
+
 
     # ==============================
     # 7. Downscale Shortwave Radiation
@@ -224,7 +227,7 @@ def main():
     )
 
     swe = swe.rename_labels(dimension="bands", target=["swe"])
-    swe = swe.save_result(format="netCDF")
+    #swe = swe.save_result(format="netCDF")
 
 
 
@@ -234,7 +237,7 @@ def main():
 
     
     swe.execute_batch(
-        title="total_cube",
+        title="swe",
         job_options=JOB_OPTIONS
     )
     

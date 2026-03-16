@@ -8,7 +8,7 @@ topographic corrections.
 
 from pathlib import Path
 from openeo import DataCube, UDF
-from openeo.processes import ProcessBuilder, array_create, exp, clip
+from openeo.processes import ProcessBuilder, array_create, exp, clip, add, subtract, multiply, divide, absolute
 import numpy as np
 
 from config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
@@ -173,44 +173,62 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
 
 def downscale_precipitation(precip_cube, dem_cube, geopotential_cube, gamma):
     """
-    Downscale precipitation using a constant gamma. #TODO expand for dyanamic gamma for multiple months
-    
-    Args:
-        precip_cube: Precipitation cube in meters (after scaling)
-        dem_cube: DEM cube (single band, e.g., "DEM")
-        geopotential_cube: Geopotential cube with band "geopotential"
-        gamma: Gamma value in m^-1 (e.g., june = 0.00025)
-    
-    Returns:
-        DataCube with downscaled precipitation in mm/day
+    Downscale precipitation using a constant gamma.
+
+    Returns precipitation in mm/day as a single-band DataCube.
     """
-    # Convert geopotential to elevation (m)
-    elev_coarse = geopotential_cube.band("geopotential") / 9.81
-    
-    # Resample precipitation and coarse elevation to DEM grid
-    precip_resampled = precip_cube.resample_cube_spatial(dem_cube, method="bilinear")
-    elev_coarse_resampled = elev_coarse.resample_cube_spatial(dem_cube, method="bilinear")
-    
-    
-    # Compute elevation difference
-    dz = dem_cube - elev_coarse_resampled
-    
-    # Compute scaling factor: (1 + gamma * dz) / (1 + abs(gamma * dz))
-    # Use process builder expressions
-    gamma_dz = dz * gamma
-    numerator = 1 + gamma_dz
-    denominator = 1 + abs(gamma_dz)
-    factor = numerator / denominator
-    
-    # Apply factor to precipitation
-    precip_downscaled = precip_resampled * factor
-    
-    # Convert to mm/day
-    precip_mm = precip_downscaled * 1000
-    
-    # Rename band
-    precip_mm = precip_mm.rename_labels(dimension="bands", target=["precipitation_downscaled"])
-    
-    return precip_mm
+
+    # ensure input band names are predictable
+    precip_cube = precip_cube.rename_labels(dimension="bands", target=["precipitation"])
+    elev_coarse = geopotential_cube.rename_labels(dimension="bands", target=["coarse_geopotential"])
+
+    # Merge precipitation and coarse geopotential (still geopotential here)
+    merged = precip_cube.merge_cubes(elev_coarse).rename_labels(
+        dimension="bands",
+        target=["precipitation", "coarse_geopotential"]
+    )
+
+    # Resample to DEM grid and add DEM band
+    downscale_inputs = (
+        merged
+        .resample_cube_spatial(dem_cube, method="bilinear")
+        .merge_cubes(dem_cube.max_time())
+        .rename_labels(dimension="bands", target=["precipitation", "coarse_geopotential", "DEM"])
+    )
+
+    def scale_precipitation(cube):
+        precip = cube["precipitation"]
+        coarse_geo = cube["coarse_geopotential"]
+        dem = cube["DEM"]
+
+        # Convert geopotential to elevation (m)
+        # g = 9.80665 (standard gravity), or simply 9.81
+        elev_coarse = coarse_geo / 9.81 
+        precip = precip * 0.01  # apply scale
+        
+
+        # Elevation difference (DEM – coarse elevation)
+        dz = dem - elev_coarse
+
+        # γ * dz
+        gamma_dz = dz * gamma
+
+        # Factor = (1 + γ·dz) / (1 + |γ·dz|)
+        numerator = gamma_dz + 1
+        denominator = absolute(gamma_dz) + 1
+        factor = numerator / denominator
+        factor = clip(factor, 0, 1)  # Limit scaling factor to reasonable range
+
+        # Apply downscaling
+        precip_downscaled = factor * precip
+
+        # No unit conversion – precip is already in mm/day
+        return precip_downscaled
+
+    # Apply the per-pixel scaling across bands and return with a clear label
+    downscaled = downscale_inputs.apply_dimension(dimension="bands", process=lambda x: scale_precipitation(x))
+
+    # rename output band to something explicit
+    return downscaled.rename_labels(dimension="bands", target=["precipitation_downscaled_mm_day"])
 
     
