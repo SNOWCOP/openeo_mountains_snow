@@ -7,6 +7,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+NO_CLOUD_VALUE = 255
+
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     """
@@ -46,17 +48,20 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     
     # Step 1: Get status and delta
     status, delta = get_status_and_delta(ta, era5)
+
     
     # Step 2: Compute melt using Pomeroy scheme
     TF = 1.2  # melt factor mm / (°C day)
     SRF = 0.2256  # radiation melt factor
     melt = get_melt_pomeroy(sca, ta, era5, sw, status, TF=TF, SRF=SRF)
-    
+
+
     # Step 3: Compute cumulative state and accumulation
     sca_sum_xr, tot_acc_xr = compute_state_and_accumulation(sca, melt, status, delta)
-    
+
     # Step 4: Compute SWE
     swe = get_swe(sca, melt, status, delta, sca_sum_xr, tot_acc_xr)
+
 
     if swe is None or swe.size == 0:
         logger.error(f"SWE computation returned empty result for tile at {cube.coords['y'].mean().values:.2f}, {cube.coords['x'].mean().values:.2f}")
@@ -211,9 +216,23 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
         melt_curr = melt.isel(t=i).values.copy()
 
         # --- Assign snow state transitions ---
-        mask_snow = np.logical_or(snow_curr == 100, snow_curr == 205)
-        changes[i+1, :, :][mask_snow] = status.isel(t=i).values[mask_snow]
+        mask_snow_curr = np.logical_or(snow_curr == 100, snow_curr == 205)
+        mask_snow_prev = np.logical_or(snow_prev == 100, snow_prev == 205)  
 
+        
+        changes[i+1, :, :][mask_snow_curr] = status.isel(t=i).values[mask_snow_curr]
+
+        # Start of new snow period
+        mask_snow_start = np.logical_and(mask_snow_curr, ~mask_snow_prev)
+        changes[i+1, :, :][mask_snow_start] = 2
+        
+        # End of snow period (melt-out)
+        mask_snow_end = np.logical_and(~mask_snow_curr, mask_snow_prev)
+        changes[i+1, :, :][mask_snow_end] = -2
+
+
+        """
+        #TODO do we need to take clouds here as snow too?
         # Start of new snow period
         mask_snow_start = np.logical_and(snow_curr == 100, snow_prev == 0)
         changes[i+1, :, :][mask_snow_start] = 2
@@ -221,6 +240,7 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
         # End of snow period (melt-out)
         mask_snow_end = np.logical_and(snow_curr == 0, snow_prev == 100)
         changes[i+1, :, :][mask_snow_end] = -2
+        """
 
         # --- Compute total accumulation (or total melt) ---
         melt_curr[changes[i+1, :, :] > 0] = 0  # skip accumulation pixels
@@ -236,6 +256,7 @@ def compute_state_and_accumulation(SCA, melt, status, delta):
         sca_sum[i+1, :, :] = sca_sum[i, :, :] + delta_sca
         sca_sum[i+1, :, :][changes[i+1, :, :] == 0] = 0  # reset where snow-free
         sca_sum[i+1, :, :][mask_snow_start] = delta_sca[mask_snow_start]
+
 
     # --- Final masking: keep only the values when melt-out ---
     sca_sum[changes != -2] = 0
@@ -294,7 +315,6 @@ def get_swe(SCA, melt, status, delta, sca_sum_xr, tot_acc_xr):
     swe = np.zeros(dim, dtype=np.float32)
 
     for i in range(len(SCA['t']) - 1):
-        date = pd.Timestamp(SCA['t'][i + 1].values).strftime("%Y-%m-%d")
 
         melt_curr = melt.isel(t=i).values.copy()
         snow_curr = SCA.isel(t=i+1).values
@@ -312,7 +332,7 @@ def get_swe(SCA, melt, status, delta, sca_sum_xr, tot_acc_xr):
         swe[i+1][mask_melt] = swe[i][mask_melt] - melt_curr[mask_melt]
 
         # Invalid snow codes (cloud / no data)
-        swe[i+1][snow_curr > 100] = np.nan
+        swe[i+1][snow_curr > 100] = NO_CLOUD_VALUE  # e.g., 255 or np.nan depending on your choice
         swe[i+1][snow_curr == 0] = 0
 
     # Remove negative SWE values (true melt-out)

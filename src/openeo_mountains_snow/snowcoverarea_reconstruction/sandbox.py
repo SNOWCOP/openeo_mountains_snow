@@ -9,188 +9,6 @@ result = job.get_result()
 
 result.download_files('./sca_input')
 
-#%%
-import numpy as np
-import xarray as xr
-import matplotlib.pyplot as plt
-
-SCF_RANGES = [
-    (0, 20), (0, 30), (10, 40), (20, 50), (30, 60),
-    (40, 70), (50, 80), (60, 90), (70, 100), (80, 100)
-]
-
-START_X = 0
-START_Y = 0
-CHUNK_SIZE = 64
-SNOW = 100
-CLOUD = 205
-NO_DATA = 255
-
-
-n_days_actual = 10
-n_ranges = len(SCF_RANGES)
-
-path = "C:\\Git_projects\\openeo_mountains_snow\\src\\openeo_mountains_snow\\snowcoverarea_reconstruction\\sca_reconstruction.nc"
-ds = xr.open_dataset(path)
-ds = ds.set_coords(['x', 'y'])
-
-# Now slice lazily - no data is loaded yet
-ds_sliced = ds.isel(
-    x=slice(START_X, START_X + CHUNK_SIZE),
-    y=slice(START_Y, START_Y + CHUNK_SIZE)
-)
-
-# Access the data variable
-data_var = ds_sliced['__xarray_dataarray_variable__']
-
-# If you need to reorganize dimensions
-cube = data_var.rename({'variable': 'bands'})
-
-total_days = cube.shape[0]
-
-
-hist_end = total_days - n_days_actual
-
-historical_cp_maps = cube.isel(time=0, bands=slice(2, 2 + n_ranges)).values.astype(np.uint8)
-historical_occ_maps = cube.isel(time=0, bands=slice(2 + n_ranges, 2 + 2 * n_ranges)).values.astype(np.uint8)
-historical_snow = cube.isel(bands=0).values.astype(np.uint8)
-
-np.nan_to_num(historical_cp_maps, nan=NO_DATA, copy=False)
-np.nan_to_num(historical_occ_maps, nan=NO_DATA, copy=False)
-np.nan_to_num(historical_snow, nan=NO_DATA, copy=False)
-
-
-coords_t = cube.coords["time"].values[hist_end:hist_end + n_days_actual]
-coords_y = cube.coords["y"].values
-coords_x = cube.coords["x"].values
-
-
-reconstructed_days  = []
-day_idx = 7
-
-snow_map  = cube.isel(time=hist_end + day_idx, bands=0).values.astype(np.uint8)
-scf_map  = cube.isel(time=hist_end + day_idx, bands=1).values.astype(np.uint8)
-cloud_mask = (snow_map == CLOUD)
-
-plt.figure(figsize=(6, 6))
-plt.imshow(snow_map, cmap='Blues')  # adjust vmin/vmax as needed
-plt.title(f"snow_map pre_hr")
-plt.colorbar(label='Snow Cover (%)')
-plt.show()
-
-reconstructed_hr = hr_reconstruction_single(
-        snow_map,
-        historical_snow
-    )
-
-update_mask_hr = cloud_mask & (reconstructed_hr != NO_DATA)
-snow_map[update_mask_hr] = reconstructed_hr[update_mask_hr]
-
-plt.figure(figsize=(6, 6))
-plt.imshow(snow_map, cmap='Blues')  # adjust vmin/vmax as needed
-plt.title(f"snow_map post_hr")
-plt.colorbar(label='Snow Cover (%)')
-plt.show()
-
-reconstructed_scf = scf_reconstruction_single(
-    snow_map,
-    scf_map,
-    historical_cp_maps,
-    historical_occ_maps,
-    SCF_RANGES
-)
-
-plt.figure(figsize=(6, 6))
-plt.imshow(reconstructed_scf, cmap='Blues')  # adjust vmin/vmax as needed
-plt.title(f"reconstructed_scf")
-plt.colorbar(label='Snow Cover (%)')
-plt.show()
-
-
-
-# Update snow map with SCF reconstruction
-update_mask_scf = cloud_mask & (reconstructed_scf != NO_DATA) 
-snow_map[update_mask_scf] = reconstructed_scf[update_mask_scf]
-
-
-
-plt.figure(figsize=(6, 6))
-plt.imshow(reconstructed_scf, cmap='Blues')  # adjust vmin/vmax as needed
-plt.title(f"reconstructed_scf")
-plt.colorbar(label='Snow Cover (%)')
-plt.show()
-
-
-
-
-
-
-"""
-    
-    # Update snow map
-    update_mask_hr = cloud_mask & (reconstructed_hr != NO_DATA)
-    snow_map[update_mask_hr] = reconstructed_hr[update_mask_hr]
-    logger.info(f"HR update non NAN {np.sum((reconstructed_hr != NO_DATA))} pixels")
-
-    del reconstructed_hr
-    del update_mask_hr
-    gc.collect()
-            
-    # Update cloud mask after HR reconstruction
-    cloud_mask = (snow_map == CLOUD)
-    
-    # ----- Step 2: SCF-based reconstruction -----
-    if not cloud_mask.any():
-        logger.info("No clouds remaining - stopping iterations")
-        break
-        
-    # Call your scf_reconstruction function
-    reconstructed_scf = scf_reconstruction_single(
-        snow_map,
-        scf_map,
-        hist_cp_maps,
-        hist_occ_maps,
-        scf_ranges
-    )
-    
-    # Update snow map with SCF reconstruction
-    update_mask_scf = cloud_mask & (reconstructed_scf != NO_DATA) 
-    snow_map[update_mask_scf] = reconstructed_scf[update_mask_scf]
-    
-    del reconstructed_scf
-    del update_mask_scf
-    gc.collect()
-    
-logger.info(f" Completed after {iteration} iterations")
-return snow_map
-
-#check gap filling; this is also done it in a loop.
-# this is also an itteration in a loop based on this daily date thing
-
-"""
-
-#%%
-scf_map
-
-plt.figure(figsize=(6, 6))
-plt.imshow(snow_map, cmap='Blues')  # adjust vmin/vmax as needed
-plt.title(f"scf_map")
-plt.colorbar(label='Snow Cover (%)')
-plt.show()
-
-
-#%%
-
-# Define which timesteps to plot: every 30th timestep
-timesteps_to_plot = np.arange(0, total_days, 30)
-
-# Example: Plotting historical snow
-for t in timesteps_to_plot:
-    plt.figure(figsize=(6, 6))
-    plt.imshow(historical_snow[t], cmap='Blues')  # adjust vmin/vmax as needed
-    plt.title(f"Snow Cover Day {t}")
-    plt.colorbar(label='Snow Cover (%)')
-    plt.show()
 
 
 
@@ -202,14 +20,22 @@ import math
 
 # Load dataset
 path = r"C:\Users\VROMPAYH\Downloads\openEO (11).nc"
-ds = xr.open_dataset(path)
+inputs = xr.open_dataset(path)
 
-# Keep only spatial variables (exclude CRS)
-variables = [
-    v for v in ds.data_vars
-    if ds[v].dims == ("t", "y", "x")
-]
+inputs = inputs.drop_vars(["crs"])
+array = inputs.to_array(dim="bands").astype("float")
+array = array.transpose('t', 'bands', 'y', 'x')
+from udfs.swe_udf import apply_datacube
+result = apply_datacube(array, None)
 
+for i in range(result.sizes['t']):
+    plt.figure()
+    result.isel(t=i, bands=0).plot()
+    plt.title(f"time index {i}")
+    plt.show()
+
+
+#%%
 n_vars = len(variables)
 
 cols = 3

@@ -227,7 +227,7 @@ def main():
     )
 
     swe = swe.rename_labels(dimension="bands", target=["swe"])
-    #swe = swe.save_result(format="netCDF")
+    total_cube = total_cube.save_result(format="netCDF")
 
 
 
@@ -236,8 +236,8 @@ def main():
     # ==============================
 
     
-    swe.execute_batch(
-        title="swe",
+    total_cube.execute_batch(
+        title="swe_input",
         job_options=JOB_OPTIONS
     )
     
@@ -291,3 +291,7 @@ for i, ax in enumerate(axes.flat):
 
 plt.tight_layout()
 plt.show()
+
+
+#%%
+

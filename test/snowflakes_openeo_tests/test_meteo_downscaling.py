@@ -66,5 +66,6 @@ def test_shortwave_incidence_udf():
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.savefig("incidence_angle.png")
+    
 
 
