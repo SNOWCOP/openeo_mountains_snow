@@ -5,6 +5,8 @@
 # ]
 # ///
 
+
+
 import xarray
 import numpy as np
 from openeo.metadata import CubeMetadata
@@ -64,31 +66,43 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
 
         curr_NDVI_masked = apply_mask(curr_NDVI)
 
-        if curr_range[0] >= 90:
-            representative_pixels_mask_snow, representative_pixels_mask_noSnow = compute_representative_snow_pixels_high_range(
-                apply_mask(cube.sel(bands="NDSI")), apply_mask(curr_bands), apply_mask(cube.sel(bands="diff_B_NIR")),None,
-                apply_mask(cube.sel(bands="SI")), 1000)
-        else:
-            representative_pixels_mask_snow, representative_pixels_mask_noSnow  = compute_representative_snow_pixels(
-                            apply_mask(cube.sel(bands="NDSI")), curr_NDVI_masked, apply_mask(curr_bands), None, apply_mask(cube.sel(bands="B03")), 1000)
+        #find representative pixels, if there are any
+        if curr_NDVI_masked.shape[0] > 0:
+            try:
 
-        inspect(data=representative_pixels_mask_snow, message="representative_pixels_mask_snow")
-        inspect(data=representative_pixels_mask_noSnow, message="representative_pixels_mask_noSnow")
+                if curr_range[0] >= 90:
+                    representative_pixels_mask_snow, representative_pixels_mask_noSnow = compute_representative_snow_pixels_high_range(
+                        apply_mask(cube.sel(bands="NDSI")), apply_mask(curr_bands), apply_mask(cube.sel(bands="diff_B_NIR")),None,
+                        apply_mask(cube.sel(bands="SI")), 1000)
+                else:
+                    representative_pixels_mask_snow, representative_pixels_mask_noSnow  = compute_representative_snow_pixels(
+                                    apply_mask(cube.sel(bands="NDSI")), curr_NDVI_masked, apply_mask(curr_bands), None, apply_mask(cube.sel(bands="B03")), 1000)
 
-        if representative_pixels_mask_snow.shape[0] > 0 or representative_pixels_mask_noSnow.shape[0] > 0:
 
-            if representative_pixels_mask_snow.shape[0] > 0:
-                    values[~mask] += representative_pixels_mask_snow * 10
+                if representative_pixels_mask_snow.shape[0] > 0 or representative_pixels_mask_noSnow.shape[0] > 0:
 
-            if representative_pixels_mask_noSnow.shape[0] > 0:
-                    values[~mask] +=  representative_pixels_mask_noSnow * 4
+                    if representative_pixels_mask_snow.shape[0] > 0:
+                            values[~mask] += representative_pixels_mask_snow * 10
+
+                    if representative_pixels_mask_noSnow.shape[0] > 0:
+                            values[~mask] +=  representative_pixels_mask_noSnow * 4
+            except Exception as e:
+                inspect(data=str(e), message=f"Error while finding representative pixels for {curr_range} and count {sample_count} {curr_NDVI_masked.shape} {e} ")
 
     if(context.get("classify", False)):
         def reshape(v):
             return np.stack(v, axis=-1)
-        class_array, normalizer, svm, training_array = model_training_svm(reshape(curr_bands.values[:,values==10]), reshape(curr_bands.values[:,values==8]))
-        SCF_map = classify(curr_bands.values, ~mask, normalizer, svm)
-        values = SCF_map
+        try:
+            snow_representative_pixel_bands = curr_bands.values[:, values == 10]
+            #classify if there are snow pixels to begin with
+
+            if snow_representative_pixel_bands.shape[1] > 0:
+                class_array, normalizer, svm, training_array = model_training_svm(reshape(snow_representative_pixel_bands), reshape(curr_bands.values[:, values == 8]))
+
+                SCF_map = classify(curr_bands.values, ~curr_scene_valid, normalizer, svm)
+                values = SCF_map
+        except Exception as e:
+            inspect(data=str(e), message=f"Error during classification, not classifying pixels {e} {curr_bands.values[:,values==10].shape}  {curr_bands.values[:,values==8].shape}  ")
 
     cube.loc['B03'] = 0
 
@@ -138,7 +152,7 @@ def hyp_disatance(svmModel, svmMatrix):
     return svmModel.decision_function(svmMatrix)
 
 def classify(bands, valid_mask, normalizer, svm, Nprocesses = 8):
-    from joblib import Parallel, delayed
+    #from joblib import Parallel, delayed
     min_score_ns = -1
     max_score_s = 1
     Image_array_to_classify = bands[:, valid_mask].transpose()
@@ -146,9 +160,11 @@ def classify(bands, valid_mask, normalizer, svm, Nprocesses = 8):
     # Divide Samples_to_classify into blocks for parallel processing
     samplesBlocks = np.array_split(Samples_to_classify, Nprocesses, axis=0)
     # Calculate the score
-    scoreImage_arrayBlocks = Parallel(n_jobs=Nprocesses, verbose=10)(
-        delayed(hyp_disatance)(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))
-    )
+    #TODO: parallellization gives serialization issue
+    scoreImage_arrayBlocks = [hyp_disatance(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))]
+    #scoreImage_arrayBlocks = Parallel(n_jobs=Nprocesses, verbose=10)(
+     #   delayed(hyp_disatance)(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))
+    #)
     scoreImage_array = np.concatenate(scoreImage_arrayBlocks, axis=0)
     Score_map = 255 * np.ones(np.shape(valid_mask)).astype(float)
     Score_map[valid_mask] = scoreImage_array.flatten()
@@ -189,11 +205,14 @@ def model_training_svm(snow_training, no_snow_training, gamma=None):
     svm = SVC(C=2000000, kernel='rbf', gamma=best_gamma, probability=False,
               decision_function_shape='ovo', cache_size=8000)
     svm.fit(Samples_train_normalized, class_array)
-    pred = svm.predict(Samples_train_normalized)
+    #pred = svm.predict(Samples_train_normalized)
     return class_array, normalizer, svm, training_array
 
 def compute_representative_snow_pixels_high_range(curr_NDSI, curr_bands, curr_diff_B_NIR, curr_distance_idx, curr_shad_idx,
                                                   sample_count):
+    """
+    Original code in: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py
+    """
     representative_pixels_mask_snow = np.array([])
     representative_pixels_mask_noSnow = np.array([])
     diff_B_NIR_low_perc, diff_B_NIR_high_perc = np.percentile(curr_diff_B_NIR, [2, 95])
@@ -223,6 +242,9 @@ def compute_representative_snow_pixels_high_range(curr_NDSI, curr_bands, curr_di
     return representative_pixels_mask_snow, representative_pixels_mask_noSnow
 
 def compute_representative_snow_pixels(curr_NDSI, curr_NDVI, curr_bands, curr_distance_idx, curr_green, sample_count):
+    """
+    Original code: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py
+    """
     # Normalize indices and compute sun metric
     representative_pixels_mask_snow = np.array([])
     representative_pixels_mask_noSnow = np.array([])
@@ -254,6 +276,8 @@ def get_representative_pixels(bands_data, valid_mask, sample_count=50, k='auto',
     """
     Selects representative "no snow" pixels by clustering and distance to cluster centroids.
     Saves the output as a raster.
+
+    See: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py
 
     Parameters
     ----------
@@ -324,6 +348,8 @@ def get_representative_pixels(bands_data, valid_mask, sample_count=50, k='auto',
 def find_optimal_k(data, max_k=10, method="elbow", random_state=42):
     """
     Find the optimal number of clusters using the Elbow or Silhouette method.
+
+    See: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py
 
     Parameters:
     - data (array-like): The dataset to cluster.

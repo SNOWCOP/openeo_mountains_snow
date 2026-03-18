@@ -74,7 +74,7 @@ def run_openeo(cfg : DictConfig) -> None:
     aoi = json.load(open(Path(__file__).parent / "senales_wgs84.geojson"))
 
     # define time period
-    time_period = ['2023-02-01', '2023-02-28']
+    time_period = ['2022-09-01', '2023-05-01']
 
     bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
 
@@ -87,14 +87,14 @@ def run_openeo(cfg : DictConfig) -> None:
         "executor-memoryOverhead": "4G"
         #"image-name": "python311-dev"
     }
-    representative_pixels.execute_batch("representative_pixels_senales_multirange.nc", job_options=job_options)
+    representative_pixels.execute_batch("representative_pixels_senales_multirange_classified.nc", job_options=job_options)
 
 
 
 def get_udf(name):
     with (files('openeo_mountains_snow') / name).open('r') as fp:
         udf_code = fp.read()
-        return UDF( code= udf_code, runtime="Python", version="3.8", context={"classify":True})
+        return UDF( code= udf_code, runtime="Python", version="3.11", context={"classify":True})
 
 
 def snowflake_inputs_cube(aoi, time_period, connection, cfg):
@@ -104,13 +104,10 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
         cfg.sentinel2_l1c.collection,
         spatial_extent=aoi,
         temporal_extent=time_period,
-
         bands=cfg.sentinel2_l1c.bands)
     masked_s2 = sentinel2_bands.mask(mask | dem_mask)
 
     s2_with_local_angle = local_incidence_angle(masked_s2, aoi, connection, cfg)
-
-
 
 
     from openeo.processes import normalized_difference
@@ -134,23 +131,21 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
     bands_indices = s2_with_local_angle.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
         dimension="bands", target=s2_with_local_angle.metadata.band_names + ["NDVI", "NDSI", "diff_B_NIR", "SI"])
 
-
-
     return bands_indices
 
 
 def slope_aspect(aoi, connection, cfg):
-    aspect = connection.load_stac(
-        "https://stac.openeo.vito.be/collections/DEM_aspec_30m",
-        spatial_extent=aoi
-    ).reduce_dimension(dimension='t', reducer='mean')
+    dem_spacetime = connection.load_collection("COPERNICUS_30", spatial_extent=aoi)
+    dem = dem_spacetime.reduce_dimension(dimension='t', reducer='mean')
 
-    slope = connection.load_stac(
-        "https://stac.openeo.vito.be/collections/DEM_slope_30m",
-        spatial_extent=aoi
-    ).reduce_dimension(dimension='t', reducer='mean')
+    aspect = dem.aspect()
+    slope = dem.slope()
 
-    return aspect.merge_cubes(slope).rename_labels(dimension="bands", target=["aspect", "slope"])
+    aspect_slope = aspect.merge_cubes(slope).rename_labels(
+        dimension="bands", target=["aspect", "slope"]
+    )
+    return aspect_slope
+
 
 
 
