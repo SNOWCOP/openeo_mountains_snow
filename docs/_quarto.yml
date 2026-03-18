@@ -19,6 +19,10 @@ website:
     style: "floating"
     collapse-level: 2
     contents:
+      - href: index.md
+        text: Overview
+      - href: snow_cover_fraction.qmd
+        text: High resolution snow cover fraction
       - href: timeseries_reconstruction.qmd
         text: Timeseries reconstruction
       - href: snow_water_equivalent_reconstruction.qmd

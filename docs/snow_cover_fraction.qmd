@@ -1,0 +1,13 @@
+# High resolution snow cover fraction (SCF)
+
+SCF is derived from Sentinel-2 and Landsat data using an openEO variant of the [SNOWFLAKES](https://github.com/bare92/SnowFLAKES) algorithm.
+
+The method first splits the target scene into ranges based on solar incidence angles,
+which is relevant to inspect pixels with a similar illumination condition.
+
+For each range, representative snow/no-snow pixels are selected.
+
+This selection of pixels is used to train an SVM model, which is then used to estimate
+snow fraction in all other pixels.
+
+The main entrypoint is: `openeo_mountains_snow.collect_training.run_openeo`.
