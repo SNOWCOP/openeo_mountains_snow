@@ -227,7 +227,7 @@ def main():
     )
 
     swe = swe.rename_labels(dimension="bands", target=["swe"])
-    total_cube = total_cube.save_result(format="netCDF")
+    sca_input = sca_input.save_result(format="netCDF")
 
 
 
@@ -236,7 +236,7 @@ def main():
     # ==============================
 
     
-    total_cube.execute_batch(
+    sca_input.execute_batch(
         title="swe_input",
         job_options=JOB_OPTIONS
     )
