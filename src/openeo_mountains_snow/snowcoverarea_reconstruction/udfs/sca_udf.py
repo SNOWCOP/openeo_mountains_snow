@@ -277,8 +277,29 @@ def hr_reconstruction_single(snow_map,
 
     similar_indices = np.where((h_valid_counts > 0) & ((np.abs(h_scas - current_sca)/len(h_scas)) < similarity_threshold))[0] #TODO probably need agglomerated statistiscs on the difference
     logger.info(f"Found {len(similar_indices)} similar historical scenes for current SCA {current_sca:.2f} with threshold {similarity_threshold}")
+
+    # --- Debug: show current scene vs selected similar historical scenes ---
+    n_show = min(len(similar_indices), 8)  # show at most 8 similar scenes
+    n_cols = n_show + 1  # +1 for the current scene
+    fig, axes = plt.subplots(1, n_cols, figsize=(3 * n_cols, 3.5))
+    if n_cols == 1:
+        axes = [axes]
+    axes[0].set_title(f"Current\nSCA={current_sca:.1f}", fontsize=9)
+    axes[0].imshow(snow_map, cmap='viridis', vmin=0, vmax=255)
+    axes[0].axis('off')
+    for k, idx in enumerate(similar_indices[:n_show]):
+        axes[k + 1].set_title(f"Hist [{idx}]\nSCA={h_scas[idx]:.1f}", fontsize=9)
+        axes[k + 1].imshow(historical_maps[idx], cmap='viridis', vmin=0, vmax=255)
+        axes[k + 1].axis('off')
+    if len(similar_indices) == 0:
+        fig.suptitle(f"HR: no similar scenes found (need {min_similar_scenes})", fontsize=10, color='red')
+    else:
+        fig.suptitle(f"HR: {len(similar_indices)} similar scenes (showing {n_show})", fontsize=10)
+    plt.tight_layout()
+    plt.show()
+
     if len(similar_indices) < min_similar_scenes:
-        return snow_map
+        return None
 
     similar_scenes = historical_maps[similar_indices]
 

@@ -247,50 +247,6 @@ if __name__ == "__main__":
 
 # %%
 
-import rasterio
-import matplotlib.pyplot as plt
-import numpy as np
-
-path1 = r"C:\Users\VROMPAYH\Downloads\openEO_2024-08-23Z.tif"
-path2 = r"C:\Users\VROMPAYH\Downloads\openEO_2023-07-01Z.tif"
-
-# Read band 1 from first file
-with rasterio.open(path1) as src:
-    sca = src.read(1)
-
-# Read bands 2–4 from second file
-with rasterio.open(path2) as src:
-    temp = src.read(2)
-    rh = src.read(3)
-    sw = src.read(4)
-
-data = [sca, temp, rh, sw]
-
-titles = [
-    "SCA",
-    "Temperature",
-    "Precipitation",
-    "Shortwave Radiation Flux"
-]
-
-units = ["", "°C", "%", "W m$^{-2}$"]
-
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-for i, ax in enumerate(axes.flat):
-
-    vmin, vmax = np.percentile(data[i], (2, 98))
-    im = ax.imshow(data[i], cmap="viridis", vmin=vmin, vmax=vmax)
-
-    ax.set_title(titles[i])
-    ax.axis("off")
-
-    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    if units[i]:
-        cbar.set_label(units[i])
-
-plt.tight_layout()
-plt.show()
 
 
 #%%

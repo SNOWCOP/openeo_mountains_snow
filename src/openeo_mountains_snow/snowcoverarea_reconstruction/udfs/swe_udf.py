@@ -4,7 +4,6 @@ import pandas as pd
 import logging
 
 
-
 logger = logging.getLogger(__name__)
 
 NO_CLOUD_VALUE = 255
