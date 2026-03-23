@@ -1,5 +1,5 @@
 connection:
-  endpoint: "openeo-staging.dataspace.copernicus.eu"
+  endpoint: "openeo.dataspace.copernicus.eu"
 
 
 sentinel2_l2a:

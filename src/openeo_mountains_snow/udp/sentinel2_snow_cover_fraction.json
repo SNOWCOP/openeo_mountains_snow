@@ -1,0 +1,1191 @@
+{
+  "process_graph": {
+    "loadcollection1": {
+      "process_id": "load_collection",
+      "arguments": {
+        "bands": [
+          "B02",
+          "B03",
+          "B04",
+          "B08",
+          "B11",
+          "sunZenithAngles",
+          "sunAzimuthAngles"
+        ],
+        "id": "SENTINEL2_L1C",
+        "spatial_extent": {
+          "from_parameter": "spatial_extent"
+        },
+        "temporal_extent": {
+          "from_parameter": "temporal_extent"
+        }
+      }
+    },
+    "loadcollection2": {
+      "process_id": "load_collection",
+      "arguments": {
+        "bands": [
+          "SCL"
+        ],
+        "id": "SENTINEL2_L2A",
+        "spatial_extent": {
+          "from_parameter": "spatial_extent"
+        },
+        "temporal_extent": {
+          "from_parameter": "temporal_extent"
+        }
+      }
+    },
+    "reducedimension1": {
+      "process_id": "reduce_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "loadcollection2"
+        },
+        "dimension": "bands",
+        "reducer": {
+          "process_graph": {
+            "eq1": {
+              "process_id": "eq",
+              "arguments": {
+                "x": {
+                  "from_parameter": "data"
+                },
+                "y": 8
+              }
+            },
+            "eq2": {
+              "process_id": "eq",
+              "arguments": {
+                "x": {
+                  "from_parameter": "data"
+                },
+                "y": 9
+              }
+            },
+            "eq3": {
+              "process_id": "eq",
+              "arguments": {
+                "x": {
+                  "from_parameter": "data"
+                },
+                "y": 3
+              }
+            },
+            "eq4": {
+              "process_id": "eq",
+              "arguments": {
+                "x": {
+                  "from_parameter": "data"
+                },
+                "y": 10
+              }
+            },
+            "any1": {
+              "process_id": "any",
+              "arguments": {
+                "data": [
+                  {
+                    "from_node": "eq1"
+                  },
+                  {
+                    "from_node": "eq2"
+                  },
+                  {
+                    "from_node": "eq3"
+                  },
+                  {
+                    "from_node": "eq4"
+                  }
+                ]
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "loadcollection3": {
+      "process_id": "load_collection",
+      "arguments": {
+        "bands": [
+          "MAP"
+        ],
+        "id": "ESA_WORLDCOVER_10M_2021_V2",
+        "spatial_extent": {
+          "from_parameter": "spatial_extent"
+        },
+        "temporal_extent": null
+      }
+    },
+    "reducedimension2": {
+      "process_id": "reduce_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "loadcollection3"
+        },
+        "dimension": "t",
+        "reducer": {
+          "process_graph": {
+            "max1": {
+              "process_id": "max",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                }
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "reducedimension3": {
+      "process_id": "reduce_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "reducedimension2"
+        },
+        "dimension": "bands",
+        "reducer": {
+          "process_graph": {
+            "eq5": {
+              "process_id": "eq",
+              "arguments": {
+                "x": {
+                  "from_parameter": "data"
+                },
+                "y": 80
+              }
+            },
+            "any2": {
+              "process_id": "any",
+              "arguments": {
+                "data": [
+                  {
+                    "from_node": "eq5"
+                  }
+                ]
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "mergecubes1": {
+      "process_id": "merge_cubes",
+      "arguments": {
+        "cube1": {
+          "from_node": "reducedimension1"
+        },
+        "cube2": {
+          "from_node": "reducedimension3"
+        },
+        "overlap_resolver": {
+          "process_graph": {
+            "or1": {
+              "process_id": "or",
+              "arguments": {
+                "x": {
+                  "from_parameter": "x"
+                },
+                "y": {
+                  "from_parameter": "y"
+                }
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "loadcollection4": {
+      "process_id": "load_collection",
+      "arguments": {
+        "id": "COPERNICUS_30",
+        "spatial_extent": {
+          "from_parameter": "spatial_extent"
+        },
+        "temporal_extent": null
+      }
+    },
+    "reducedimension4": {
+      "process_id": "reduce_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "loadcollection4"
+        },
+        "dimension": "t",
+        "reducer": {
+          "process_graph": {
+            "max2": {
+              "process_id": "max",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                }
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "aggregatespatial1": {
+      "process_id": "aggregate_spatial",
+      "arguments": {
+        "data": {
+          "from_node": "reducedimension4"
+        },
+        "geometries": {
+          "from_parameter": "spatial_extent"
+        },
+        "reducer": {
+          "process_graph": {
+            "quantiles1": {
+              "process_id": "quantiles",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "probabilities": [
+                  0.1
+                ]
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "vectortoraster1": {
+      "process_id": "vector_to_raster",
+      "arguments": {
+        "data": {
+          "from_node": "aggregatespatial1"
+        },
+        "target": {
+          "from_node": "reducedimension4"
+        }
+      }
+    },
+    "renamelabels1": {
+      "process_id": "rename_labels",
+      "arguments": {
+        "data": {
+          "from_node": "vectortoraster1"
+        },
+        "dimension": "bands",
+        "target": [
+          "percentile10"
+        ]
+      }
+    },
+    "mergecubes2": {
+      "process_id": "merge_cubes",
+      "arguments": {
+        "cube1": {
+          "from_node": "reducedimension4"
+        },
+        "cube2": {
+          "from_node": "renamelabels1"
+        }
+      }
+    },
+    "reducedimension5": {
+      "process_id": "reduce_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "mergecubes2"
+        },
+        "dimension": "bands",
+        "reducer": {
+          "process_graph": {
+            "arrayelement1": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "index": 0
+              }
+            },
+            "arrayelement2": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "index": 1
+              }
+            },
+            "subtract1": {
+              "process_id": "subtract",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement2"
+                },
+                "y": 200
+              }
+            },
+            "lt1": {
+              "process_id": "lt",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement1"
+                },
+                "y": {
+                  "from_node": "subtract1"
+                }
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "mergecubes3": {
+      "process_id": "merge_cubes",
+      "arguments": {
+        "cube1": {
+          "from_node": "mergecubes1"
+        },
+        "cube2": {
+          "from_node": "reducedimension5"
+        },
+        "overlap_resolver": {
+          "process_graph": {
+            "or2": {
+              "process_id": "or",
+              "arguments": {
+                "x": {
+                  "from_parameter": "x"
+                },
+                "y": {
+                  "from_parameter": "y"
+                }
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "mask1": {
+      "process_id": "mask",
+      "arguments": {
+        "data": {
+          "from_node": "loadcollection1"
+        },
+        "mask": {
+          "from_node": "mergecubes3"
+        }
+      }
+    },
+    "loadcollection5": {
+      "process_id": "load_collection",
+      "arguments": {
+        "id": "COPERNICUS_30",
+        "spatial_extent": {
+          "from_parameter": "spatial_extent"
+        },
+        "temporal_extent": null
+      }
+    },
+    "reducedimension6": {
+      "process_id": "reduce_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "loadcollection5"
+        },
+        "dimension": "t",
+        "reducer": {
+          "process_graph": {
+            "mean1": {
+              "process_id": "mean",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                }
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "aspect1": {
+      "process_id": "aspect",
+      "arguments": {
+        "data": {
+          "from_node": "reducedimension6"
+        }
+      }
+    },
+    "slope1": {
+      "process_id": "slope",
+      "arguments": {
+        "data": {
+          "from_node": "reducedimension6"
+        }
+      }
+    },
+    "mergecubes4": {
+      "process_id": "merge_cubes",
+      "arguments": {
+        "cube1": {
+          "from_node": "aspect1"
+        },
+        "cube2": {
+          "from_node": "slope1"
+        }
+      }
+    },
+    "renamelabels2": {
+      "process_id": "rename_labels",
+      "arguments": {
+        "data": {
+          "from_node": "mergecubes4"
+        },
+        "dimension": "bands",
+        "target": [
+          "aspect",
+          "slope"
+        ]
+      }
+    },
+    "mergecubes5": {
+      "process_id": "merge_cubes",
+      "arguments": {
+        "cube1": {
+          "from_node": "mask1"
+        },
+        "cube2": {
+          "from_node": "renamelabels2"
+        }
+      }
+    },
+    "applydimension1": {
+      "process_id": "apply_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "mergecubes5"
+        },
+        "dimension": "bands",
+        "process": {
+          "process_graph": {
+            "arrayelement3": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B02"
+              }
+            },
+            "arrayelement4": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B03"
+              }
+            },
+            "arrayelement5": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B04"
+              }
+            },
+            "arrayelement6": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B08"
+              }
+            },
+            "arrayelement7": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B11"
+              }
+            },
+            "arrayelement8": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "sunZenithAngles"
+              }
+            },
+            "multiply1": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement8"
+                },
+                "y": 0.017453292519943295
+              }
+            },
+            "cos1": {
+              "process_id": "cos",
+              "arguments": {
+                "x": {
+                  "from_node": "multiply1"
+                }
+              }
+            },
+            "arrayelement9": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "slope"
+              }
+            },
+            "multiply2": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement9"
+                },
+                "y": 0.017453292519943295
+              }
+            },
+            "cos2": {
+              "process_id": "cos",
+              "arguments": {
+                "x": {
+                  "from_node": "multiply2"
+                }
+              }
+            },
+            "multiply3": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "cos1"
+                },
+                "y": {
+                  "from_node": "cos2"
+                }
+              }
+            },
+            "sin1": {
+              "process_id": "sin",
+              "arguments": {
+                "x": {
+                  "from_node": "multiply1"
+                }
+              }
+            },
+            "sin2": {
+              "process_id": "sin",
+              "arguments": {
+                "x": {
+                  "from_node": "multiply2"
+                }
+              }
+            },
+            "multiply4": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "sin1"
+                },
+                "y": {
+                  "from_node": "sin2"
+                }
+              }
+            },
+            "arrayelement10": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "aspect"
+              }
+            },
+            "multiply5": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement10"
+                },
+                "y": 0.017453292519943295
+              }
+            },
+            "arrayelement11": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "sunAzimuthAngles"
+              }
+            },
+            "multiply6": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement11"
+                },
+                "y": 0.017453292519943295
+              }
+            },
+            "subtract2": {
+              "process_id": "subtract",
+              "arguments": {
+                "x": {
+                  "from_node": "multiply5"
+                },
+                "y": {
+                  "from_node": "multiply6"
+                }
+              }
+            },
+            "cos3": {
+              "process_id": "cos",
+              "arguments": {
+                "x": {
+                  "from_node": "subtract2"
+                }
+              }
+            },
+            "multiply7": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "multiply4"
+                },
+                "y": {
+                  "from_node": "cos3"
+                }
+              }
+            },
+            "add1": {
+              "process_id": "add",
+              "arguments": {
+                "x": {
+                  "from_node": "multiply3"
+                },
+                "y": {
+                  "from_node": "multiply7"
+                }
+              }
+            },
+            "max3": {
+              "process_id": "max",
+              "arguments": {
+                "data": {
+                  "from_node": "add1"
+                },
+                "ignore_nodata": -1
+              }
+            },
+            "min1": {
+              "process_id": "min",
+              "arguments": {
+                "data": {
+                  "from_node": "max3"
+                },
+                "ignore_nodata": 1
+              }
+            },
+            "arccos1": {
+              "process_id": "arccos",
+              "arguments": {
+                "x": {
+                  "from_node": "min1"
+                }
+              }
+            },
+            "multiply8": {
+              "process_id": "multiply",
+              "arguments": {
+                "x": {
+                  "from_node": "arccos1"
+                },
+                "y": 57.29577951308232
+              }
+            },
+            "arraycreate1": {
+              "process_id": "array_create",
+              "arguments": {
+                "data": [
+                  {
+                    "from_node": "arrayelement3"
+                  },
+                  {
+                    "from_node": "arrayelement4"
+                  },
+                  {
+                    "from_node": "arrayelement5"
+                  },
+                  {
+                    "from_node": "arrayelement6"
+                  },
+                  {
+                    "from_node": "arrayelement7"
+                  },
+                  {
+                    "from_node": "multiply8"
+                  }
+                ]
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "renamelabels3": {
+      "process_id": "rename_labels",
+      "arguments": {
+        "data": {
+          "from_node": "applydimension1"
+        },
+        "dimension": "bands",
+        "target": [
+          "B02",
+          "B03",
+          "B04",
+          "B08",
+          "B11",
+          "local_solar_incidence_angle"
+        ]
+      }
+    },
+    "applydimension2": {
+      "process_id": "apply_dimension",
+      "arguments": {
+        "data": {
+          "from_node": "renamelabels3"
+        },
+        "dimension": "bands",
+        "process": {
+          "process_graph": {
+            "arrayelement12": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B08"
+              }
+            },
+            "arrayelement13": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B04"
+              }
+            },
+            "normalizeddifference1": {
+              "process_id": "normalized_difference",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement12"
+                },
+                "y": {
+                  "from_node": "arrayelement13"
+                }
+              }
+            },
+            "arrayappend1": {
+              "process_id": "array_append",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "NDVI",
+                "value": {
+                  "from_node": "normalizeddifference1"
+                }
+              }
+            },
+            "arrayelement14": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B03"
+              }
+            },
+            "arrayelement15": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B11"
+              }
+            },
+            "subtract3": {
+              "process_id": "subtract",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement14"
+                },
+                "y": {
+                  "from_node": "arrayelement15"
+                }
+              }
+            },
+            "add2": {
+              "process_id": "add",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement14"
+                },
+                "y": {
+                  "from_node": "arrayelement15"
+                }
+              }
+            },
+            "divide1": {
+              "process_id": "divide",
+              "arguments": {
+                "x": {
+                  "from_node": "subtract3"
+                },
+                "y": {
+                  "from_node": "add2"
+                }
+              }
+            },
+            "arrayappend2": {
+              "process_id": "array_append",
+              "arguments": {
+                "data": {
+                  "from_node": "arrayappend1"
+                },
+                "label": "NDSI",
+                "value": {
+                  "from_node": "divide1"
+                }
+              }
+            },
+            "arrayelement16": {
+              "process_id": "array_element",
+              "arguments": {
+                "data": {
+                  "from_parameter": "data"
+                },
+                "label": "B02"
+              }
+            },
+            "subtract4": {
+              "process_id": "subtract",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement16"
+                },
+                "y": {
+                  "from_node": "arrayelement12"
+                }
+              }
+            },
+            "add3": {
+              "process_id": "add",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement16"
+                },
+                "y": {
+                  "from_node": "arrayelement12"
+                }
+              }
+            },
+            "divide2": {
+              "process_id": "divide",
+              "arguments": {
+                "x": {
+                  "from_node": "subtract4"
+                },
+                "y": {
+                  "from_node": "add3"
+                }
+              }
+            },
+            "arrayappend3": {
+              "process_id": "array_append",
+              "arguments": {
+                "data": {
+                  "from_node": "arrayappend2"
+                },
+                "label": "diff_B_NIR",
+                "value": {
+                  "from_node": "divide2"
+                }
+              }
+            },
+            "subtract5": {
+              "process_id": "subtract",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement14"
+                },
+                "y": {
+                  "from_node": "arrayelement15"
+                }
+              }
+            },
+            "add4": {
+              "process_id": "add",
+              "arguments": {
+                "x": {
+                  "from_node": "arrayelement14"
+                },
+                "y": {
+                  "from_node": "arrayelement15"
+                }
+              }
+            },
+            "divide3": {
+              "process_id": "divide",
+              "arguments": {
+                "x": {
+                  "from_node": "subtract5"
+                },
+                "y": {
+                  "from_node": "add4"
+                }
+              }
+            },
+            "divide4": {
+              "process_id": "divide",
+              "arguments": {
+                "x": {
+                  "from_node": "divide3"
+                },
+                "y": {
+                  "from_node": "arrayelement14"
+                }
+              }
+            },
+            "arrayappend4": {
+              "process_id": "array_append",
+              "arguments": {
+                "data": {
+                  "from_node": "arrayappend3"
+                },
+                "label": "SI",
+                "value": {
+                  "from_node": "divide4"
+                }
+              },
+              "result": true
+            }
+          }
+        }
+      }
+    },
+    "renamelabels4": {
+      "process_id": "rename_labels",
+      "arguments": {
+        "data": {
+          "from_node": "applydimension2"
+        },
+        "dimension": "bands",
+        "target": [
+          "B02",
+          "B03",
+          "B04",
+          "B08",
+          "B11",
+          "local_solar_incidence_angle",
+          "NDVI",
+          "NDSI",
+          "diff_B_NIR",
+          "SI"
+        ]
+      }
+    },
+    "applyneighborhood1": {
+      "process_id": "apply_neighborhood",
+      "arguments": {
+        "data": {
+          "from_node": "renamelabels4"
+        },
+        "process": {
+          "process_graph": {
+            "runudf1": {
+              "process_id": "run_udf",
+              "arguments": {
+                "context": {
+                  "classify": true
+                },
+                "data": {
+                  "from_parameter": "data"
+                },
+                "runtime": "Python",
+                "udf": "# /// script\n# dependencies = [\n#   \"threadpoolctl\",\n#   \"scipy\",\n# ]\n# ///\n\n\n\nimport xarray\nimport numpy as np\nfrom openeo.metadata import CubeMetadata\nfrom openeo.udf import inspect\n\nREPRESENTATIVE_PIXEL_BAND_NAME = \"representative\"\n\ndef apply_metadata(metadata: CubeMetadata, context: dict) -> CubeMetadata:\n    \"\"\"Rename the bands by using apply metadata\n    :param metadata: Metadata of the input data\n    :param context: Context of the UDF\n    :return: Renamed labels\n    \"\"\"\n    # rename band labels\n    return metadata.rename_labels(dimension=\"bands\", target=[REPRESENTATIVE_PIXEL_BAND_NAME])\n\ndef apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:\n\n    inspect(data = cube.bands, message=\"Running representative pixel UDF\")\n\n    total_samples = context.get(\"total_samples\", 500)\n    ranges = ((0, 20), (20, 45), (45, 70), (70, 90), (90, 180))\n    solar_incidence_angle = cube.sel(bands=\"local_solar_incidence_angle\").values.astype(float)\n\n    range_samples = calculate_training_samples(solar_incidence_angle, ranges, total_samples)\n\n    curr_bands = cube.sel(bands=[\"B02\", \"B03\", \"B04\", \"B08\", \"B11\"])\n    curr_NDVI = cube.sel(bands=\"NDVI\")\n\n    curr_scene_valid = np.isnan(curr_NDVI.values.astype(float)) | np.isnan(solar_incidence_angle)\n\n    # Calculate distance from snow_sure\n    # snow_sure = (cube.sel(bands=\"NDSI\").values.astype(float) > 0.6) & (\n    #             cube.sel(bands=\"B08\").values.astype(float) > 0.45 * 10000)\n    # distance_from_snow = np.full_like(snow_sure, np.nan, dtype=np.float32)\n    #\n    # distance_from_snow[curr_scene_valid] = distance_transform_edt(~snow_sure)[curr_scene_valid]\n    # distance_from_snow = np.nan_to_num(distance_from_snow, nan=np.nanmax(distance_from_snow))\n    # distance_from_snow_normalized = (distance_from_snow - np.nanmin(distance_from_snow)) / (\n    #         np.nanmax(distance_from_snow) - np.nanmin(distance_from_snow)\n    # )\n    #TODO following original code: actual distance score is not used at all, only the elevation mask has effect???\n\n    values =  np.full_like(curr_NDVI, 0, dtype=np.float32)\n    for curr_range, sample_count in range_samples.items():\n\n        valid_angles = np.logical_and(~np.isnan(solar_incidence_angle),np.logical_and(solar_incidence_angle >= curr_range[0], solar_incidence_angle < curr_range[1]))\n        mask = np.logical_or(curr_scene_valid, ~valid_angles)\n\n        def apply_mask(values):\n            if len(values.shape) == 3:\n                masked = values.values[:, ~mask]\n            else:\n                masked = [values.values[~mask].astype(float)]\n\n            return np.stack(masked, axis=-1)\n\n        curr_NDVI_masked = apply_mask(curr_NDVI)\n\n        #find representative pixels, if there are any\n        if curr_NDVI_masked.shape[0] > 0:\n            try:\n\n                if curr_range[0] >= 90:\n                    representative_pixels_mask_snow, representative_pixels_mask_noSnow = compute_representative_snow_pixels_high_range(\n                        apply_mask(cube.sel(bands=\"NDSI\")), apply_mask(curr_bands), apply_mask(cube.sel(bands=\"diff_B_NIR\")),None,\n                        apply_mask(cube.sel(bands=\"SI\")), 1000)\n                else:\n                    representative_pixels_mask_snow, representative_pixels_mask_noSnow  = compute_representative_snow_pixels(\n                                    apply_mask(cube.sel(bands=\"NDSI\")), curr_NDVI_masked, apply_mask(curr_bands), None, apply_mask(cube.sel(bands=\"B03\")), 1000)\n\n\n                if representative_pixels_mask_snow.shape[0] > 0 or representative_pixels_mask_noSnow.shape[0] > 0:\n\n                    if representative_pixels_mask_snow.shape[0] > 0:\n                            values[~mask] += representative_pixels_mask_snow * 10\n\n                    if representative_pixels_mask_noSnow.shape[0] > 0:\n                            values[~mask] +=  representative_pixels_mask_noSnow * 4\n            except Exception as e:\n                inspect(data=str(e), message=f\"Error while finding representative pixels for {curr_range} and count {sample_count} {curr_NDVI_masked.shape} {e} \")\n\n    if(context.get(\"classify\", False)):\n        def reshape(v):\n            return np.stack(v, axis=-1)\n        try:\n            snow_representative_pixel_bands = curr_bands.values[:, values == 10]\n            #classify if there are snow pixels to begin with\n\n            if snow_representative_pixel_bands.shape[1] > 0:\n                class_array, normalizer, svm, training_array = model_training_svm(reshape(snow_representative_pixel_bands), reshape(curr_bands.values[:, values == 8]))\n\n                SCF_map = classify(curr_bands.values, ~curr_scene_valid, normalizer, svm)\n                values = SCF_map\n        except Exception as e:\n            inspect(data=str(e), message=f\"Error during classification, not classifying pixels {e} {curr_bands.values[:,values==10].shape}  {curr_bands.values[:,values==8].shape}  \")\n\n    cube.loc['B03'] = 0\n\n    if values is not None and values.shape[0] > 0:\n        cube.loc['B03'] = values\n\n    bands_to_drop = list(cube.bands.values)\n    bands_to_drop.remove(\"B03\")\n\n    cube = cube.drop_sel(bands=bands_to_drop)\n    return cube\n\ndef calculate_training_samples(solar_incidence_angle, ranges, total_samples):\n    \"\"\"\n    Calculate the number of training samples for each angle range proportional to the pixel distribution.\n\n    Parameters:\n        solar_incidence_angle (np.ndarray): 2D array representing the solar incidence angle map.\n        ranges (list of tuple): List of angle ranges (start, end).\n        total_samples (int): Total number of training samples to distribute.\n\n    Returns:\n        dict: A dictionary with ranges as keys and the number of training samples as values.\n    \"\"\"\n    # Flatten the angle map for easier processing\n    flattened_map = solar_incidence_angle.flatten()\n\n    # Initialize a dictionary to store the count for each range\n    range_pixel_counts = {r: 0 for r in ranges}\n\n    # Count pixels in each range\n    for r in ranges:\n        range_pixel_counts[r] = np.sum((flattened_map >= r[0]) & (flattened_map < r[1]))\n\n    # Calculate the total number of pixels considered\n    total_pixels = sum(range_pixel_counts.values())\n\n    # Calculate the proportion of samples for each range\n    range_samples = {\n        r: int(total_samples * (count / total_pixels)) + 20 if total_pixels > 0 else 0\n        for r, count in range_pixel_counts.items()\n    }\n\n    return range_samples\n\ndef hyp_disatance(svmModel, svmMatrix):\n    return svmModel.decision_function(svmMatrix)\n\ndef classify(bands, valid_mask, normalizer, svm, Nprocesses = 8):\n    #from joblib import Parallel, delayed\n    min_score_ns = -1\n    max_score_s = 1\n    Image_array_to_classify = bands[:, valid_mask].transpose()\n    Samples_to_classify = normalizer.transform(Image_array_to_classify)\n    # Divide Samples_to_classify into blocks for parallel processing\n    samplesBlocks = np.array_split(Samples_to_classify, Nprocesses, axis=0)\n    # Calculate the score\n    #TODO: parallellization gives serialization issue\n    scoreImage_arrayBlocks = [hyp_disatance(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))]\n    #scoreImage_arrayBlocks = Parallel(n_jobs=Nprocesses, verbose=10)(\n     #   delayed(hyp_disatance)(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))\n    #)\n    scoreImage_array = np.concatenate(scoreImage_arrayBlocks, axis=0)\n    Score_map = 255 * np.ones(np.shape(valid_mask)).astype(float)\n    Score_map[valid_mask] = scoreImage_array.flatten()\n    scoreImage_array[scoreImage_array < min_score_ns] = min_score_ns\n    scoreImage_array[scoreImage_array > max_score_s] = max_score_s\n    SCF_Image_array = (scoreImage_array * 50 + 50).astype('uint8')\n    # Create the SCF map\n    SCF_map = 255 * np.ones(np.shape(valid_mask))\n    SCF_map[valid_mask] = SCF_Image_array.flatten()\n\n    return SCF_map\n\ndef model_training_svm(snow_training, no_snow_training, gamma=None):\n    from sklearn import preprocessing\n    from sklearn.svm import SVC\n    from sklearn.metrics.pairwise import rbf_kernel\n\n    training_array = np.concatenate((snow_training, no_snow_training), axis=0)\n    class_array = np.concatenate((np.ones(snow_training.shape[0]), np.zeros(no_snow_training.shape[0])), axis=0)\n    # Rescale: standardization between 0 and 1\n    normalizer = preprocessing.StandardScaler().fit(training_array)\n    Samples_train_normalized = normalizer.transform(training_array)\n    if gamma == None:\n        # Gamma selection by examining the kernel\n        gamma_range = np.logspace(-2, 2, 100)\n        std_list = []\n        for curr_gamma in gamma_range:\n            rbf = rbf_kernel(Samples_train_normalized, Samples_train_normalized, gamma=curr_gamma)\n            std_list.append(rbf.std())\n\n        idx_max_std = np.argmax(std_list)\n        best_gamma = gamma_range[idx_max_std]\n\n        print('The best Gamma is: ' + str(best_gamma))\n\n    else:\n        best_gamma = gamma\n    svm = SVC(C=2000000, kernel='rbf', gamma=best_gamma, probability=False,\n              decision_function_shape='ovo', cache_size=8000)\n    svm.fit(Samples_train_normalized, class_array)\n    #pred = svm.predict(Samples_train_normalized)\n    return class_array, normalizer, svm, training_array\n\ndef compute_representative_snow_pixels_high_range(curr_NDSI, curr_bands, curr_diff_B_NIR, curr_distance_idx, curr_shad_idx,\n                                                  sample_count):\n    \"\"\"\n    Original code in: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py\n    \"\"\"\n    representative_pixels_mask_snow = np.array([])\n    representative_pixels_mask_noSnow = np.array([])\n    diff_B_NIR_low_perc, diff_B_NIR_high_perc = np.percentile(curr_diff_B_NIR, [2, 95])\n    shad_idx_low_perc, shad_idx_high_perc = np.percentile(curr_shad_idx, [2, 95])\n    curr_diff_B_NIR_norm = np.clip(\n        (curr_diff_B_NIR - diff_B_NIR_low_perc) / (diff_B_NIR_high_perc - diff_B_NIR_low_perc), 0, 1)\n    curr_shad_idx_norm = np.clip((curr_shad_idx - shad_idx_low_perc) / (shad_idx_high_perc - shad_idx_low_perc),\n                                 0, 1)\n    curr_score_snow_shadow = curr_diff_B_NIR_norm - curr_shad_idx_norm\n    threshold_shadow = np.percentile(curr_score_snow_shadow, 95)\n    curr_valid_snow_mask_shadow = np.logical_and.reduce(\n        (curr_score_snow_shadow >= threshold_shadow, curr_NDSI > 0.7)).flatten() #TODO add again , curr_distance_idx != 255\n    if np.sum(curr_valid_snow_mask_shadow) > 10:\n        representative_pixels_mask_snow = get_representative_pixels(curr_bands, curr_valid_snow_mask_shadow,\n                                                                    sample_count=int(sample_count / 2), k=5,\n                                                                    n_closest='auto')\n\n    threshold_shadow_no_snow = np.percentile(curr_score_snow_shadow, 5)\n    curr_valid_no_snow_mask_shadow = (curr_score_snow_shadow <= threshold_shadow_no_snow).flatten()\n\n    if np.sum(curr_valid_no_snow_mask_shadow) > 10:\n        representative_pixels_mask_noSnow = get_representative_pixels(curr_bands,\n                                                                      curr_valid_no_snow_mask_shadow,\n                                                                      sample_count=int(sample_count / 2), k=5,\n                                                                      n_closest='auto') * 2\n\n    return representative_pixels_mask_snow, representative_pixels_mask_noSnow\n\ndef compute_representative_snow_pixels(curr_NDSI, curr_NDVI, curr_bands, curr_distance_idx, curr_green, sample_count):\n    \"\"\"\n    Original code: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py\n    \"\"\"\n    # Normalize indices and compute sun metric\n    representative_pixels_mask_snow = np.array([])\n    representative_pixels_mask_noSnow = np.array([])\n\n    NDSI_low_perc, NDSI_high_perc = np.percentile(curr_NDSI[np.logical_not(np.isnan(curr_NDSI))], [1, 99])\n    NDVI_low_perc, NDVI_high_perc = np.percentile(curr_NDVI[np.logical_not(np.isnan(curr_NDVI))], [1, 99])\n    green_low_perc, green_high_perc = np.percentile(curr_green, [1, 99])\n    curr_NDSI_norm = np.clip((curr_NDSI - NDSI_low_perc) / (NDSI_high_perc - NDVI_low_perc), 0, 1)\n    curr_NDVI_norm = np.clip((curr_NDVI - NDVI_low_perc) / (NDVI_high_perc - NDVI_low_perc), 0, 1)\n    curr_green_norm = np.clip((curr_green - green_low_perc) / (green_high_perc - green_low_perc), 0, 1)\n    curr_score_snow_sun = curr_NDSI_norm - curr_NDVI_norm + curr_green_norm\n    threshold = np.percentile(curr_score_snow_sun, 95)\n    curr_valid_snow_mask = np.logical_and.reduce(\n        (curr_score_snow_sun >= threshold, curr_NDSI > 0.7)).flatten() #TODO add again , curr_distance_idx != 255\n    if np.sum(curr_valid_snow_mask) > 10:\n        representative_pixels_mask_snow = get_representative_pixels(curr_bands, curr_valid_snow_mask,\n                                                                    sample_count=int(sample_count / 2), k=5,\n                                                                    n_closest='auto')\n    curr_valid_no_snow_mask = (curr_NDSI < 0).flatten()\n    if np.sum(curr_valid_no_snow_mask) > 10:\n        representative_pixels_mask_noSnow = get_representative_pixels(curr_bands, curr_valid_no_snow_mask,\n                                                                      sample_count=int(sample_count / 2), k=10,\n                                                                      n_closest='auto') * 2\n    return representative_pixels_mask_snow, representative_pixels_mask_noSnow\n\n\n\ndef get_representative_pixels(bands_data, valid_mask, sample_count=50, k='auto', n_closest='auto'):\n    \"\"\"\n    Selects representative \"no snow\" pixels by clustering and distance to cluster centroids.\n    Saves the output as a raster.\n\n    See: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py\n\n    Parameters\n    ----------\n    bands_data : numpy.ndarray\n        3D array (bands, height, width) containing spectral data for each band.\n    valid_mask : numpy.ndarray\n        2D mask of valid pixels for selection.\n    k : int, optional\n        Number of clusters for K-means, by default 5.\n    n_closest : int, optional\n        Number of closest pixels to each centroid to select, by default 5.\n\n    Returns\n    -------\n    representative_pixels_mask : numpy.ndarray\n        2D mask with representative pixels marked as 1.\n    \"\"\"\n    from sklearn.cluster import KMeans\n    from scipy.spatial import distance\n    from sklearn.preprocessing import StandardScaler\n\n    # Extract \"valid\" pixels for clustering\n    valid_pixels = bands_data[valid_mask, :]  # Shape (pixels, bands)\n\n    # Normalize the valid pixels\n    scaler = StandardScaler()\n    normalized_pixels = scaler.fit_transform(valid_pixels)\n\n    # find optimal K\n    if k == 'auto':\n        k = find_optimal_k(normalized_pixels, max_k=10, method=\"elbow\")\n    if n_closest == 'auto':\n        n_closest = int(sample_count / k)\n\n    # Perform K-means clustering on \"no snow\" pixels\n    kmeans = KMeans(n_clusters=k, random_state=0)\n    kmeans.fit(normalized_pixels)\n\n    # Get cluster centroids and labels\n    labels = kmeans.labels_\n    centroids = kmeans.cluster_centers_\n\n    # Initialize an empty mask for representative pixels\n    representative_pixels_mask = np.zeros(valid_mask.shape, dtype='uint8')\n\n    # Find the n_closest pixels to each centroid\n    for cluster_idx in range(k):\n        # Select pixels in the current cluster\n        cluster_indices = np.where(labels == cluster_idx)[0]\n        cluster_pixels = normalized_pixels[cluster_indices]\n\n        # Compute distances to the centroid for these pixels\n        distances = distance.cdist(cluster_pixels, [centroids[cluster_idx]], 'euclidean').flatten()\n\n        # Get the indices of the n_closest pixels in the cluster\n        closest_indices = np.argsort(distances)[:n_closest]\n\n        # Map the closest indices back to the original image coordinates\n        original_indices = np.argwhere(valid_mask)[cluster_indices]\n        selected_pixels = original_indices[closest_indices]\n\n        # Set these pixels in the representative mask\n        representative_pixels_mask[selected_pixels] = 1\n\n    return representative_pixels_mask\n\n\ndef find_optimal_k(data, max_k=10, method=\"elbow\", random_state=42):\n    \"\"\"\n    Find the optimal number of clusters using the Elbow or Silhouette method.\n\n    See: https://github.com/bare92/SnowFLAKES/blob/main/training_collection_kmeans.py\n\n    Parameters:\n    - data (array-like): The dataset to cluster.\n    - max_k (int): The maximum number of clusters to evaluate.\n    - method (str): \"elbow\" for WCSS-based elbow method or \"silhouette\" for silhouette score.\n    - random_state (int): Random seed for reproducibility.\n\n    Returns:\n    - int: The optimal number of clusters.\n    \"\"\"\n    from sklearn.cluster import KMeans\n    from sklearn.metrics import silhouette_score\n\n    wcss = []  # Within-Cluster Sum of Squares\n    silhouette_scores = []  # Silhouette Scores\n    k_values = range(2, max_k + 1)  # Start from 2 clusters for silhouette\n\n    for k in k_values:\n        kmeans = KMeans(n_clusters=k, random_state=random_state)\n        kmeans.fit(data)\n        wcss.append(kmeans.inertia_)\n        silhouette_scores.append(silhouette_score(data, kmeans.labels_))\n\n    if method == \"elbow\":\n        # Calculate second derivative to find the \"elbow\"\n        wcss_diff = np.diff(wcss)\n        wcss_diff2 = np.diff(wcss_diff)\n        optimal_k = k_values[np.argmin(wcss_diff2) + 1]  # Offset for the diff\n    elif method == \"silhouette\":\n        # Choose k with the highest silhouette score\n        optimal_k = k_values[np.argmax(silhouette_scores)]\n    else:\n        raise ValueError(\"Invalid method. Choose 'elbow' or 'silhouette'.\")\n\n    return optimal_k",
+                "version": "3.11"
+              },
+              "result": true
+            }
+          }
+        },
+        "size": [
+          {
+            "dimension": "x",
+            "value": 2460,
+            "unit": "px"
+          },
+          {
+            "dimension": "y",
+            "value": 1800,
+            "unit": "px"
+          },
+          {
+            "dimension": "t",
+            "value": "P1D"
+          }
+        ]
+      }
+    },
+    "renamelabels5": {
+      "process_id": "rename_labels",
+      "arguments": {
+        "data": {
+          "from_node": "applyneighborhood1"
+        },
+        "dimension": "bands",
+        "target": [
+          "representative"
+        ]
+      },
+      "result": true
+    }
+  },
+  "id": "sentinel2_snow_cover_fraction",
+  "summary": "Computes snow cover fraction at 10m resolution, with clouded areas set to nodata.",
+  "description": "Computes snow cover fraction at 10m resolution, with clouded areas set to nodata. The implementation is based on the SnowFLAKES algorithm by EURAC.",
+  "returns": {
+    "description": "A data cube with the newly computed values.\n\nAll dimensions stay the same, except for the dimensions specified in corresponding parameters. There are three cases how the dimensions can change:\n\n1. The source dimension is the target dimension:\n   - The (number of) dimensions remain unchanged as the source dimension is the target dimension.\n   - The source dimension properties name and type remain unchanged.\n   - The dimension labels, the reference system and the resolution are preserved only if the number of values in the source dimension is equal to the number of values computed by the process. Otherwise, all other dimension properties change as defined in the list below.\n2. The source dimension is not the target dimension. The target dimension exists with a single label only:\n   - The number of dimensions decreases by one as the source dimension is 'dropped' and the target dimension is filled with the processed data that originates from the source dimension.\n   - The target dimension properties name and type remain unchanged. All other dimension properties change as defined in the list below.\n3. The source dimension is not the target dimension and the latter does not exist:\n   - The number of dimensions remain unchanged, but the source dimension is replaced with the target dimension.\n   - The target dimension has the specified name and the type other. All other dimension properties are set as defined in the list below.\n\nUnless otherwise stated above, for the given (target) dimension the following applies:\n\n- the number of dimension labels is equal to the number of values computed by the process,\n- the dimension labels are incrementing integers starting from zero,\n- the resolution changes, and\n- the reference system is undefined.",
+    "schema": {
+      "type": "object",
+      "subtype": "datacube"
+    }
+  },
+  "categories": [
+    "zsnow"
+  ],
+  "links": [
+    {
+      "rel": "about",
+      "href": "https://github.com/bare92/SnowFLAKES"
+    }
+  ],
+  "default_job_options": {
+    "executor-memory": "3G",
+    "python-memory": "disable",
+    "executor-memoryOverhead": "4G"
+  },
+  "parameters": [
+    {
+      "name": "spatial_extent",
+      "description": "Limits the data to process to the specified bounding box or polygons.\n\nFor raster data, the process loads the pixel into the data cube if the point\nat the pixel center intersects with the bounding box or any of the polygons\n(as defined in the Simple Features standard by the OGC).\n\nFor vector data, the process loads the geometry into the data cube if the geometry\nis fully within the bounding box or any of the polygons (as defined in the\nSimple Features standard by the OGC). Empty geometries may only be in the\ndata cube if no spatial extent has been provided.\n\nEmpty geometries are ignored.\n\nSet this parameter to null to set no limit for the spatial extent.",
+      "schema": [
+        {
+          "title": "Bounding Box",
+          "type": "object",
+          "subtype": "bounding-box",
+          "required": [
+            "west",
+            "south",
+            "east",
+            "north"
+          ],
+          "properties": {
+            "west": {
+              "description": "West (lower left corner, coordinate axis 1).",
+              "type": "number"
+            },
+            "south": {
+              "description": "South (lower left corner, coordinate axis 2).",
+              "type": "number"
+            },
+            "east": {
+              "description": "East (upper right corner, coordinate axis 1).",
+              "type": "number"
+            },
+            "north": {
+              "description": "North (upper right corner, coordinate axis 2).",
+              "type": "number"
+            },
+            "base": {
+              "description": "Base (optional, lower left corner, coordinate axis 3).",
+              "type": [
+                "number",
+                "null"
+              ],
+              "default": null
+            },
+            "height": {
+              "description": "Height (optional, upper right corner, coordinate axis 3).",
+              "type": [
+                "number",
+                "null"
+              ],
+              "default": null
+            },
+            "crs": {
+              "description": "Coordinate reference system of the extent, specified as as [EPSG code](http://www.epsg-registry.org/) or [WKT2 CRS string](http://docs.opengeospatial.org/is/18-010r7/18-010r7.html). Defaults to `4326` (EPSG code 4326) unless the client explicitly requests a different coordinate reference system.",
+              "anyOf": [
+                {
+                  "title": "EPSG Code",
+                  "type": "integer",
+                  "subtype": "epsg-code",
+                  "minimum": 1000,
+                  "examples": [
+                    3857
+                  ]
+                },
+                {
+                  "title": "WKT2",
+                  "type": "string",
+                  "subtype": "wkt2-definition"
+                }
+              ],
+              "default": 4326
+            }
+          }
+        },
+        {
+          "title": "Vector data cube",
+          "description": "Limits the data cube to the bounding box of the given geometries in the vector data cube. For raster data, all pixels inside the bounding box that do not intersect with any of the polygons will be set to no data (`null`). Empty geometries are ignored.",
+          "type": "object",
+          "subtype": "datacube",
+          "dimensions": [
+            {
+              "type": "geometry"
+            }
+          ]
+        },
+        {
+          "title": "No filter",
+          "description": "Don't filter spatially. All data is included in the data cube.",
+          "type": "null"
+        }
+      ]
+    }
+  ]
+}
