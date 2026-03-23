@@ -1086,7 +1086,7 @@
     }
   },
   "categories": [
-    "zsnow"
+    "snow"
   ],
   "links": [
     {
@@ -1186,6 +1186,34 @@
           "type": "null"
         }
       ]
+    },
+    {
+      "name": "temporal_extent",
+      "description": "Temporal extent specified as two-element array with start and end date/date-time.",
+      "schema": {
+        "type": "array",
+        "subtype": "temporal-interval",
+        "uniqueItems": true,
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "anyOf": [
+            {
+              "type": "string",
+              "subtype": "date-time",
+              "format": "date-time"
+            },
+            {
+              "type": "string",
+              "subtype": "date",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   ]
 }
