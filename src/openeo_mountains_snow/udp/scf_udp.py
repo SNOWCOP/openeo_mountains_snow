@@ -38,7 +38,7 @@ def generate_udp(cfg : DictConfig) -> None:
                              description="Computes snow cover fraction at 10m resolution, with clouded areas set to nodata. The implementation is based on the SnowFLAKES algorithm by EURAC.",
                              links=[{"rel": "about", "href": "https://github.com/bare92/SnowFLAKES"}],
                              categories=["snow"],
-                             parameters=[spatial_extent], returns=returns,
+                             parameters=[spatial_extent,temporal_extent], returns=returns,
                              default_job_options=job_options)
 
     with open(Path(__file__).parent / "sentinel2_snow_cover_fraction.json", "w+") as f:
