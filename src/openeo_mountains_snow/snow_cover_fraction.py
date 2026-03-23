@@ -76,10 +76,7 @@ def run_openeo(cfg : DictConfig) -> None:
     # define time period
     time_period = ['2022-09-01', '2023-05-01']
 
-    bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
-
-    representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"), size=[{"dimension": "x", "value": 2460, "unit": "px"},{"dimension": "y", "value": 1800, "unit": "px"},{"dimension": "t", "value": "P1D"}])
-    representative_pixels = representative_pixels.rename_labels(dimension="bands", target=[REPRESENTATIVE_PIXEL_BAND_NAME])
+    representative_pixels = snow_cover_fraction_cube(aoi,time_period, c, cfg )
 
     job_options = {
         "executor-memory": "3G",
@@ -89,6 +86,16 @@ def run_openeo(cfg : DictConfig) -> None:
     }
     representative_pixels.execute_batch("representative_pixels_senales_multirange_classified.nc", job_options=job_options)
 
+
+def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
+    bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
+    representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"),
+                                                             size=[{"dimension": "x", "value": 2460, "unit": "px"},
+                                                                   {"dimension": "y", "value": 1800, "unit": "px"},
+                                                                   {"dimension": "t", "value": "P1D"}])
+    representative_pixels = representative_pixels.rename_labels(dimension="bands",
+                                                                target=[REPRESENTATIVE_PIXEL_BAND_NAME])
+    return representative_pixels
 
 
 def get_udf(name):
