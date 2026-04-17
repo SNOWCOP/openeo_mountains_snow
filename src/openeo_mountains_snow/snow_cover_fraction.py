@@ -7,10 +7,12 @@ from typing import TextIO
 
 import hydra
 import openeo
+import shapely
 from omegaconf import DictConfig, OmegaConf
 from openeo import UDF
 from openeo.extra.spectral_indices import compute_indices
 from openeo.processes import any, array_append, process, cos, sin, arccos, array_create, quantiles
+from pyproj import Transformer
 
 from openeo_mountains_snow.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
 
@@ -67,24 +69,33 @@ def collect_training(inputs_cube):
     collect_training_udf = None
     inputs_cube.apply_polygon(collect_training_udf)
 
+
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def run_openeo(cfg : DictConfig) -> None:
+    """
+    Run a specific experiment on the command line via:
+    python snow_cover_fraction.py +experiment=andes_scf.yaml
+    """
     print(OmegaConf.to_yaml(cfg))
     c = openeo.connect(cfg.connection.endpoint).authenticate_oidc()
-    aoi = json.load(open(Path(__file__).parent / "senales_wgs84.geojson"))
+
+    if cfg.experiment.aoi is None:
+        aoi = json.load(open(Path(__file__).parent / "senales_wgs84.geojson"))
+    else:
+        aoi = shapely.box(*cfg.experiment.aoi)
+        if cfg.experiment.aoi_crs is not None:
+            transformer = Transformer.from_crs(cfg.experiment.aoi_crs, "EPSG:4326", always_xy=True)
+            from shapely.ops import transform
+            aoi = transform(transformer.transform, aoi)
+
 
     # define time period
-    time_period = ['2022-09-01', '2023-05-01']
+    time_period = list(cfg.experiment.temporal_extent) or ['2022-09-01', '2023-05-01']
 
     representative_pixels = snow_cover_fraction_cube(aoi,time_period, c, cfg )
 
-    job_options = {
-        "executor-memory": "3G",
-        "python-memory": "disable",
-        "executor-memoryOverhead": "4G"
-        #"image-name": "python311-dev"
-    }
-    representative_pixels.execute_batch("representative_pixels_senales_multirange_classified.nc", job_options=job_options)
+    job_options = dict(cfg.experiment.job_options)
+    representative_pixels.execute_batch( "representative_pixels_senales_multirange_classified.nc", title=(cfg.experiment.title_prefix or "") , filename_prefix=cfg.experiment.title_prefix , job_options=job_options)
 
 
 def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
