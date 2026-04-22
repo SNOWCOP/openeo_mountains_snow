@@ -67,7 +67,8 @@ def calculate_cloud_mask(scl: openeo.DataCube) -> openeo.DataCube:
 
 
 
-def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0) -> openeo.DataCube:
+def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0,
+                   crs=32632, resolution=20) -> openeo.DataCube:
     """
     Calculate snow cover from Sentinel-2 L2A scene classification.
     
@@ -76,6 +77,8 @@ def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0)
         temporal_extent: Temporal extent as [start_date, end_date]
         spatial_extent: Spatial extent dictionary with crs and bounds
         cloud_prob: Maximum cloud probability threshold (default: 80%)
+        crs: Target CRS EPSG code (default: 32632)
+        resolution: Target resolution in meters (default: 20)
         
     Returns:
         DataCube with snow classification (0: no snow, 100: snow, 205: clouds)
@@ -88,7 +91,7 @@ def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0)
         max_cloud_cover=cloud_prob,
     )
 
-    scl = scl.resample_spatial(resolution=20, projection=32632, method="near")
+    scl = scl.resample_spatial(resolution=resolution, projection=crs, method="near")
 
     def snow_callback(scl_data: openeo.processes.ProcessBuilder):
         classification = scl_data["SCL"]

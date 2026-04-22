@@ -7,42 +7,54 @@ and loading MODIS data.
 
 from typing import Tuple, List, Dict
 import openeo
+from omegaconf import DictConfig
 from openeo.processes import eq, is_nan, gt, or_, if_, array_create, ProcessBuilder
 from openeo import DataCube
 
-from utils_gapfilling import calculate_snow, create_mask, get_scf_ranges
-from config import (
-    TEMPORAL_EXTENT, SPATIAL_EXTENT, CLOUD_PROB, DELTA, EPSILON,
-    RESOLUTION, CRS, INVALID_THRESHOLD, INVALID_VALUE, MODIS_TEMPORAL_EXTENT,
-    MODIS_RESOLUTION
+from openeo_mountains_snow.snowcoverarea_reconstruction.utils_gapfilling import (
+    calculate_snow, create_mask, get_scf_ranges,
 )
 
 
-def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, list]:
+def compute_scf_masks(
+    connection: openeo.Connection,
+    cfg: DictConfig,
+    spatial_extent: dict,
+    temporal_extent: list,
+) -> Tuple[openeo.DataCube, list]:
     """
     Compute snow cover fraction masks and conditional probabilities.
-    
+
     Args:
         connection: openEO Connection object
-        
+        cfg: Hydra configuration
+        spatial_extent: Spatial extent dict
+        temporal_extent: [start_date, end_date]
+
     Returns:
         Tuple of (merged SCF masks, list of SCF range labels)
     """
+    proc = cfg.processing
+
     snow = calculate_snow(
         connection,
-        TEMPORAL_EXTENT,
-        SPATIAL_EXTENT,
-        CLOUD_PROB
+        temporal_extent,
+        spatial_extent,
+        cloud_prob=proc.cloud_prob,
+        crs=proc.crs,
+        resolution=proc.resolution,
     )
 
     # Create masks for valid and snow pixels
     total_mask = create_mask(snow)
-    scf_lr_masked = low_resolution_snow_cover_fraction_mask(connection, total_mask)
+    scf_lr_masked = low_resolution_snow_cover_fraction_mask(
+        connection, cfg, total_mask, temporal_extent
+    )
 
     # ==============================
     # Conditional Probabilities
     # ==============================
-    scf_dic = get_scf_ranges(DELTA, EPSILON)
+    scf_dic = get_scf_ranges(proc.delta, proc.epsilon)
 
     def scf_to_bands(scf_lr_masked):
         """Convert SCF map to binary bands for each SCF range."""
@@ -72,13 +84,13 @@ def compute_scf_masks(connection: openeo.Connection) -> Tuple[openeo.DataCube, l
 
     # Upsample back to HR resolution
     mask_scf_hr = (all_scf_masks
-                   .resample_spatial(resolution=RESOLUTION, projection=CRS, method="near")
+                   .resample_spatial(resolution=proc.resolution, projection=proc.crs, method="near")
                    .resample_cube_spatial(snow))
 
     return mask_scf_hr.merge_cubes(total_mask), labels_scf
 
 
-def low_resolution_snow_cover_fraction_mask(connection, total_mask):
+def low_resolution_snow_cover_fraction_mask(connection, cfg, total_mask, temporal_extent):
     """
     Calculate low-resolution snow cover fraction (SCF) from MODIS data.
     
@@ -89,9 +101,10 @@ def low_resolution_snow_cover_fraction_mask(connection, total_mask):
     Returns:
         Low-resolution SCF data cube
     """
+    proc = cfg.processing
     modis = connection.load_stac(
-        "https://stac.eurac.edu/collections/MOD10A1v61",
-        temporal_extent=MODIS_TEMPORAL_EXTENT
+        cfg.modis.stac_url,
+        temporal_extent=temporal_extent,
     )
     
     # Resample mask to MODIS resolution and compute statistics
@@ -107,8 +120,8 @@ def low_resolution_snow_cover_fraction_mask(connection, total_mask):
         scf_lr = if_(is_nan(scf_lr), 205, scf_lr)
 
         # Replace pixels with too many invalid values
-        valid_threshold = 1 - INVALID_THRESHOLD / 100
-        scf_lr_masked = if_(valid_band <= valid_threshold, INVALID_VALUE, scf_lr)
+        valid_threshold = 1 - proc.invalid_threshold / 100
+        scf_lr_masked = if_(valid_band <= valid_threshold, proc.invalid_value, scf_lr)
 
         return scf_lr_masked
 
@@ -118,6 +131,7 @@ def low_resolution_snow_cover_fraction_mask(connection, total_mask):
 
 
 def create_modis_scf_cube(connection: openeo.Connection,
+                          cfg: DictConfig,
                           temporal_extent: List[str],
                           spatial_extent: Dict) -> DataCube:
     """
@@ -134,8 +148,9 @@ def create_modis_scf_cube(connection: openeo.Connection,
         - 205: Cloud/invalid pixels
     """
     # Load MODIS from the STAC endpoint
+    proc = cfg.processing
     modis_cube = connection.load_stac(
-        url="https://stac.eurac.edu/collections/MOD10A1v61",
+        url=cfg.modis.stac_url,
         temporal_extent=temporal_extent,
         spatial_extent=spatial_extent,
         bands=["SCF"]
@@ -168,8 +183,8 @@ def create_modis_scf_cube(connection: openeo.Connection,
     
     # Resample to consistent resolution
     cleaned_cube = cleaned_cube.resample_spatial(
-        resolution=MODIS_RESOLUTION,
-        projection=CRS,
+        resolution=proc.modis_resolution,
+        projection=proc.crs,
         method="near"
     )
     

@@ -1,0 +1,23 @@
+# @package experiment
+# Historical SCA reconstruction + SWE estimation
+# Run: python -m openeo_mountains_snow.main +experiment=reconstruction
+
+pipeline: "reconstruction"
+
+aoi:
+  west: 631800.0
+  south: 5170700.0
+  east: 637800.0
+  north: 5176200.0
+  crs: "EPSG:32632"
+
+temporal_extent: ['2021-09-01', '2024-09-30']
+modis_temporal_extent: ['2023-01-20', '2023-01-21']
+agera_temporal_extent: ['2023-07-01', '2023-07-05']
+
+title_prefix: "swe_reconstruction"
+
+job_options:
+  executor-memory: "8G"
+  executor-memoryOverhead: "500m"
+  python-memory: "15G"

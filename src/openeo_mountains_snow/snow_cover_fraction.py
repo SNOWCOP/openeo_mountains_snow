@@ -1,18 +1,11 @@
-import importlib
-import json
 import math
-from importlib.resources import Package, Resource, files
+from importlib.resources import files
 from pathlib import Path
-from typing import TextIO
 
-import hydra
 import openeo
-import shapely
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 from openeo import UDF
-from openeo.extra.spectral_indices import compute_indices
-from openeo.processes import any, array_append, process, cos, sin, arccos, array_create, quantiles
-from pyproj import Transformer
+from openeo.processes import any, array_append, cos, sin, arccos, array_create
 
 from openeo_mountains_snow.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
 
@@ -70,35 +63,7 @@ def collect_training(inputs_cube):
     inputs_cube.apply_polygon(collect_training_udf)
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="config")
-def run_openeo(cfg : DictConfig) -> None:
-    """
-    Run a specific experiment on the command line via:
-    python snow_cover_fraction.py +experiment=andes_scf.yaml
-    """
-    print(OmegaConf.to_yaml(cfg))
-    c = openeo.connect(cfg.connection.endpoint).authenticate_oidc()
-
-    if cfg.experiment.aoi is None:
-        aoi = json.load(open(Path(__file__).parent / "senales_wgs84.geojson"))
-    else:
-        aoi = shapely.box(*cfg.experiment.aoi)
-        if cfg.experiment.aoi_crs is not None:
-            transformer = Transformer.from_crs(cfg.experiment.aoi_crs, "EPSG:4326", always_xy=True)
-            from shapely.ops import transform
-            aoi = transform(transformer.transform, aoi)
-
-
-    # define time period
-    time_period = list(cfg.experiment.temporal_extent) or ['2022-09-01', '2023-05-01']
-
-    representative_pixels = snow_cover_fraction_cube(aoi,time_period, c, cfg )
-
-    job_options = dict(cfg.experiment.job_options)
-    representative_pixels.execute_batch( "representative_pixels_senales_multirange_classified.nc", title=(cfg.experiment.title_prefix or "") , filename_prefix=cfg.experiment.title_prefix , job_options=job_options)
-
-
-def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
+def snow_cover_fraction_cube(aoi, time_period, c, cfg):
     bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
     representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"),
                                                              size=[{"dimension": "x", "value": 2460, "unit": "px"},
@@ -204,8 +169,3 @@ def local_incidence_angle(s2_cube, aoi, connection, cfg, bands_to_retain = ["B02
     extended_cube = extended_cube.rename_labels(dimension="bands", target=bands_to_retain + ["local_solar_incidence_angle"])
 
     return extended_cube
-
-
-
-if "__main__" == __name__:
-    run_openeo()

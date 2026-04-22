@@ -11,7 +11,9 @@ from openeo import DataCube, UDF
 from openeo.processes import ProcessBuilder, array_create, exp, clip
 import numpy as np
 
-from .config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
+_UDF_DIR = Path(__file__).parent / "udfs"
+SOLAR_POSITION_UDF = _UDF_DIR / "solar_position_udf.py"
+INCIDENCE_ANGLE_UDF = _UDF_DIR / "incidence_angle_udf.py"
 
 # Vapor pressure coefficients for Northern and Southern hemispheres
 VP_COEFF_NOHEM = np.array([0.41, 0.42, 0.40, 0.39, 0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40]) / 1000.0

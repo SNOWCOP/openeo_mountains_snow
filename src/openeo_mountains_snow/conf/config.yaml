@@ -1,11 +1,14 @@
 connection:
   endpoint: "openeo.dataspace.copernicus.eu"
 
+# ==============================
+# Data Sources
+# ==============================
 
 sentinel2_l2a:
   collection: "SENTINEL2_L2A"
   scl_band: "SCL"
-  cloud_values: [8,9,3,10]
+  cloud_values: [8, 9, 3, 10]
 
 sentinel2_l1c:
   collection: "SENTINEL2_L1C"
@@ -16,5 +19,59 @@ water_mask:
   band: "MAP"
   water_values: [80]
 
+modis:
+  stac_url: "https://stac.eurac.edu/collections/MOD10A1v61"
 
-corsa_job: None
+agera5:
+  stac_url: "https://stac.openeo.vito.be/collections/agera5_daily"
+  bands: ["2m_temperature_mean", "dewpoint_temperature_mean", "solar_radiation_flux"]
+  band_aliases: ["temperature-mean", "dewpoint-temperature", "solar-radiation-flux"]
+
+geopotential:
+  stac_url: "https://artifactory.vgt.vito.be/artifactory/auxdata-public/geopotential.json"
+
+dem:
+  slope_stac_url: "https://stac.openeo.vito.be/collections/DEM_slope_30m"
+  aspect_stac_url: "https://stac.openeo.vito.be/collections/DEM_aspec_30m"
+
+# ==============================
+# Processing Parameters
+# ==============================
+
+processing:
+  crs: 32632
+  resolution: 20.0        # HR output resolution in meters
+  cloud_prob: 80           # Max cloud probability (%)
+  pixel_ratio: 25          # Ratio between LR and HR pixel sizes
+  invalid_value: 255
+  invalid_threshold: 10    # % invalid pixels allowed in LR pixel
+  delta: 10                # Step size for SCF ranges (%)
+  epsilon: 10              # Security buffer for SCF ranges (%)
+  modis_resolution: 25     # meters
+
+# ==============================
+# Reconstruction Parameters
+# ==============================
+
+reconstruction:
+  n_days: 5
+  neighborhood_size: 64
+
+# ==============================
+# Experiment (overridden per experiment file)
+# ==============================
+
+experiment:
+  pipeline: "scf"          # "scf" or "reconstruction"
+  aoi: null                # bbox list [west, south, east, north] or null for default geojson
+  aoi_crs: null            # CRS of aoi (null = EPSG:4326)
+  temporal_extent: ['2022-09-01', '2023-05-01']
+  modis_temporal_extent: null
+  agera_temporal_extent: null
+  title_prefix: null
+  job_options:
+    executor-memory: "8G"
+    executor-memoryOverhead: "500m"
+    python-memory: "15G"
+
+corsa_job: null
