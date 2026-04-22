@@ -12,8 +12,9 @@ from openeo.processes import eq, is_nan, gt, or_, if_, array_create, ProcessBuil
 from openeo import DataCube
 
 from openeo_mountains_snow.snowcoverarea_reconstruction.utils_gapfilling import (
-    calculate_snow, create_mask, get_scf_ranges,
+    create_mask, get_scf_ranges,
 )
+from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
 
 
 def compute_scf_masks(
@@ -36,14 +37,13 @@ def compute_scf_masks(
     """
     proc = cfg.processing
 
-    snow = calculate_snow(
-        connection,
-        temporal_extent,
-        spatial_extent,
-        cloud_prob=proc.cloud_prob,
-        crs=proc.crs,
-        resolution=proc.resolution,
-    )
+    # Use the improved spectral-index-based snow cover fraction
+    snow = snow_cover_fraction_cube(
+        aoi=spatial_extent,
+        time_period=temporal_extent,
+        c=connection,
+        cfg=cfg,
+    ).rename_labels(dimension="bands", target=["snow"])
 
     # Create masks for valid and snow pixels
     total_mask = create_mask(snow)

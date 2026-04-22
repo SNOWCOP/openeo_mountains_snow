@@ -1,3 +1,5 @@
+#%%
+
 """
 Historical snow cover reconstruction pipeline.
 
@@ -179,3 +181,7 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, aoi) -> None:
         title=exp.title_prefix or "swe",
         job_options=job_options,
     )
+
+
+
+
