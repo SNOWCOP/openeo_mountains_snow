@@ -8,11 +8,13 @@ from openeo import UDF
 from openeo.processes import any, array_append, cos, sin, arccos, array_create
 
 from openeo_mountains_snow.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
+from openeo_mountains_snow.spatial_extent_utils import bbox_to_geometry
 
 
-def elevation_mask(region, conn: openeo.Connection, cfg:DictConfig):
-    elevation = conn.load_collection("COPERNICUS_30", spatial_extent=region).max_time()
-    percentile10 = elevation.aggregate_spatial(region, reducer=lambda x: x.quantiles(probabilities = [0.1])).vector_to_raster(target=elevation).rename_labels(dimension="bands", target=["percentile10"])
+def elevation_mask(spatial_extent: dict, conn: openeo.Connection, cfg: DictConfig):
+    elevation = conn.load_collection("COPERNICUS_30", spatial_extent=spatial_extent).max_time()
+    geojson = bbox_to_geometry(spatial_extent)
+    percentile10 = elevation.aggregate_spatial(geojson, reducer=lambda x: x.quantiles(probabilities = [0.1])).vector_to_raster(target=elevation).rename_labels(dimension="bands", target=["percentile10"])
 
 
     return elevation.merge_cubes(percentile10).reduce_dimension(dimension="bands", reducer=lambda x: x[0] < x[1] - 200)
@@ -21,22 +23,18 @@ def elevation_mask(region, conn: openeo.Connection, cfg:DictConfig):
     #return conn.load_collection("COPERNICUS_30", spatial_extent=region).max_time().apply(lambda x: x < altitude_min_threshold)
 
 
-
-
-
-def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfig):
+def cloud_water_mask(spatial_extent: dict, time_period, conn: openeo.Connection, cfg: DictConfig):
     scl = conn.load_collection(
         cfg.sentinel2_l2a.collection,
-        spatial_extent=region,
+        spatial_extent=spatial_extent,
         temporal_extent=time_period,
-
         bands=[cfg.sentinel2_l2a.scl_band])
 
     cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([ x == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
 
     water = conn.load_collection(
         cfg.water_mask.collection,
-        spatial_extent=region,
+        spatial_extent=spatial_extent,
         bands=[cfg.water_mask.band]).max_time()
 
     water_mask = water.reduce_dimension(dimension="bands", reducer=lambda x: any(
@@ -63,8 +61,8 @@ def collect_training(inputs_cube):
     inputs_cube.apply_polygon(collect_training_udf)
 
 
-def snow_cover_fraction_cube(aoi, time_period, c, cfg):
-    bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
+def snow_cover_fraction_cube(spatial_extent: dict, time_period, c, cfg):
+    bands_indices = snowflake_inputs_cube(spatial_extent, time_period, c, cfg)
     representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"),
                                                              size=[{"dimension": "x", "value": 2460, "unit": "px"},
                                                                    {"dimension": "y", "value": 1800, "unit": "px"},
@@ -80,17 +78,17 @@ def get_udf(name):
         return UDF( code= udf_code, runtime="Python", version="3.11", context={"classify":True})
 
 
-def snowflake_inputs_cube(aoi, time_period, connection, cfg):
-    mask = cloud_water_mask(aoi, time_period, connection, cfg)
-    dem_mask = elevation_mask(aoi, connection, cfg)
+def snowflake_inputs_cube(spatial_extent: dict, time_period, connection, cfg):
+    mask = cloud_water_mask(spatial_extent, time_period, connection, cfg)
+    dem_mask = elevation_mask(spatial_extent, connection, cfg)
     sentinel2_bands = connection.load_collection(
         cfg.sentinel2_l1c.collection,
-        spatial_extent=aoi,
+        spatial_extent=spatial_extent,
         temporal_extent=time_period,
         bands=cfg.sentinel2_l1c.bands)
     masked_s2 = sentinel2_bands.mask(mask | dem_mask)
 
-    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, connection, cfg)
+    s2_with_local_angle = local_incidence_angle(masked_s2, spatial_extent, connection, cfg)
 
 
     from openeo.processes import normalized_difference
@@ -117,8 +115,8 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
     return bands_indices
 
 
-def slope_aspect(aoi, connection, cfg):
-    dem_spacetime = connection.load_collection("COPERNICUS_30", spatial_extent=aoi)
+def slope_aspect(spatial_extent: dict, connection, cfg):
+    dem_spacetime = connection.load_collection("COPERNICUS_30", spatial_extent=spatial_extent)
     dem = dem_spacetime.reduce_dimension(dimension='t', reducer='mean')
 
     aspect = dem.aspect()
@@ -132,8 +130,8 @@ def slope_aspect(aoi, connection, cfg):
 
 
 
-def local_incidence_angle(s2_cube, aoi, connection, cfg, bands_to_retain = ["B02", "B03", "B04", "B08", "B11"]):
-    slope_aspect_cube = slope_aspect(aoi, connection, cfg)
+def local_incidence_angle(s2_cube, spatial_extent: dict, connection, cfg, bands_to_retain = ["B02", "B03", "B04", "B08", "B11"]):
+    slope_aspect_cube = slope_aspect(spatial_extent, connection, cfg)
     combined = s2_cube.merge_cubes(slope_aspect_cube)
 
     # degree - radians conversions

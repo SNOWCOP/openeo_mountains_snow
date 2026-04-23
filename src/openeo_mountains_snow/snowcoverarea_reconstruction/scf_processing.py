@@ -39,7 +39,7 @@ def compute_scf_masks(
 
     # Use the improved spectral-index-based snow cover fraction
     snow = snow_cover_fraction_cube(
-        aoi=spatial_extent,
+        spatial_extent=spatial_extent,
         time_period=temporal_extent,
         c=connection,
         cfg=cfg,
@@ -48,7 +48,7 @@ def compute_scf_masks(
     # Create masks for valid and snow pixels
     total_mask = create_mask(snow)
     scf_lr_masked = low_resolution_snow_cover_fraction_mask(
-        connection, cfg, total_mask, temporal_extent
+        connection, cfg, total_mask, temporal_extent, spatial_extent
     )
 
     # ==============================
@@ -90,21 +90,26 @@ def compute_scf_masks(
     return mask_scf_hr.merge_cubes(total_mask), labels_scf
 
 
-def low_resolution_snow_cover_fraction_mask(connection, cfg, total_mask, temporal_extent):
+def low_resolution_snow_cover_fraction_mask(connection, cfg, total_mask, temporal_extent, spatial_extent=None):
     """
     Calculate low-resolution snow cover fraction (SCF) from MODIS data.
     
     Args:
         connection: openEO connection
         total_mask: Valid and snow pixel masks
+        temporal_extent: [start_date, end_date]
+        spatial_extent: bbox dict (optional, passed to load_stac)
         
     Returns:
         Low-resolution SCF data cube
     """
     proc = cfg.processing
+    load_kwargs = {"temporal_extent": temporal_extent}
+    if spatial_extent is not None:
+        load_kwargs["spatial_extent"] = spatial_extent
     modis = connection.load_stac(
         cfg.modis.stac_url,
-        temporal_extent=temporal_extent,
+        **load_kwargs,
     )
     
     # Resample mask to MODIS resolution and compute statistics

@@ -13,6 +13,7 @@ import openeo
 from omegaconf import DictConfig, OmegaConf
 
 from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
+from openeo_mountains_snow.spatial_extent_utils import bbox_to_wgs84
 from openeo_mountains_snow.snowcoverarea_reconstruction.scf_processing import (
     compute_scf_masks, create_modis_scf_cube,
 )
@@ -25,14 +26,13 @@ SCA_RECONSTRUCTION_UDF = _UDF_DIR / "historical_reconstruction_udf.py"
 SWE_RECONSTRUCTION_UDF = _UDF_DIR / "swe_udf.py"
 
 
-def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, aoi) -> None:
+def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_extent: dict) -> None:
     """Execute the full historical reconstruction pipeline."""
 
     exp = cfg.experiment
     proc = cfg.processing
     recon = cfg.reconstruction
 
-    spatial_extent = OmegaConf.to_container(exp.aoi, resolve=True)
     temporal_extent = list(exp.temporal_extent)
     modis_temporal_extent = list(exp.modis_temporal_extent)
     agera_temporal_extent = list(exp.agera_temporal_extent)
@@ -69,7 +69,7 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, aoi) -> None:
 
     # HR Sentinel-2 snow cover fraction (spectral indices + representative pixels)
     hr_snow = snow_cover_fraction_cube(
-        aoi=spatial_extent,
+        spatial_extent=spatial_extent,
         time_period=temporal_extent,
         c=eoconn,
         cfg=cfg,
@@ -126,9 +126,11 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, aoi) -> None:
     agera = agera.filter_bands(bands=list(cfg.agera5.bands))
     agera = agera.rename_labels(dimension="bands", target=list(cfg.agera5.band_aliases))
 
+    # Geopotential STAC item is in EPSG:4326 — convert bbox to WGS84
+    geopotential_extent = bbox_to_wgs84(spatial_extent)
     geopotential = eoconn.load_stac(
         cfg.geopotential.stac_url,
-        spatial_extent=spatial_extent,
+        spatial_extent=geopotential_extent,
         bands=["geopotential"],
     )
     geopotential.metadata = geopotential.metadata.add_dimension(
