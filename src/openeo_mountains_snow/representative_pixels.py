@@ -152,7 +152,7 @@ def hyp_disatance(svmModel, svmMatrix):
     return svmModel.decision_function(svmMatrix)
 
 def classify(bands, valid_mask, normalizer, svm, Nprocesses = 8):
-    #from joblib import Parallel, delayed
+
     min_score_ns = -1
     max_score_s = 1
     Image_array_to_classify = bands[:, valid_mask].transpose()
@@ -160,11 +160,11 @@ def classify(bands, valid_mask, normalizer, svm, Nprocesses = 8):
     # Divide Samples_to_classify into blocks for parallel processing
     samplesBlocks = np.array_split(Samples_to_classify, Nprocesses, axis=0)
     # Calculate the score
-    #TODO: parallellization gives serialization issue
-    scoreImage_arrayBlocks = [hyp_disatance(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))]
-    #scoreImage_arrayBlocks = Parallel(n_jobs=Nprocesses, verbose=10)(
-     #   delayed(hyp_disatance)(svm, samplesBlocks[i]) for i in range(len(samplesBlocks))
-    #)
+    from concurrent.futures import ThreadPoolExecutor
+    #use threadpoolexecutor, scikit learn will release the GIL
+    with ThreadPoolExecutor(max_workers=Nprocesses) as executor:
+        scoreImage_arrayBlocks = list(executor.map(lambda block: hyp_disatance(svm, block), samplesBlocks))
+
     scoreImage_array = np.concatenate(scoreImage_arrayBlocks, axis=0)
     Score_map = 255 * np.ones(np.shape(valid_mask)).astype(float)
     Score_map[valid_mask] = scoreImage_array.flatten()
