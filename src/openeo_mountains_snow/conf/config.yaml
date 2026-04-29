@@ -28,7 +28,7 @@ agera5:
   band_aliases: ["temperature-mean", "dewpoint-temperature", "solar-radiation-flux"]
 
 geopotential:
-  stac_url: "https://artifactory.vgt.vito.be/artifactory/auxdata-public/geopotential.json"
+  stac_url: "https://stac.openeo.vito.be/collections/geopotential"
 
 dem:
   slope_stac_url: "https://stac.openeo.vito.be/collections/DEM_slope_30m"

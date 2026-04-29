@@ -13,7 +13,6 @@ import openeo
 from omegaconf import DictConfig, OmegaConf
 
 from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
-from openeo_mountains_snow.spatial_extent_utils import bbox_to_wgs84
 from openeo_mountains_snow.snowcoverarea_reconstruction.scf_processing import (
     compute_scf_masks, create_modis_scf_cube,
 )
@@ -107,7 +106,7 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
             {"dimension": "y", "value": recon.neighborhood_size, "unit": "px"},
         ],
     )
-    sca = sca.add_dimension(name="bands", label="sca", type="bands")
+    sca = sca.rename_labels(dimension="bands", target=["sca"])
 
     # ==============================
     # 5. Load and Downscale Climate Data
@@ -126,15 +125,10 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
     agera = agera.filter_bands(bands=list(cfg.agera5.bands))
     agera = agera.rename_labels(dimension="bands", target=list(cfg.agera5.band_aliases))
 
-    # Geopotential STAC item is in EPSG:4326 — convert bbox to WGS84
-    geopotential_extent = bbox_to_wgs84(spatial_extent)
     geopotential = eoconn.load_stac(
         cfg.geopotential.stac_url,
-        spatial_extent=geopotential_extent,
+        spatial_extent=spatial_extent,
         bands=["geopotential"],
-    )
-    geopotential.metadata = geopotential.metadata.add_dimension(
-        "t", label=first_date, type="temporal"
     )
 
     agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
@@ -187,3 +181,5 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
 
 
 
+
+# %%

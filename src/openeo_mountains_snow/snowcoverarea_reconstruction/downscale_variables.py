@@ -146,7 +146,7 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
         DataCube with topographically corrected shortwave radiation
 
     """
-    solar_flux = sw#.filter_bands(["solar-radiation-flux"])
+    solar_flux = sw.filter_bands(["solar-radiation-flux"])
     solar_flux = solar_flux / 1000000  # Scale to MJ/m^2 if needed
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     
