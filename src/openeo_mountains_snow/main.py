@@ -36,7 +36,7 @@ def main(cfg: DictConfig) -> None:
 
 def _run_scf(cfg: DictConfig, conn: openeo.Connection, spatial_extent: dict):
     """Run the snow cover fraction pipeline."""
-    from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
+    from openeo_mountains_snow.scf.snow_cover_fraction import snow_cover_fraction_cube
 
     time_period = list(cfg.experiment.temporal_extent)
     cube = snow_cover_fraction_cube(spatial_extent, time_period, conn, cfg)
@@ -52,7 +52,7 @@ def _run_scf(cfg: DictConfig, conn: openeo.Connection, spatial_extent: dict):
 
 def _run_reconstruction(cfg: DictConfig, conn: openeo.Connection, spatial_extent: dict):
     """Run the full historical reconstruction pipeline."""
-    from openeo_mountains_snow.snowcoverarea_reconstruction.pipeline import run_reconstruction
+    from openeo_mountains_snow.swe.pipeline import run_reconstruction
 
     run_reconstruction(cfg, conn, spatial_extent)
 

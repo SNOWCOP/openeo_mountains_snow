@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 from openeo.api.process import Parameter
 from openeo.rest.udp import build_process_dict
 
-from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
+from openeo_mountains_snow.scf.snow_cover_fraction import snow_cover_fraction_cube
 
 
 @hydra.main(version_base=None, config_path="../conf", config_name="config")

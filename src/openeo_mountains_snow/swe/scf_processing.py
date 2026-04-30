@@ -11,10 +11,10 @@ from omegaconf import DictConfig
 from openeo.processes import eq, is_nan, gt, or_, if_, array_create, ProcessBuilder
 from openeo import DataCube
 
-from openeo_mountains_snow.snowcoverarea_reconstruction.utils_gapfilling import (
+from openeo_mountains_snow.legacy.utils_gapfilling import (
     create_mask, get_scf_ranges,
 )
-from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
+from openeo_mountains_snow.scf.snow_cover_fraction import snow_cover_fraction_cube
 
 
 def compute_scf_masks(
@@ -133,6 +133,44 @@ def low_resolution_snow_cover_fraction_mask(connection, cfg, total_mask, tempora
     scf_lr_masked = average.apply_dimension(dimension="bands", process=create_scf_lr_masked)
     scf_lr_masked = scf_lr_masked.rename_labels(dimension="bands", target=['scf'])
     return scf_lr_masked
+
+
+def compute_conditional_probabilities(
+    all_masks: openeo.DataCube,
+    labels_scf: list,
+) -> Tuple[openeo.DataCube, openeo.DataCube]:
+    """
+    Compute conditional probabilities and occurrence counts from SCF masks.
+
+    For each SCF range, computes the probability that a high-resolution pixel
+    is snow given it falls into that SCF range.
+
+    Args:
+        all_masks: Merged SCF masks + snow/valid masks (from compute_scf_masks)
+        labels_scf: List of SCF range band labels (e.g. ['scf_0_20', ...])
+
+    Returns:
+        Tuple of:
+        - cp: Conditional probability cube with bands ``cp_<label>``
+        - occurences: Occurrence count cube with bands ``occ_<label>``
+    """
+    def merge_masks(all_masks):
+        return all_masks.and_(all_masks.array_element(label="snow")) * 1.0
+
+    mask_cp_snow = all_masks.apply(process=merge_masks)
+    mask_cp_snow = mask_cp_snow.filter_bands(bands=labels_scf)
+    sum_cp_snow = mask_cp_snow.reduce_dimension(reducer="sum", dimension="t")
+
+    occurences = all_masks.reduce_dimension(reducer="sum", dimension="t")
+    occurences = occurences.filter_bands(bands=labels_scf)
+    occurences = occurences.rename_labels(
+        dimension="bands", target=[f"occ_{b}" for b in labels_scf]
+    )
+
+    cp = sum_cp_snow / occurences
+    cp = cp.rename_labels(dimension="bands", target=[f"cp_{b}" for b in labels_scf])
+
+    return cp, occurences
 
 
 def create_modis_scf_cube(connection: openeo.Connection,

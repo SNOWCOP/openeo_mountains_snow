@@ -4,7 +4,7 @@ import openeo
 import pytest
 import xarray
 
-from openeo_mountains_snow.snowcoverarea_reconstruction.downscale_variables import downscale_shortwave_radiation
+from openeo_mountains_snow.swe.downscale_variables import downscale_shortwave_radiation
 
 
 @pytest.fixture
@@ -54,7 +54,7 @@ def test_shortwave_incidence_udf():
     inputs = inputs.drop_vars(["crs","unkown_band_5"])
     array = inputs.to_array(dim="bands").astype("float")
 
-    from openeo_mountains_snow.snowcoverarea_reconstruction.udfs.incidence_angle_udf import apply_datacube
+    from openeo_mountains_snow.swe.udfs.incidence_angle_udf import apply_datacube
     result = apply_datacube(array, None)
     angle = result.sel(bands="incidence_angle").isel(t=0)
     print(angle)

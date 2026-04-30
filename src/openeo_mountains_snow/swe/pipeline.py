@@ -3,8 +3,10 @@
 """
 Historical snow cover reconstruction pipeline.
 
-Orchestrates: loading data, computing conditional probabilities,
-reconstructing snow cover, downscaling climate data, and executing batch jobs.
+Orchestrates the full reconstruction by calling focused modules:
+- scf_processing: SCF masks, conditional probabilities, MODIS data
+- downscale_variables: climate data loading and downscaling
+- UDFs: historical reconstruction and SWE computation
 """
 
 from pathlib import Path
@@ -12,12 +14,12 @@ from pathlib import Path
 import openeo
 from omegaconf import DictConfig, OmegaConf
 
-from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
-from openeo_mountains_snow.snowcoverarea_reconstruction.scf_processing import (
-    compute_scf_masks, create_modis_scf_cube,
+from openeo_mountains_snow.scf.snow_cover_fraction import snow_cover_fraction_cube
+from openeo_mountains_snow.swe.scf_processing import (
+    compute_scf_masks, compute_conditional_probabilities, create_modis_scf_cube,
 )
-from openeo_mountains_snow.snowcoverarea_reconstruction.downscale_variables import (
-    downscale_shortwave_radiation, downscale_temperature_humidity,
+from openeo_mountains_snow.swe.downscale_variables import (
+    load_climate_data,
 )
 
 _UDF_DIR = Path(__file__).parent / "udfs"
@@ -29,7 +31,6 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
     """Execute the full historical reconstruction pipeline."""
 
     exp = cfg.experiment
-    proc = cfg.processing
     recon = cfg.reconstruction
 
     temporal_extent = list(exp.temporal_extent)
@@ -37,36 +38,16 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
     agera_temporal_extent = list(exp.agera_temporal_extent)
 
     # ==============================
-    # 1. Compute SCF Masks & Conditional Probabilities
+    # 1. SCF Masks & Conditional Probabilities
     # ==============================
 
     all_masks, labels_scf = compute_scf_masks(eoconn, cfg, spatial_extent, temporal_extent)
+    cp, occurences = compute_conditional_probabilities(all_masks, labels_scf)
 
     # ==============================
-    # 2. Compute Conditional Probabilities
+    # 2. Load High-Resolution Data
     # ==============================
 
-    def merge_masks(all_masks):
-        return all_masks.and_(all_masks.array_element(label="snow")) * 1.0
-
-    mask_cp_snow = all_masks.apply(process=merge_masks)
-    mask_cp_snow = mask_cp_snow.filter_bands(bands=labels_scf)
-    sum_cp_snow = mask_cp_snow.reduce_dimension(reducer="sum", dimension="t")
-
-    occurences = all_masks.reduce_dimension(reducer="sum", dimension="t")
-    occurences = occurences.filter_bands(bands=labels_scf)
-    occurences = occurences.rename_labels(
-        dimension="bands", target=[f"occ_{b}" for b in labels_scf]
-    )
-
-    cp = sum_cp_snow / occurences
-    cp = cp.rename_labels(dimension="bands", target=[f"cp_{b}" for b in labels_scf])
-
-    # ==============================
-    # 3. Load High-Resolution Data
-    # ==============================
-
-    # HR Sentinel-2 snow cover fraction (spectral indices + representative pixels)
     hr_snow = snow_cover_fraction_cube(
         spatial_extent=spatial_extent,
         time_period=temporal_extent,
@@ -74,7 +55,6 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
         cfg=cfg,
     ).rename_labels(dimension="bands", target=["snow"])
 
-    # HR MODIS SCF
     hr_scf = create_modis_scf_cube(
         eoconn, cfg, modis_temporal_extent, spatial_extent
     ).rename_labels(dimension="bands", target=["scf"])
@@ -91,7 +71,7 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
     )
 
     # ==============================
-    # 4. Historical Reconstruction via UDF
+    # 3. Historical Reconstruction via UDF
     # ==============================
 
     sca_udf = openeo.UDF.from_file(
@@ -109,50 +89,15 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
     sca = sca.rename_labels(dimension="bands", target=["sca"])
 
     # ==============================
-    # 5. Load and Downscale Climate Data
+    # 4. Downscale Climate Data
     # ==============================
 
-    dem = eoconn.load_collection("COPERNICUS_30", spatial_extent=spatial_extent)
-    if dem.metadata.has_temporal_dimension():
-        dem = dem.reduce_dimension(dimension="t", reducer="max")
-    dem = dem.add_dimension(name="t", label=first_date, type="temporal")
-
-    agera = eoconn.load_stac(
-        cfg.agera5.stac_url,
-        spatial_extent=spatial_extent,
-        temporal_extent=agera_temporal_extent,
-    )
-    agera = agera.filter_bands(bands=list(cfg.agera5.bands))
-    agera = agera.rename_labels(dimension="bands", target=list(cfg.agera5.band_aliases))
-
-    geopotential = eoconn.load_stac(
-        cfg.geopotential.stac_url,
-        spatial_extent=spatial_extent,
-        bands=["geopotential"],
+    agera_downscaled, shortwave_rad_cube = load_climate_data(
+        eoconn, cfg, spatial_extent, agera_temporal_extent, first_date
     )
 
-    agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
-
     # ==============================
-    # 6. Downscale Shortwave Radiation
-    # ==============================
-
-    aspect = eoconn.load_stac(
-        cfg.dem.aspect_stac_url, spatial_extent=spatial_extent
-    ).reduce_dimension(dimension="t", reducer="mean")
-
-    slope = eoconn.load_stac(
-        cfg.dem.slope_stac_url, spatial_extent=spatial_extent
-    ).reduce_dimension(dimension="t", reducer="mean")
-
-    slope_aspect = aspect.merge_cubes(slope).rename_labels(
-        dimension="bands", target=["aspect", "slope"]
-    )
-
-    shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
-
-    # ==============================
-    # 7. Merge All & Compute SWE
+    # 5. Merge All & Compute SWE
     # ==============================
 
     total_cube = sca.merge_cubes(agera_downscaled).merge_cubes(shortwave_rad_cube)
@@ -169,7 +114,7 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
     swe = swe.rename_labels(dimension="bands", target=["swe"])
 
     # ==============================
-    # 8. Execute Batch Job
+    # 6. Execute Batch Job
     # ==============================
 
     job_options = OmegaConf.to_container(exp.job_options, resolve=True)
@@ -177,9 +122,6 @@ def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_exten
         title=exp.title_prefix or "swe",
         job_options=job_options,
     )
-
-
-
 
 
 # %%

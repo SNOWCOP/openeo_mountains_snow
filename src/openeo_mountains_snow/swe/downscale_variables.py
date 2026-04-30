@@ -161,6 +161,66 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
 
     return shortwave_radiation_downscaled
 
+
+def load_climate_data(eoconn, cfg, spatial_extent, agera_temporal_extent, first_date):
+    """
+    Load and downscale all climate variables (temperature, humidity, shortwave radiation).
+
+    Loads DEM, AGERA5, geopotential, slope, and aspect data, then applies
+    lapse-rate downscaling for temperature/humidity and topographic correction
+    for shortwave radiation.
+
+    Args:
+        eoconn: openEO Connection
+        cfg: Full Hydra config (needs agera5, geopotential, dem sections)
+        spatial_extent: bbox dict
+        agera_temporal_extent: [start, end] for AGERA5
+        first_date: Reference date string for the temporal dimension
+
+    Returns:
+        Tuple of (agera_downscaled, shortwave_rad_cube)
+    """
+    # DEM
+    dem = eoconn.load_collection("COPERNICUS_30", spatial_extent=spatial_extent)
+    if dem.metadata.has_temporal_dimension():
+        dem = dem.reduce_dimension(dimension="t", reducer="max")
+    dem = dem.add_dimension(name="t", label=first_date, type="temporal")
+
+    # AGERA5
+    agera = eoconn.load_stac(
+        cfg.agera5.stac_url,
+        spatial_extent=spatial_extent,
+        temporal_extent=agera_temporal_extent,
+    )
+    agera = agera.filter_bands(bands=list(cfg.agera5.bands))
+    agera = agera.rename_labels(dimension="bands", target=list(cfg.agera5.band_aliases))
+
+    # Geopotential
+    geopotential = eoconn.load_stac(
+        cfg.geopotential.stac_url,
+        spatial_extent=spatial_extent,
+        bands=["geopotential"],
+    )
+
+    agera_downscaled = downscale_temperature_humidity(agera, dem, geopotential.max_time())
+
+    # Slope & aspect for shortwave radiation
+    aspect = eoconn.load_stac(
+        cfg.dem.aspect_stac_url, spatial_extent=spatial_extent
+    ).reduce_dimension(dimension="t", reducer="mean")
+
+    slope = eoconn.load_stac(
+        cfg.dem.slope_stac_url, spatial_extent=spatial_extent
+    ).reduce_dimension(dimension="t", reducer="mean")
+
+    slope_aspect = aspect.merge_cubes(slope).rename_labels(
+        dimension="bands", target=["aspect", "slope"]
+    )
+
+    shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
+
+    return agera_downscaled, shortwave_rad_cube
+
     def downscale_shortwave(radiation_incidence: ProcessBuilder) -> ProcessBuilder:
         """Apply topographic correction to shortwave radiation."""
         ssrd = radiation_incidence["solar-radiation-flux-downscaled"]

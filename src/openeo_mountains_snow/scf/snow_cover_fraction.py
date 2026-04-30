@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 from openeo import UDF
 from openeo.processes import any, array_append, cos, sin, arccos, array_create
 
-from openeo_mountains_snow.udfs.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
+from openeo_mountains_snow.scf.udfs.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
 from openeo_mountains_snow.spatial_extent_utils import bbox_to_geometry
 
 
@@ -73,7 +73,7 @@ def snow_cover_fraction_cube(spatial_extent: dict, time_period, c, cfg):
 
 
 def get_udf(name):
-    with (files('openeo_mountains_snow.udfs') / name).open('r') as fp:
+    with (files('openeo_mountains_snow.scf.udfs') / name).open('r') as fp:
         udf_code = fp.read()
         return UDF( code= udf_code, runtime="Python", version="3.11", context={"classify":True})
 

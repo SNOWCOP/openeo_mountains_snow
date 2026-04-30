@@ -34,7 +34,7 @@ def resolve_aoi(experiment_cfg) -> Dict[str, Any]:
 
     # null -> default GeoJSON file
     if aoi is None:
-        geojson = json.loads((Path(__file__).parent / "senales_wgs84.geojson").read_text())
+        geojson = json.loads((Path(__file__).parent / "data" / "senales_wgs84.geojson").read_text())
         return _geojson_to_bbox(geojson)
 
     # List [west, south, east, north]
