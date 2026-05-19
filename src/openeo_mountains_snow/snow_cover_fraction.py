@@ -101,8 +101,8 @@ def run_openeo(cfg : DictConfig) -> None:
 def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
     bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
     representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"),
-                                                             size=[{"dimension": "x", "value": 2460, "unit": "px"},
-                                                                   {"dimension": "y", "value": 1800, "unit": "px"},
+                                                             size=[{"dimension": "x", "value": 3038, "unit": "px"},
+                                                                   {"dimension": "y", "value": 3038, "unit": "px"},
                                                                    {"dimension": "t", "value": "P1D"}])
     representative_pixels = representative_pixels.rename_labels(dimension="bands",
                                                                 target=[REPRESENTATIVE_PIXEL_BAND_NAME])

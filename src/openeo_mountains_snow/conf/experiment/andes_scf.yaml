@@ -5,9 +5,10 @@ aoi_crs: "EPSG:32719"
 temporal_extent: ['2025-04-01', '2025-06-01']
 title_prefix: "Andes snow cover fraction"
 job_options:
-  executor-memory: "7G"
+  executor-memory: "3G"
   python-memory: "disable"
-  executor-memoryOverhead: "5G"
+  executor-memoryOverhead: "6500m"
+  executor-request-cores: "2500m"
 
 
 
