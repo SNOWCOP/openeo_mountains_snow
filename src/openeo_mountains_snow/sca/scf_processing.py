@@ -11,9 +11,7 @@ from omegaconf import DictConfig
 from openeo.processes import eq, is_nan, gt, or_, if_, array_create, ProcessBuilder
 from openeo import DataCube
 
-from openeo_mountains_snow.legacy.utils_gapfilling import (
-    create_mask, get_scf_ranges,
-)
+from openeo_mountains_snow.sca.utils import create_mask, get_scf_ranges
 from openeo_mountains_snow.scf.snow_cover_fraction import snow_cover_fraction_cube
 
 

@@ -52,7 +52,7 @@ def _run_scf(cfg: DictConfig, conn: openeo.Connection, spatial_extent: dict):
 
 def _run_reconstruction(cfg: DictConfig, conn: openeo.Connection, spatial_extent: dict):
     """Run the full historical reconstruction pipeline."""
-    from openeo_mountains_snow.swe.pipeline import run_reconstruction
+    from openeo_mountains_snow.reconstruction_pipeline import run_reconstruction
 
     run_reconstruction(cfg, conn, spatial_extent)
 

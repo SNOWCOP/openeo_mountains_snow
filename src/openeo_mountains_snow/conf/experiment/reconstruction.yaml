@@ -11,9 +11,10 @@ aoi:
   north: 5176200.0
   crs: "EPSG:32632"
 
-temporal_extent: ['2021-09-01', '2024-09-30']
-modis_temporal_extent: ['2023-01-20', '2023-01-21']
-agera_temporal_extent: ['2023-07-01', '2023-07-05']
+# NOTE: MODIS STAC (Eurac) covers only up to 2023-02-01, so keep dates within that range.
+temporal_extent: ['2022-09-10', '2023-01-15']
+modis_temporal_extent: ['2023-01-10', '2023-01-15']
+agera_temporal_extent: ['2023-01-10', '2023-01-15']
 
 title_prefix: "swe_reconstruction"
 

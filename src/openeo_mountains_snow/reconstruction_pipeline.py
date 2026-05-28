@@ -15,16 +15,16 @@ import openeo
 from omegaconf import DictConfig, OmegaConf
 
 from openeo_mountains_snow.scf.snow_cover_fraction import snow_cover_fraction_cube
-from openeo_mountains_snow.swe.scf_processing import (
+from openeo_mountains_snow.sca.scf_processing import (
     compute_scf_masks, compute_conditional_probabilities, create_modis_scf_cube,
 )
 from openeo_mountains_snow.swe.downscale_variables import (
     load_climate_data,
 )
 
-_UDF_DIR = Path(__file__).parent / "udfs"
-SCA_RECONSTRUCTION_UDF = _UDF_DIR / "historical_reconstruction_udf.py"
-SWE_RECONSTRUCTION_UDF = _UDF_DIR / "swe_udf.py"
+_PKG_DIR = Path(__file__).parent
+SCA_RECONSTRUCTION_UDF = _PKG_DIR / "sca" / "udfs" / "historical_reconstruction_udf.py"
+SWE_RECONSTRUCTION_UDF = _PKG_DIR / "swe" / "udfs" / "swe_udf.py"
 
 
 def run_reconstruction(cfg: DictConfig, eoconn: openeo.Connection, spatial_extent: dict) -> None:

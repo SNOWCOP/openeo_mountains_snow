@@ -65,9 +65,9 @@ experiment:
   pipeline: "scf"          # "scf" or "reconstruction"
   aoi: null                # bbox list [west, south, east, north] or null for default geojson
   aoi_crs: null            # CRS of aoi (null = EPSG:4326)
-  temporal_extent: ['2022-09-01', '2023-05-01']
-  modis_temporal_extent: null
-  agera_temporal_extent: null
+  temporal_extent: ['2022-09-10', '2023-01-15']
+  modis_temporal_extent: ['2023-01-10', '2023-01-15']
+  agera_temporal_extent: ['2023-01-10', '2023-01-15']
   title_prefix: null
   job_options:
     executor-memory: "8G"

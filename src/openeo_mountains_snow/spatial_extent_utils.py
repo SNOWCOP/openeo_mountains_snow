@@ -34,7 +34,9 @@ def resolve_aoi(experiment_cfg) -> Dict[str, Any]:
 
     # null -> default GeoJSON file
     if aoi is None:
-        geojson = json.loads((Path(__file__).parent / "data" / "senales_wgs84.geojson").read_text())
+        # data/ lives at the repo root; this file is at src/openeo_mountains_snow/
+        repo_root = Path(__file__).resolve().parents[2]
+        geojson = json.loads((repo_root / "data" / "senales_wgs84.geojson").read_text())
         return _geojson_to_bbox(geojson)
 
     # List [west, south, east, north]

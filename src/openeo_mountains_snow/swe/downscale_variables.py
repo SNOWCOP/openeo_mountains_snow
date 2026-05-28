@@ -220,18 +220,3 @@ def load_climate_data(eoconn, cfg, spatial_extent, agera_temporal_extent, first_
     shortwave_rad_cube = downscale_shortwave_radiation(agera, slope_aspect)
 
     return agera_downscaled, shortwave_rad_cube
-
-    def downscale_shortwave(radiation_incidence: ProcessBuilder) -> ProcessBuilder:
-        """Apply topographic correction to shortwave radiation."""
-        ssrd = radiation_incidence["solar-radiation-flux-downscaled"]
-        incidence = radiation_incidence["incidence_angle"]
-        zenith = radiation_incidence["zenith"]
-
-        cos_i = np.clip(np.cos(np.radians(incidence)), 0, 1)
-        cosZ = np.cos(zenith)
-        # Topographic correction
-        Qsi_daily = ssrd * (cos_i / (cosZ + 1e-6))
-        return Qsi_daily
-
-    result = radiation_with_incidence.apply_dimension(dimension="bands", process=downscale_shortwave)
-    return result.rename_labels(dimension="bands", target=["shortwave_radiation_downscaled"])

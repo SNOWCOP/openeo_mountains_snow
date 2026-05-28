@@ -14,6 +14,7 @@ This project provides two pipelines, both driven by [Hydra](https://hydra.cc/) c
 ```
 src/openeo_mountains_snow/
 ├── main.py                        # Hydra entry point (dispatches to pipelines)
+├── reconstruction_pipeline.py     # Full SCF → SCA → SWE orchestrator
 ├── spatial_extent_utils.py        # bbox / GeoJSON / CRS helpers
 │
 ├── conf/                          # Hydra configuration
@@ -23,43 +24,33 @@ src/openeo_mountains_snow/
 │       ├── andes_area01.yaml
 │       └── reconstruction.yaml
 │
-├── data/                          # Static data files
-│   └── senales_wgs84.geojson      #   default AOI (Senales catchment)
-│
-├── scf/                           # Snow Cover Fraction pipeline
+├── scf/                           # Snow Cover Fraction (Sentinel-2)
 │   ├── snow_cover_fraction.py     #   spectral indices + classification
+│   ├── udfs/
+│   │   └── representative_pixels.py  # SVM-based snow/no-snow classification
+│   └── udp/                       #   openEO User Defined Process export
+│       ├── scf_udp.py
+│       └── sentinel2_snow_cover_fraction.json
+│
+├── sca/                           # Snow Cover Area reconstruction
+│   ├── scf_processing.py          #   MODIS SCF masks, conditional probabilities
+│   ├── utils.py                   #   create_mask, get_scf_ranges
 │   └── udfs/
-│       └── representative_pixels.py  # SVM-based snow/no-snow classification
+│       └── historical_reconstruction_udf.py
 │
-├── swe/                           # SWE Reconstruction pipeline
-│   ├── pipeline.py                #   orchestrator (calls modules below)
-│   ├── scf_processing.py          #   SCF masks, conditional probabilities, MODIS
-│   ├── downscale_variables.py     #   climate loading & downscaling (T, RH, SW)
-│   └── udfs/                      #   server-side UDFs
-│       ├── historical_reconstruction_udf.py
-│       ├── solar_position_udf.py
-│       ├── incidence_angle_udf.py
-│       └── swe_udf.py
-│
-├── udp/                           # User Defined Processes (openEO UDP export)
-│   ├── scf_udp.py
-│   └── sentinel2_snow_cover_fraction.json
-│
-├── scripts/                       # Standalone scripts (not part of library)
-│   └── snow_corsa_ml_inference.py
-│
-└── legacy/                        # Deprecated modules kept for reference
-    ├── downscaling_distribution.py
-    ├── highresolution_gapfilling.py
-    └── utils_gapfilling.py
+└── swe/                           # Snow Water Equivalent
+    ├── downscale_variables.py     #   climate loading & downscaling (T, RH, SW)
+    └── udfs/                      #   server-side UDFs
+        ├── solar_position_udf.py
+        ├── incidence_angle_udf.py
+        └── swe_udf.py
 
-notebooks/
-└── test_pipeline.ipynb            # Interactive exploration notebook
-
-test/
-├── test_udfs.py                   # Unit tests for all UDFs
-└── snowflakes_openeo_tests/
-    └── test_meteo_downscaling.py  # Integration tests (require openEO connection)
+# Repo root (outside the package)
+data/                              # Static data files (default AOI GeoJSON)
+legacy/                            # Deprecated modules kept for reference
+scripts/                           # Standalone scripts (not part of library)
+notebooks/                         # Interactive exploration notebooks
+test/                              # Unit & integration tests
 ```
 
 ## Quick Start
@@ -100,13 +91,13 @@ Computes sub-pixel snow cover fraction from Sentinel-2 L1C using:
 
 Reconstructs daily snow cover and SWE by:
 
-1. **SCF masks & conditional probabilities** (`scf_processing.py`) — MODIS-derived P(snow | SCF range)
+1. **SCF masks & conditional probabilities** (`sca/scf_processing.py`) — MODIS-derived P(snow | SCF range)
 2. **High-resolution data** — Sentinel-2 SCF + MODIS SCF
-3. **Historical reconstruction UDF** — iterative cloud-gap filling using similar historical scenes
-4. **Climate downscaling** (`downscale_variables.py`) — lapse-rate correction for temperature/humidity, topographic correction for shortwave radiation
-5. **SWE computation UDF** — degree-day model driven by downscaled climate
+3. **Historical reconstruction UDF** (`sca/udfs/`) — iterative cloud-gap filling using similar historical scenes
+4. **Climate downscaling** (`swe/downscale_variables.py`) — lapse-rate correction for temperature/humidity, topographic correction for shortwave radiation
+5. **SWE computation UDF** (`swe/udfs/swe_udf.py`) — degree-day model driven by downscaled climate
 
-**Entry:** `snowcoverarea_reconstruction/pipeline.py` → `run_reconstruction()`
+**Entry:** `reconstruction_pipeline.py` → `run_reconstruction()`
 
 ## Configuration
 

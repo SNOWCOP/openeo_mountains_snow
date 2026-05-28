@@ -163,7 +163,7 @@ class TestIncidenceAngleUDF:
 # ---------------------------------------------------------------------------
 
 class TestHistoricalReconstructionUDF:
-    """Tests for swe/udfs/historical_reconstruction_udf.py"""
+    """Tests for sca/udfs/historical_reconstruction_udf.py"""
 
     @staticmethod
     def _make_cube(n_time=15, ny=10, nx=10, n_ranges=10):
@@ -204,7 +204,7 @@ class TestHistoricalReconstructionUDF:
         return cube
 
     def test_output_dimensions(self):
-        from openeo_mountains_snow.swe.udfs.historical_reconstruction_udf import apply_datacube
+        from openeo_mountains_snow.sca.udfs.historical_reconstruction_udf import apply_datacube
 
         cube = self._make_cube(n_time=15)
         result = apply_datacube(cube, {"n_days_to_reconstruct": 5})
@@ -214,7 +214,7 @@ class TestHistoricalReconstructionUDF:
         assert result.shape[0] == 5  # n_days_to_reconstruct
 
     def test_output_values_valid(self):
-        from openeo_mountains_snow.swe.udfs.historical_reconstruction_udf import apply_datacube
+        from openeo_mountains_snow.sca.udfs.historical_reconstruction_udf import apply_datacube
 
         cube = self._make_cube(n_time=15)
         result = apply_datacube(cube, {"n_days_to_reconstruct": 5})
@@ -226,7 +226,7 @@ class TestHistoricalReconstructionUDF:
 
     def test_single_timestep_returns_empty(self):
         """With only 1 timestep there's nothing to reconstruct."""
-        from openeo_mountains_snow.swe.udfs.historical_reconstruction_udf import apply_datacube
+        from openeo_mountains_snow.sca.udfs.historical_reconstruction_udf import apply_datacube
 
         cube = self._make_cube(n_time=1)
         result = apply_datacube(cube, {"n_days_to_reconstruct": 5})
@@ -235,7 +235,7 @@ class TestHistoricalReconstructionUDF:
 
     def test_cloud_pixels_reduced(self):
         """After reconstruction, there should be fewer cloud pixels than in the input."""
-        from openeo_mountains_snow.swe.udfs.historical_reconstruction_udf import apply_datacube
+        from openeo_mountains_snow.sca.udfs.historical_reconstruction_udf import apply_datacube
 
         cube = self._make_cube(n_time=20)
         n_days = 5
@@ -337,11 +337,11 @@ class TestSweUDF:
 # Utility functions from legacy (still used by active pipeline)
 # ---------------------------------------------------------------------------
 
-class TestUtilsGapfilling:
-    """Tests for legacy/utils_gapfilling.py — get_scf_ranges and create_mask."""
+class TestScaUtils:
+    """Tests for sca/utils.py — get_scf_ranges and create_mask."""
 
     def test_get_scf_ranges_default(self):
-        from openeo_mountains_snow.legacy.utils_gapfilling import get_scf_ranges
+        from openeo_mountains_snow.sca.utils import get_scf_ranges
 
         ranges = get_scf_ranges(delta=10, epsilon=10)
 
@@ -355,7 +355,7 @@ class TestUtilsGapfilling:
             assert 0 <= lower < upper <= 100
 
     def test_get_scf_ranges_no_overlap(self):
-        from openeo_mountains_snow.legacy.utils_gapfilling import get_scf_ranges
+        from openeo_mountains_snow.sca.utils import get_scf_ranges
 
         ranges = get_scf_ranges(delta=10, epsilon=0)
 
