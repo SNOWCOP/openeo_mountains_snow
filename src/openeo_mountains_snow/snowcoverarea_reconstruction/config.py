@@ -77,9 +77,12 @@ NEIGHBORHOOD_SIZE = 64
 
 JOB_OPTIONS = {
     "executor-memory": "8G",
-    "executor-memoryOverhead": "500m",
-    "python-memory": "15G",
+    "executor-memoryOverhead": "3G",
+    "driver-memory": "2G",
+    "driver-memoryOverhead": "1G",
+    "python-memory": None, 
 }
+
 
 # ==============================
 # MODIS Configuration

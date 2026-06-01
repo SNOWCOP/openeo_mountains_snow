@@ -9,6 +9,7 @@ from __future__ import annotations
 import openeo
 from openeo.processes import is_nan, if_, array_create, ProcessBuilder
 
+from openeo_mountains_snow.upscaling.config import MODIS_END_DATE
 from openeo_mountains_snow.snowcoverarea_reconstruction.utils_gapfilling import (
     calculate_snow,
     get_scf_ranges,
@@ -31,9 +32,13 @@ def _low_resolution_scf(
     spatial_extent: dict,
 ) -> openeo.DataCube:
     """Compute low-resolution SCF from MODIS, masked by valid pixel fraction."""
+    modis_temporal_extent = [
+        temporal_extent[0],
+        min(temporal_extent[1], MODIS_END_DATE),
+    ]
     modis = connection.load_stac(
         "https://stac.eurac.edu/collections/MOD10A1v61",
-        temporal_extent=temporal_extent,
+        temporal_extent=modis_temporal_extent,
         spatial_extent=spatial_extent,
     )
 
@@ -125,3 +130,41 @@ def build_conditional_probability_cube(
     cp = sum_cp_snow / occurrences
 
     return cp
+
+
+def build_conditional_probability_with_inputs_cube(
+    connection: openeo.Connection,
+    temporal_extent: list[str],
+    spatial_extent: dict,
+) -> openeo.DataCube:
+    """Build CP and export the two pre-division inputs in one datacube.
+
+    Output bands are prefixed to keep labels unique in a single merged product:
+    - cp_*: conditional probabilities
+    - numerator_*: sum of snow-conditioned mask values over time
+    - denominator_*: total SCF-class occurrences over time
+    """
+    all_masks, labels_scf = _compute_scf_masks(
+        connection, temporal_extent, spatial_extent
+    )
+
+    def merge_masks(mask_cube):
+        return mask_cube.and_(mask_cube.array_element(label="snow")) * 1.0
+
+    mask_cp_snow = all_masks.apply(process=merge_masks).filter_bands(bands=labels_scf)
+    sum_cp_snow = mask_cp_snow.reduce_dimension(reducer="sum", dimension="t")
+
+    occurrences = all_masks.reduce_dimension(reducer="sum", dimension="t")
+    occurrences = occurrences.filter_bands(bands=labels_scf)
+
+    cp = sum_cp_snow / occurrences
+
+    cp_labels = [f"cp_{label}" for label in labels_scf]
+    numerator_labels = [f"snow_sum_{label}" for label in labels_scf]
+    denominator_labels = [f"snow_occur_{label}" for label in labels_scf]
+
+    cp = cp.rename_labels(dimension="bands", target=cp_labels)
+    sum_cp_snow = sum_cp_snow.rename_labels(dimension="bands", target=numerator_labels)
+    occurrences = occurrences.rename_labels(dimension="bands", target=denominator_labels)
+
+    return cp.merge_cubes(sum_cp_snow).merge_cubes(occurrences)

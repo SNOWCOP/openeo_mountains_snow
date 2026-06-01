@@ -1,0 +1,3830 @@
+[
+  {
+    "id": "[1780067010917, 300594]",
+    "time": "2026-05-29T15:03:30.917Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#22,HTTP-Dispatcher,5,main]"
+  },
+  {
+    "id": "[1780067010921, 537026]",
+    "time": "2026-05-29T15:03:30.921Z",
+    "level": "error",
+    "message": "[Container in shutdown] Uncaught exception in thread Thread[#57,Executor task launch worker for task 4.0 in stage 21.0 (TID 4254),5,main]"
+  },
+  {
+    "id": "[1780067010975, 994300]",
+    "time": "2026-05-29T15:03:30.975Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 3.0 in stage 21.0 (TID 4253),5,main]"
+  },
+  {
+    "id": "[1780067011058, 821767]",
+    "time": "2026-05-29T15:03:31.058Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 7.0 in stage 21.0 (TID 4257),5,main]"
+  },
+  {
+    "id": "[1780067011097, 315483]",
+    "time": "2026-05-29T15:03:31.097Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#49,RemoteBlock-temp-file-clean-thread,5,main]"
+  },
+  {
+    "id": "[1780067011104, 8577]",
+    "time": "2026-05-29T15:03:31.104Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 19 outstanding blocks"
+  },
+  {
+    "id": "[1780067011105, 513244]",
+    "time": "2026-05-29T15:03:31.105Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 7 outstanding blocks"
+  },
+  {
+    "id": "[1780067011144, 225633]",
+    "time": "2026-05-29T15:03:31.144Z",
+    "level": "error",
+    "message": "[Container in shutdown] Uncaught exception in thread Thread[#86,Executor task launch worker for task 5.0 in stage 21.0 (TID 4255),5,main]"
+  },
+  {
+    "id": "[1780067011148, 445257]",
+    "time": "2026-05-29T15:03:31.148Z",
+    "level": "error",
+    "message": "Ignoring error"
+  },
+  {
+    "id": "[1780067011304, 817274]",
+    "time": "2026-05-29T15:03:31.304Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 18 outstanding blocks"
+  },
+  {
+    "id": "[1780067011305, 985275]",
+    "time": "2026-05-29T15:03:31.305Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011306, 472121]",
+    "time": "2026-05-29T15:03:31.306Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011306, 490448]",
+    "time": "2026-05-29T15:03:31.306Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011307, 462678]",
+    "time": "2026-05-29T15:03:31.307Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011307, 876400]",
+    "time": "2026-05-29T15:03:31.307Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011308, 778822]",
+    "time": "2026-05-29T15:03:31.308Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011308, 938868]",
+    "time": "2026-05-29T15:03:31.308Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011308, 998246]",
+    "time": "2026-05-29T15:03:31.308Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011309, 238100]",
+    "time": "2026-05-29T15:03:31.309Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011309, 805626]",
+    "time": "2026-05-29T15:03:31.309Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011309, 824068]",
+    "time": "2026-05-29T15:03:31.309Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011310, 148104]",
+    "time": "2026-05-29T15:03:31.310Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011310, 925491]",
+    "time": "2026-05-29T15:03:31.310Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011311, 63304]",
+    "time": "2026-05-29T15:03:31.311Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011311, 249302]",
+    "time": "2026-05-29T15:03:31.311Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011311, 357003]",
+    "time": "2026-05-29T15:03:31.311Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011312, 465954]",
+    "time": "2026-05-29T15:03:31.312Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011312, 631208]",
+    "time": "2026-05-29T15:03:31.312Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011843, 518608]",
+    "time": "2026-05-29T15:03:31.843Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 15 outstanding blocks"
+  },
+  {
+    "id": "[1780067011859, 483129]",
+    "time": "2026-05-29T15:03:31.859Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 9 outstanding blocks"
+  },
+  {
+    "id": "[1780067011870, 201616]",
+    "time": "2026-05-29T15:03:31.870Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011872, 586951]",
+    "time": "2026-05-29T15:03:31.872Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011873, 944575]",
+    "time": "2026-05-29T15:03:31.873Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011875, 107130]",
+    "time": "2026-05-29T15:03:31.875Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011876, 921598]",
+    "time": "2026-05-29T15:03:31.876Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011877, 636604]",
+    "time": "2026-05-29T15:03:31.877Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011878, 5612]",
+    "time": "2026-05-29T15:03:31.878Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011879, 844950]",
+    "time": "2026-05-29T15:03:31.879Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011880, 62677]",
+    "time": "2026-05-29T15:03:31.880Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.61.20:41661"
+  },
+  {
+    "id": "[1780067011890, 106550]",
+    "time": "2026-05-29T15:03:31.890Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 18 outstanding blocks"
+  },
+  {
+    "id": "[1780067011901, 640711]",
+    "time": "2026-05-29T15:03:31.901Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011904, 74072]",
+    "time": "2026-05-29T15:03:31.904Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011905, 137236]",
+    "time": "2026-05-29T15:03:31.905Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011907, 865051]",
+    "time": "2026-05-29T15:03:31.907Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011908, 297310]",
+    "time": "2026-05-29T15:03:31.908Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011909, 977786]",
+    "time": "2026-05-29T15:03:31.909Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011911, 557454]",
+    "time": "2026-05-29T15:03:31.911Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011912, 914300]",
+    "time": "2026-05-29T15:03:31.912Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011913, 927986]",
+    "time": "2026-05-29T15:03:31.913Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011914, 278373]",
+    "time": "2026-05-29T15:03:31.914Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011916, 360593]",
+    "time": "2026-05-29T15:03:31.916Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011917, 217066]",
+    "time": "2026-05-29T15:03:31.917Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011918, 321439]",
+    "time": "2026-05-29T15:03:31.918Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011919, 868280]",
+    "time": "2026-05-29T15:03:31.919Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011920, 336388]",
+    "time": "2026-05-29T15:03:31.920Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011920, 421601]",
+    "time": "2026-05-29T15:03:31.920Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011921, 534187]",
+    "time": "2026-05-29T15:03:31.921Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011922, 713283]",
+    "time": "2026-05-29T15:03:31.922Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011940, 603115]",
+    "time": "2026-05-29T15:03:31.940Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 22 outstanding blocks"
+  },
+  {
+    "id": "[1780067011963, 136426]",
+    "time": "2026-05-29T15:03:31.963Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 11 outstanding blocks"
+  },
+  {
+    "id": "[1780067011976, 742144]",
+    "time": "2026-05-29T15:03:31.976Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011979, 928403]",
+    "time": "2026-05-29T15:03:31.979Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011981, 455466]",
+    "time": "2026-05-29T15:03:31.981Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011983, 196308]",
+    "time": "2026-05-29T15:03:31.983Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011983, 807399]",
+    "time": "2026-05-29T15:03:31.983Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011985, 429686]",
+    "time": "2026-05-29T15:03:31.985Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011987, 116940]",
+    "time": "2026-05-29T15:03:31.987Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011988, 97349]",
+    "time": "2026-05-29T15:03:31.988Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011990, 92416]",
+    "time": "2026-05-29T15:03:31.990Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011992, 255440]",
+    "time": "2026-05-29T15:03:31.992Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067011993, 638756]",
+    "time": "2026-05-29T15:03:31.993Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.22:37135"
+  },
+  {
+    "id": "[1780067012227, 776093]",
+    "time": "2026-05-29T15:03:32.227Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 5 outstanding blocks"
+  },
+  {
+    "id": "[1780067012229, 532871]",
+    "time": "2026-05-29T15:03:32.229Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012230, 43992]",
+    "time": "2026-05-29T15:03:32.230Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012231, 681757]",
+    "time": "2026-05-29T15:03:32.231Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012232, 7092]",
+    "time": "2026-05-29T15:03:32.232Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012232, 656872]",
+    "time": "2026-05-29T15:03:32.232Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012347, 943068]",
+    "time": "2026-05-29T15:03:32.347Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.FetchFailedException\n\tat org.apache.spark.errors.SparkCoreErrors$.fetchFailedError(SparkCoreErrors.scala:439)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.throwFetchFailedException(ShuffleBlockFetcherIterator.scala:1253)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:983)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.next(ShuffleBlockFetcherIterator.scala:87)\n\tat org.apache.spark.util.CompletionIterator.next(CompletionIterator.scala:29)\n\tat scala.collection.Iterator$$anon$10.nextCur(Iterator.scala:594)\n\tat scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:608)\n\tat scala.collection.Iterator$$anon$9.hasNext(Iterator.scala:583)\n\tat org.apache.spark.util.CompletionIterator.hasNext(CompletionIterator.scala:31)\n\tat org.apache.spark.InterruptibleIterator.hasNext(InterruptibleIterator.scala:37)\n\tat scala.collection.immutable.List.prependedAll(List.scala:155)\n\tat scala.collection.immutable.List$.from(List.scala:685)\n\tat scala.collection.immutable.List$.from(List.scala:682)\n\tat scala.collection.SeqFactory$Delegate.from(Factory.scala:306)\n\tat scala.collection.immutable.Seq$.from(Seq.scala:42)\n\tat scala.collection.IterableOnceOps.toSeq(IterableOnce.scala:1473)\n\tat scala.collection.IterableOnceOps.toSeq$(IterableOnce.scala:1473)\n\tat org.apache.spark.InterruptibleIterator.toSeq(InterruptibleIterator.scala:28)\n\tat org.openeo.geotrellis.OpenEOProcesses.$anonfun$transformTimeDimension$8(OpenEOProcesses.scala:249)\n\tat org.apache.spark.rdd.RDD.$anonfun$mapPartitions$2(RDD.scala:866)\n\tat org.apache.spark.rdd.RDD.$anonfun$mapPartitions$2$adapted(RDD.scala:866)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\nCaused by: org.apache.spark.ExecutorDeadException: [INTERNAL_ERROR_NETWORK] The relative remote executor(Id: 6), which maintains the block data to fetch is dead. SQLSTATE: XX000\n\tat org.apache.spark.network.netty.NettyBlockTransferService$$anon$2.createAndStart(NettyBlockTransferService.scala:146)\n\tat org.apache.spark.network.shuffle.RetryingBlockTransferor.transferAllOutstanding(RetryingBlockTransferor.java:181)\n\tat org.apache.spark.network.shuffle.RetryingBlockTransferor.start(RetryingBlockTransferor.java:160)\n\tat org.apache.spark.network.netty.NettyBlockTransferService.fetchBlocks(NettyBlockTransferService.scala:157)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.sendRequest(ShuffleBlockFetcherIterator.scala:376)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.send$1(ShuffleBlockFetcherIterator.scala:1223)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.fetchUpToMaxBytes(ShuffleBlockFetcherIterator.scala:1215)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.initialize(ShuffleBlockFetcherIterator.scala:721)\n\tat org.apache.spark.storage.ShuffleBlockFetcherIterator.<init>(ShuffleBlockFetcherIterator.scala:195)\n\tat org.apache.spark.shuffle.BlockStoreShuffleReader.read(BlockStoreShuffleReader.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\t... 15 more\n"
+  },
+  {
+    "id": "[1780067012509, 731352]",
+    "time": "2026-05-29T15:03:32.509Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 5 outstanding blocks"
+  },
+  {
+    "id": "[1780067012510, 352216]",
+    "time": "2026-05-29T15:03:32.510Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012512, 47938]",
+    "time": "2026-05-29T15:03:32.512Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012512, 48188]",
+    "time": "2026-05-29T15:03:32.512Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012513, 638076]",
+    "time": "2026-05-29T15:03:32.513Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012514, 414103]",
+    "time": "2026-05-29T15:03:32.514Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067012574, 870232]",
+    "time": "2026-05-29T15:03:32.574Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 2 outstanding blocks"
+  },
+  {
+    "id": "[1780067012916, 609726]",
+    "time": "2026-05-29T15:03:32.916Z",
+    "level": "error",
+    "message": "Lost executor 6 on 10.42.45.22: \nThe executor with id 6 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:40:04Z\n\t container finished at: 2026-05-29T15:03:31Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067013066, 527391]",
+    "time": "2026-05-29T15:03:33.066Z",
+    "level": "error",
+    "message": "Lost executor 5 on 10.42.135.170: \nThe executor with id 5 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:40:05Z\n\t container finished at: 2026-05-29T15:03:31Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067013458, 951459]",
+    "time": "2026-05-29T15:03:33.458Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#58,Executor task launch worker for task 6.0 in stage 21.0 (TID 4256),5,main]"
+  },
+  {
+    "id": "[1780067013600, 722165]",
+    "time": "2026-05-29T15:03:33.600Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 3 outstanding blocks"
+  },
+  {
+    "id": "[1780067013618, 204354]",
+    "time": "2026-05-29T15:03:33.618Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#84,Executor task launch worker for task 2.0 in stage 21.0 (TID 4252),5,main]"
+  },
+  {
+    "id": "[1780067013644, 621813]",
+    "time": "2026-05-29T15:03:33.644Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#59,Executor task launch worker for task 0.0 in stage 21.0 (TID 4250),5,main]"
+  },
+  {
+    "id": "[1780067013699, 816245]",
+    "time": "2026-05-29T15:03:33.699Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780067013742, 306651]",
+    "time": "2026-05-29T15:03:33.742Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780067013759, 907306]",
+    "time": "2026-05-29T15:03:33.759Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780067013762, 356893]",
+    "time": "2026-05-29T15:03:33.762Z",
+    "level": "error",
+    "message": "Lost executor 13 on 10.42.61.20: \nThe executor with id 13 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:44:18Z\n\t container finished at: 2026-05-29T15:03:31Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067014632, 921043]",
+    "time": "2026-05-29T15:03:34.632Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#60,Executor task launch worker for task 8.0 in stage 21.0 (TID 4258),5,main]"
+  },
+  {
+    "id": "[1780067014759, 941550]",
+    "time": "2026-05-29T15:03:34.759Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780067015336, 325474]",
+    "time": "2026-05-29T15:03:35.336Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 1.0 in stage 21.0 (TID 4251),5,main]"
+  },
+  {
+    "id": "[1780067015456, 866538]",
+    "time": "2026-05-29T15:03:35.456Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780067015468, 337720]",
+    "time": "2026-05-29T15:03:35.468Z",
+    "level": "error",
+    "message": "Lost executor 9 on 10.42.183.83: \nThe executor with id 9 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:44:15Z\n\t container finished at: 2026-05-29T15:03:34Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067015482, 107148]",
+    "time": "2026-05-29T15:03:35.482Z",
+    "level": "error",
+    "message": "Lost executor 7 on 10.42.189.88: \nThe executor with id 7 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:44:04Z\n\t container finished at: 2026-05-29T15:03:34Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067015491, 458916]",
+    "time": "2026-05-29T15:03:35.491Z",
+    "level": "error",
+    "message": "Lost executor 1 on 10.42.241.97: \nThe executor with id 1 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:17:47Z\n\t container finished at: 2026-05-29T15:03:34Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067016847, 637545]",
+    "time": "2026-05-29T15:03:36.847Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 15 outstanding blocks (after 1 retries)"
+  },
+  {
+    "id": "[1780067017577, 753965]",
+    "time": "2026-05-29T15:03:37.577Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 2 outstanding blocks (after 1 retries)"
+  },
+  {
+    "id": "[1780067018034, 612130]",
+    "time": "2026-05-29T15:03:38.034Z",
+    "level": "error",
+    "message": "Lost executor 10 on 10.42.137.138: \nThe executor with id 10 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:44:15Z\n\t container finished at: 2026-05-29T15:03:35Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067018084, 381145]",
+    "time": "2026-05-29T15:03:38.084Z",
+    "level": "error",
+    "message": "Lost executor 8 on 10.42.148.155: \nThe executor with id 8 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:44:11Z\n\t container finished at: 2026-05-29T15:03:35Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067021852, 365807]",
+    "time": "2026-05-29T15:03:41.852Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 15 outstanding blocks (after 2 retries)"
+  },
+  {
+    "id": "[1780067022579, 305473]",
+    "time": "2026-05-29T15:03:42.579Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 2 outstanding blocks (after 2 retries)"
+  },
+  {
+    "id": "[1780067024343, 792618]",
+    "time": "2026-05-29T15:03:44.343Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 7 partition 121"
+  },
+  {
+    "id": "[1780067024361, 951084]",
+    "time": "2026-05-29T15:03:44.361Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 7 partition 121\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780067024378, 742619]",
+    "time": "2026-05-29T15:03:44.378Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 7 partition 119"
+  },
+  {
+    "id": "[1780067026856, 688465]",
+    "time": "2026-05-29T15:03:46.856Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 15 outstanding blocks (after 3 retries)"
+  },
+  {
+    "id": "[1780067026857, 65455]",
+    "time": "2026-05-29T15:03:46.857Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026858, 189650]",
+    "time": "2026-05-29T15:03:46.858Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026858, 749609]",
+    "time": "2026-05-29T15:03:46.858Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026858, 792183]",
+    "time": "2026-05-29T15:03:46.858Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026858, 901277]",
+    "time": "2026-05-29T15:03:46.858Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026859, 797541]",
+    "time": "2026-05-29T15:03:46.859Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026860, 110069]",
+    "time": "2026-05-29T15:03:46.860Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026860, 380134]",
+    "time": "2026-05-29T15:03:46.860Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026860, 968793]",
+    "time": "2026-05-29T15:03:46.860Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026861, 36452]",
+    "time": "2026-05-29T15:03:46.861Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026861, 240345]",
+    "time": "2026-05-29T15:03:46.861Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026861, 600761]",
+    "time": "2026-05-29T15:03:46.861Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026861, 778486]",
+    "time": "2026-05-29T15:03:46.861Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026862, 434389]",
+    "time": "2026-05-29T15:03:46.862Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067026862, 900842]",
+    "time": "2026-05-29T15:03:46.862Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067027581, 88970]",
+    "time": "2026-05-29T15:03:47.581Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 2 outstanding blocks (after 3 retries)"
+  },
+  {
+    "id": "[1780067027582, 636065]",
+    "time": "2026-05-29T15:03:47.582Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067027582, 757327]",
+    "time": "2026-05-29T15:03:47.582Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067027608, 356414]",
+    "time": "2026-05-29T15:03:47.608Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780067030959, 884132]",
+    "time": "2026-05-29T15:03:50.959Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 0 partition 1"
+  },
+  {
+    "id": "[1780067030961, 360442]",
+    "time": "2026-05-29T15:03:50.961Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 0 partition 1\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780067030964, 299742]",
+    "time": "2026-05-29T15:03:50.964Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 0 partition 3"
+  },
+  {
+    "id": "[1780067032418, 78966]",
+    "time": "2026-05-29T15:03:52.418Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 0 partition 2"
+  },
+  {
+    "id": "[1780067032809, 89667]",
+    "time": "2026-05-29T15:03:52.809Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks (after 1 retries)"
+  },
+  {
+    "id": "[1780067032810, 156144]",
+    "time": "2026-05-29T15:03:52.810Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.53.104:34739"
+  },
+  {
+    "id": "[1780067041111, 936321]",
+    "time": "2026-05-29T15:04:01.111Z",
+    "level": "error",
+    "message": "Uncaught exception in thread shutdown-hook-0"
+  },
+  {
+    "id": "[1780067043275, 605250]",
+    "time": "2026-05-29T15:04:03.275Z",
+    "level": "error",
+    "message": "Lost executor 2 on 10.42.53.104: \nThe executor with id 2 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:17:45Z\n\t container finished at: 2026-05-29T15:04:01Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780067145250, 107840]",
+    "time": "2026-05-29T15:05:45.250Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 7 outstanding blocks (after 1 retries)"
+  },
+  {
+    "id": "[1780067145251, 314062]",
+    "time": "2026-05-29T15:05:45.251Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067145251, 498702]",
+    "time": "2026-05-29T15:05:45.251Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067145251, 584731]",
+    "time": "2026-05-29T15:05:45.251Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067145251, 605949]",
+    "time": "2026-05-29T15:05:45.251Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067145251, 675538]",
+    "time": "2026-05-29T15:05:45.251Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067145252, 799987]",
+    "time": "2026-05-29T15:05:45.252Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780067145252, 802784]",
+    "time": "2026-05-29T15:05:45.252Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.135.170:36911"
+  },
+  {
+    "id": "[1780068713964, 92652]",
+    "time": "2026-05-29T15:31:53.964Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#58,Executor task launch worker for task 1.0 in stage 21.1 (TID 7450),5,main]"
+  },
+  {
+    "id": "[1780068714267, 911646]",
+    "time": "2026-05-29T15:31:54.267Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 0.0 in stage 21.1 (TID 7449),5,main]"
+  },
+  {
+    "id": "[1780068714293, 243904]",
+    "time": "2026-05-29T15:31:54.293Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=1421978566720,chunkIndex=15],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-aa269083-52d8-4563-ab20-784fcd0cfeff/11/shuffle_5_7409_0.data,offset=2927272,length=478030]] to /10.42.189.97:55920; closing connection"
+  },
+  {
+    "id": "[1780068714294, 928384]",
+    "time": "2026-05-29T15:31:54.294Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=1421978566720,chunkIndex=16],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-aa269083-52d8-4563-ab20-784fcd0cfeff/06/shuffle_5_7422_0.data,offset=2959794,length=484722]] to /10.42.189.97:55920; closing connection"
+  },
+  {
+    "id": "[1780068714295, 82481]",
+    "time": "2026-05-29T15:31:54.295Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=1421978566720,chunkIndex=18],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-aa269083-52d8-4563-ab20-784fcd0cfeff/04/shuffle_5_7442_0.data,offset=3682300,length=598516]] to /10.42.189.97:55920; closing connection"
+  },
+  {
+    "id": "[1780068714295, 337788]",
+    "time": "2026-05-29T15:31:54.295Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=1421978566720,chunkIndex=17],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-aa269083-52d8-4563-ab20-784fcd0cfeff/09/shuffle_5_7436_0.data,offset=3043221,length=504077]] to /10.42.189.97:55920; closing connection"
+  },
+  {
+    "id": "[1780068714297, 940281]",
+    "time": "2026-05-29T15:31:54.297Z",
+    "level": "error",
+    "message": "Still have 4 requests outstanding when connection from /10.42.61.48:32973 is closed"
+  },
+  {
+    "id": "[1780068714521, 984946]",
+    "time": "2026-05-29T15:31:54.521Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 5.0 in stage 21.1 (TID 7454),5,main]"
+  },
+  {
+    "id": "[1780068714527, 269488]",
+    "time": "2026-05-29T15:31:54.527Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 5 partition 0"
+  },
+  {
+    "id": "[1780068714536, 576700]",
+    "time": "2026-05-29T15:31:54.536Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 5 partition 0\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780068714634, 537787]",
+    "time": "2026-05-29T15:31:54.634Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 2.0 in stage 21.1 (TID 7451),5,main]"
+  },
+  {
+    "id": "[1780068714636, 573521]",
+    "time": "2026-05-29T15:31:54.636Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780068714738, 445081]",
+    "time": "2026-05-29T15:31:54.738Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 4 outstanding blocks"
+  },
+  {
+    "id": "[1780068714756, 725982]",
+    "time": "2026-05-29T15:31:54.756Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 78 outstanding blocks"
+  },
+  {
+    "id": "[1780068714839, 265353]",
+    "time": "2026-05-29T15:31:54.839Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 2 outstanding blocks"
+  },
+  {
+    "id": "[1780068715378, 333420]",
+    "time": "2026-05-29T15:31:55.378Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 16 outstanding blocks"
+  },
+  {
+    "id": "[1780068715383, 81950]",
+    "time": "2026-05-29T15:31:55.383Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715385, 270739]",
+    "time": "2026-05-29T15:31:55.385Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715386, 924993]",
+    "time": "2026-05-29T15:31:55.386Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715387, 564086]",
+    "time": "2026-05-29T15:31:55.387Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715388, 455163]",
+    "time": "2026-05-29T15:31:55.388Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715389, 541175]",
+    "time": "2026-05-29T15:31:55.389Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715390, 304638]",
+    "time": "2026-05-29T15:31:55.390Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715390, 314628]",
+    "time": "2026-05-29T15:31:55.390Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715391, 350562]",
+    "time": "2026-05-29T15:31:55.391Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715391, 661952]",
+    "time": "2026-05-29T15:31:55.391Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715392, 603956]",
+    "time": "2026-05-29T15:31:55.392Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715393, 146591]",
+    "time": "2026-05-29T15:31:55.393Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715394, 314481]",
+    "time": "2026-05-29T15:31:55.394Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715395, 452487]",
+    "time": "2026-05-29T15:31:55.395Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715395, 693309]",
+    "time": "2026-05-29T15:31:55.395Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715396, 323975]",
+    "time": "2026-05-29T15:31:55.396Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.152.254:36999"
+  },
+  {
+    "id": "[1780068715723, 659765]",
+    "time": "2026-05-29T15:31:55.723Z",
+    "level": "error",
+    "message": "Lost executor 50 on 10.42.61.48: \nThe executor with id 50 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:03Z\n\t container finished at: 2026-05-29T15:31:54Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068716730, 447784]",
+    "time": "2026-05-29T15:31:56.730Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#59,Executor task launch worker for task 8.0 in stage 21.1 (TID 7457),5,main]"
+  },
+  {
+    "id": "[1780068716740, 85010]",
+    "time": "2026-05-29T15:31:56.740Z",
+    "level": "error",
+    "message": "Lost executor 54 on 10.42.152.254: \nThe executor with id 54 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:03Z\n\t container finished at: 2026-05-29T15:31:54Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068716760, 988595]",
+    "time": "2026-05-29T15:31:56.760Z",
+    "level": "error",
+    "message": "Lost executor 51 on 10.42.118.33: \nThe executor with id 51 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:04Z\n\t container finished at: 2026-05-29T15:31:55Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068716890, 635638]",
+    "time": "2026-05-29T15:31:56.890Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#60,Executor task launch worker for task 3.0 in stage 21.1 (TID 7452),5,main]"
+  },
+  {
+    "id": "[1780068717091, 227603]",
+    "time": "2026-05-29T15:31:57.091Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780068717095, 958954]",
+    "time": "2026-05-29T15:31:57.095Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717097, 229665]",
+    "time": "2026-05-29T15:31:57.097Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717098, 824673]",
+    "time": "2026-05-29T15:31:57.098Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717099, 429341]",
+    "time": "2026-05-29T15:31:57.099Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717100, 532045]",
+    "time": "2026-05-29T15:31:57.100Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717101, 812798]",
+    "time": "2026-05-29T15:31:57.101Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717102, 315278]",
+    "time": "2026-05-29T15:31:57.102Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717103, 649272]",
+    "time": "2026-05-29T15:31:57.103Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717104, 642960]",
+    "time": "2026-05-29T15:31:57.104Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717105, 338517]",
+    "time": "2026-05-29T15:31:57.105Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717106, 811009]",
+    "time": "2026-05-29T15:31:57.106Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717107, 123811]",
+    "time": "2026-05-29T15:31:57.107Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717108, 211678]",
+    "time": "2026-05-29T15:31:57.108Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717109, 935746]",
+    "time": "2026-05-29T15:31:57.109Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717110, 970899]",
+    "time": "2026-05-29T15:31:57.110Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717111, 96394]",
+    "time": "2026-05-29T15:31:57.111Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717112, 736902]",
+    "time": "2026-05-29T15:31:57.112Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.118.33:42431"
+  },
+  {
+    "id": "[1780068717291, 51140]",
+    "time": "2026-05-29T15:31:57.291Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 4.0 in stage 21.1 (TID 7453),5,main]"
+  },
+  {
+    "id": "[1780068717767, 10763]",
+    "time": "2026-05-29T15:31:57.767Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 11 partition 510"
+  },
+  {
+    "id": "[1780068717770, 437069]",
+    "time": "2026-05-29T15:31:57.770Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 11 partition 510\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780068717772, 699019]",
+    "time": "2026-05-29T15:31:57.772Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 11 partition 520"
+  },
+  {
+    "id": "[1780068717776, 928843]",
+    "time": "2026-05-29T15:31:57.776Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 11 partition 508"
+  },
+  {
+    "id": "[1780068717787, 828928]",
+    "time": "2026-05-29T15:31:57.787Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#60,Executor task launch worker for task 6.0 in stage 21.1 (TID 7455),5,main]"
+  },
+  {
+    "id": "[1780068718037, 8190]",
+    "time": "2026-05-29T15:31:58.037Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#64,Executor task launch worker for task 7.0 in stage 21.1 (TID 7456),5,main]"
+  },
+  {
+    "id": "[1780068718965, 475745]",
+    "time": "2026-05-29T15:31:58.965Z",
+    "level": "error",
+    "message": "Lost executor 53 on 10.42.148.156: \nThe executor with id 53 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:09Z\n\t container finished at: 2026-05-29T15:31:57Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068719768, 552151]",
+    "time": "2026-05-29T15:31:59.768Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719768, 588809]",
+    "time": "2026-05-29T15:31:59.768Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 78 outstanding blocks (after 1 retries)"
+  },
+  {
+    "id": "[1780068719768, 691089]",
+    "time": "2026-05-29T15:31:59.768Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719768, 721064]",
+    "time": "2026-05-29T15:31:59.768Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719768, 735177]",
+    "time": "2026-05-29T15:31:59.768Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719769, 266983]",
+    "time": "2026-05-29T15:31:59.769Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719769, 416801]",
+    "time": "2026-05-29T15:31:59.769Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719769, 538525]",
+    "time": "2026-05-29T15:31:59.769Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719769, 821998]",
+    "time": "2026-05-29T15:31:59.769Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719769, 891228]",
+    "time": "2026-05-29T15:31:59.769Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719769, 930803]",
+    "time": "2026-05-29T15:31:59.769Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 2221]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 145097]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 153194]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 291604]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 302099]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 310231]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 344104]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719770, 419066]",
+    "time": "2026-05-29T15:31:59.770Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719771, 386874]",
+    "time": "2026-05-29T15:31:59.771Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719771, 419436]",
+    "time": "2026-05-29T15:31:59.771Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719771, 514642]",
+    "time": "2026-05-29T15:31:59.771Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719771, 562550]",
+    "time": "2026-05-29T15:31:59.771Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719771, 616425]",
+    "time": "2026-05-29T15:31:59.771Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719771, 617471]",
+    "time": "2026-05-29T15:31:59.771Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719771, 906635]",
+    "time": "2026-05-29T15:31:59.771Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719772, 17984]",
+    "time": "2026-05-29T15:31:59.772Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719772, 27815]",
+    "time": "2026-05-29T15:31:59.772Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719772, 92044]",
+    "time": "2026-05-29T15:31:59.772Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719772, 586328]",
+    "time": "2026-05-29T15:31:59.772Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719772, 899551]",
+    "time": "2026-05-29T15:31:59.772Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719773, 493321]",
+    "time": "2026-05-29T15:31:59.773Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719773, 642032]",
+    "time": "2026-05-29T15:31:59.773Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719773, 853882]",
+    "time": "2026-05-29T15:31:59.773Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719773, 965719]",
+    "time": "2026-05-29T15:31:59.773Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719773, 996821]",
+    "time": "2026-05-29T15:31:59.773Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719774, 290849]",
+    "time": "2026-05-29T15:31:59.774Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719775, 12145]",
+    "time": "2026-05-29T15:31:59.775Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719775, 324294]",
+    "time": "2026-05-29T15:31:59.775Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719775, 474024]",
+    "time": "2026-05-29T15:31:59.775Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719775, 666432]",
+    "time": "2026-05-29T15:31:59.775Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719775, 851549]",
+    "time": "2026-05-29T15:31:59.775Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719775, 934569]",
+    "time": "2026-05-29T15:31:59.775Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719775, 966015]",
+    "time": "2026-05-29T15:31:59.775Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719776, 178943]",
+    "time": "2026-05-29T15:31:59.776Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719776, 360041]",
+    "time": "2026-05-29T15:31:59.776Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719776, 381810]",
+    "time": "2026-05-29T15:31:59.776Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719776, 895637]",
+    "time": "2026-05-29T15:31:59.776Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719776, 936570]",
+    "time": "2026-05-29T15:31:59.776Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719777, 18364]",
+    "time": "2026-05-29T15:31:59.777Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719777, 299322]",
+    "time": "2026-05-29T15:31:59.777Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719777, 313208]",
+    "time": "2026-05-29T15:31:59.777Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719777, 416786]",
+    "time": "2026-05-29T15:31:59.777Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719777, 514913]",
+    "time": "2026-05-29T15:31:59.777Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719777, 940800]",
+    "time": "2026-05-29T15:31:59.777Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719777, 966309]",
+    "time": "2026-05-29T15:31:59.777Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719778, 392734]",
+    "time": "2026-05-29T15:31:59.778Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719778, 467115]",
+    "time": "2026-05-29T15:31:59.778Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719778, 549282]",
+    "time": "2026-05-29T15:31:59.778Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 20354]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 87072]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 110835]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 169558]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 620984]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 673663]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 703307]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 747737]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719779, 808111]",
+    "time": "2026-05-29T15:31:59.779Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 216802]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 226437]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 239551]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 259955]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 364343]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 616448]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 632002]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 678700]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719780, 953288]",
+    "time": "2026-05-29T15:31:59.780Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719781, 1796]",
+    "time": "2026-05-29T15:31:59.781Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068719781, 743741]",
+    "time": "2026-05-29T15:31:59.781Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.45.8:39141"
+  },
+  {
+    "id": "[1780068720181, 747471]",
+    "time": "2026-05-29T15:32:00.181Z",
+    "level": "error",
+    "message": "Lost executor 36 on 10.42.45.8: \nThe executor with id 36 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:03:40Z\n\t container finished at: 2026-05-29T15:31:55Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068720201, 293161]",
+    "time": "2026-05-29T15:32:00.201Z",
+    "level": "error",
+    "message": "Lost executor 52 on 10.42.189.97: \nThe executor with id 52 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:07Z\n\t container finished at: 2026-05-29T15:31:58Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068720217, 308353]",
+    "time": "2026-05-29T15:32:00.217Z",
+    "level": "error",
+    "message": "Lost executor 37 on 10.42.255.36: \nThe executor with id 37 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:03:43Z\n\t container finished at: 2026-05-29T15:31:57Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068721366, 569317]",
+    "time": "2026-05-29T15:32:01.366Z",
+    "level": "error",
+    "message": "Lost executor 48 on 10.42.137.176: \nThe executor with id 48 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:06Z\n\t container finished at: 2026-05-29T15:31:58Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780068721397, 361663]",
+    "time": "2026-05-29T15:32:01.397Z",
+    "level": "error",
+    "message": "Lost executor 38 on 10.42.247.167: \nThe executor with id 38 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:04:14Z\n\t container finished at: 2026-05-29T15:31:58Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069402474, 457098]",
+    "time": "2026-05-29T15:43:22.474Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 0.0 in stage 21.2 (TID 9773),5,main]"
+  },
+  {
+    "id": "[1780069402590, 310929]",
+    "time": "2026-05-29T15:43:22.590Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 14 outstanding blocks"
+  },
+  {
+    "id": "[1780069402597, 902347]",
+    "time": "2026-05-29T15:43:22.597Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780069402690, 457396]",
+    "time": "2026-05-29T15:43:22.690Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 12 outstanding blocks"
+  },
+  {
+    "id": "[1780069402791, 361319]",
+    "time": "2026-05-29T15:43:22.791Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 14 outstanding blocks"
+  },
+  {
+    "id": "[1780069402891, 39853]",
+    "time": "2026-05-29T15:43:22.891Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 10 outstanding blocks"
+  },
+  {
+    "id": "[1780069403734, 605366]",
+    "time": "2026-05-29T15:43:23.734Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 19 outstanding blocks"
+  },
+  {
+    "id": "[1780069403737, 608849]",
+    "time": "2026-05-29T15:43:23.737Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403738, 152792]",
+    "time": "2026-05-29T15:43:23.738Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403739, 337712]",
+    "time": "2026-05-29T15:43:23.739Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403739, 366028]",
+    "time": "2026-05-29T15:43:23.739Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403739, 439410]",
+    "time": "2026-05-29T15:43:23.739Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403740, 394348]",
+    "time": "2026-05-29T15:43:23.740Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403740, 771782]",
+    "time": "2026-05-29T15:43:23.740Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403741, 267903]",
+    "time": "2026-05-29T15:43:23.741Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403741, 567454]",
+    "time": "2026-05-29T15:43:23.741Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403741, 658372]",
+    "time": "2026-05-29T15:43:23.741Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403741, 839017]",
+    "time": "2026-05-29T15:43:23.741Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403742, 779247]",
+    "time": "2026-05-29T15:43:23.742Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403742, 995223]",
+    "time": "2026-05-29T15:43:23.742Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403743, 18615]",
+    "time": "2026-05-29T15:43:23.743Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403743, 725841]",
+    "time": "2026-05-29T15:43:23.743Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403743, 976101]",
+    "time": "2026-05-29T15:43:23.743Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403744, 273907]",
+    "time": "2026-05-29T15:43:23.744Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403744, 430050]",
+    "time": "2026-05-29T15:43:23.744Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069403745, 495754]",
+    "time": "2026-05-29T15:43:23.745Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404075, 920498]",
+    "time": "2026-05-29T15:43:24.075Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 19 outstanding blocks"
+  },
+  {
+    "id": "[1780069404078, 821526]",
+    "time": "2026-05-29T15:43:24.078Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404079, 610894]",
+    "time": "2026-05-29T15:43:24.079Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404080, 758979]",
+    "time": "2026-05-29T15:43:24.080Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404081, 662870]",
+    "time": "2026-05-29T15:43:24.081Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404081, 881759]",
+    "time": "2026-05-29T15:43:24.081Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404082, 611290]",
+    "time": "2026-05-29T15:43:24.082Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404082, 846247]",
+    "time": "2026-05-29T15:43:24.082Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404082, 942946]",
+    "time": "2026-05-29T15:43:24.082Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404083, 573171]",
+    "time": "2026-05-29T15:43:24.083Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404083, 687942]",
+    "time": "2026-05-29T15:43:24.083Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404084, 484655]",
+    "time": "2026-05-29T15:43:24.084Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404084, 975554]",
+    "time": "2026-05-29T15:43:24.084Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404085, 107610]",
+    "time": "2026-05-29T15:43:24.085Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404085, 726888]",
+    "time": "2026-05-29T15:43:24.085Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404085, 734421]",
+    "time": "2026-05-29T15:43:24.085Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404086, 456894]",
+    "time": "2026-05-29T15:43:24.086Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404086, 463028]",
+    "time": "2026-05-29T15:43:24.086Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404086, 650547]",
+    "time": "2026-05-29T15:43:24.086Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404087, 468258]",
+    "time": "2026-05-29T15:43:24.087Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404653, 728137]",
+    "time": "2026-05-29T15:43:24.653Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780069404655, 853142]",
+    "time": "2026-05-29T15:43:24.655Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404656, 801955]",
+    "time": "2026-05-29T15:43:24.656Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404656, 847815]",
+    "time": "2026-05-29T15:43:24.656Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404656, 895013]",
+    "time": "2026-05-29T15:43:24.656Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404657, 231662]",
+    "time": "2026-05-29T15:43:24.657Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404657, 429475]",
+    "time": "2026-05-29T15:43:24.657Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404657, 522388]",
+    "time": "2026-05-29T15:43:24.657Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404658, 8770]",
+    "time": "2026-05-29T15:43:24.658Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404658, 635322]",
+    "time": "2026-05-29T15:43:24.658Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404658, 664544]",
+    "time": "2026-05-29T15:43:24.658Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404658, 951927]",
+    "time": "2026-05-29T15:43:24.658Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404659, 247281]",
+    "time": "2026-05-29T15:43:24.659Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404659, 665905]",
+    "time": "2026-05-29T15:43:24.659Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404659, 768484]",
+    "time": "2026-05-29T15:43:24.659Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404660, 223604]",
+    "time": "2026-05-29T15:43:24.660Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404660, 680545]",
+    "time": "2026-05-29T15:43:24.660Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404660, 814576]",
+    "time": "2026-05-29T15:43:24.660Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404787, 129791]",
+    "time": "2026-05-29T15:43:24.787Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 25 outstanding blocks"
+  },
+  {
+    "id": "[1780069404789, 84093]",
+    "time": "2026-05-29T15:43:24.789Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404791, 725783]",
+    "time": "2026-05-29T15:43:24.791Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404791, 831036]",
+    "time": "2026-05-29T15:43:24.791Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404792, 648544]",
+    "time": "2026-05-29T15:43:24.792Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404792, 898644]",
+    "time": "2026-05-29T15:43:24.792Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404793, 50444]",
+    "time": "2026-05-29T15:43:24.793Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404793, 637657]",
+    "time": "2026-05-29T15:43:24.793Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404794, 577689]",
+    "time": "2026-05-29T15:43:24.794Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404794, 772866]",
+    "time": "2026-05-29T15:43:24.794Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404795, 606993]",
+    "time": "2026-05-29T15:43:24.795Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404795, 721482]",
+    "time": "2026-05-29T15:43:24.795Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404795, 988735]",
+    "time": "2026-05-29T15:43:24.795Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404796, 154952]",
+    "time": "2026-05-29T15:43:24.796Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404796, 235219]",
+    "time": "2026-05-29T15:43:24.796Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404797, 275841]",
+    "time": "2026-05-29T15:43:24.797Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404797, 553797]",
+    "time": "2026-05-29T15:43:24.797Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404797, 824237]",
+    "time": "2026-05-29T15:43:24.797Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404798, 37593]",
+    "time": "2026-05-29T15:43:24.798Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404798, 370841]",
+    "time": "2026-05-29T15:43:24.798Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404798, 951476]",
+    "time": "2026-05-29T15:43:24.798Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404799, 455085]",
+    "time": "2026-05-29T15:43:24.799Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404799, 989706]",
+    "time": "2026-05-29T15:43:24.799Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404800, 374524]",
+    "time": "2026-05-29T15:43:24.800Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404800, 670164]",
+    "time": "2026-05-29T15:43:24.800Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404800, 759506]",
+    "time": "2026-05-29T15:43:24.800Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069404884, 369946]",
+    "time": "2026-05-29T15:43:24.884Z",
+    "level": "error",
+    "message": "Lost executor 4 on 10.42.226.161: \nThe executor with id 4 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T14:39:49Z\n\t container finished at: 2026-05-29T15:43:23Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069404983, 952658]",
+    "time": "2026-05-29T15:43:24.983Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 5 partition 0"
+  },
+  {
+    "id": "[1780069404996, 677765]",
+    "time": "2026-05-29T15:43:24.996Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 5 partition 0\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780069405085, 593183]",
+    "time": "2026-05-29T15:43:25.085Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 5.0 in stage 21.2 (TID 9778),5,main]"
+  },
+  {
+    "id": "[1780069405177, 943557]",
+    "time": "2026-05-29T15:43:25.177Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#84,Executor task launch worker for task 8.0 in stage 21.2 (TID 9781),5,main]"
+  },
+  {
+    "id": "[1780069405269, 785430]",
+    "time": "2026-05-29T15:43:25.269Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#69,prometheus-http-1-4,5,main]"
+  },
+  {
+    "id": "[1780069405275, 595333]",
+    "time": "2026-05-29T15:43:25.275Z",
+    "level": "error",
+    "message": "[Container in shutdown] Uncaught exception in thread Thread[#57,Executor task launch worker for task 1.0 in stage 21.2 (TID 9774),5,main]"
+  },
+  {
+    "id": "[1780069405337, 108159]",
+    "time": "2026-05-29T15:43:25.337Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 19 outstanding blocks"
+  },
+  {
+    "id": "[1780069405341, 256011]",
+    "time": "2026-05-29T15:43:25.341Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405343, 813826]",
+    "time": "2026-05-29T15:43:25.343Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405344, 640681]",
+    "time": "2026-05-29T15:43:25.344Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405344, 791627]",
+    "time": "2026-05-29T15:43:25.344Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405345, 506793]",
+    "time": "2026-05-29T15:43:25.345Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405346, 703551]",
+    "time": "2026-05-29T15:43:25.346Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405346, 839475]",
+    "time": "2026-05-29T15:43:25.346Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405347, 193712]",
+    "time": "2026-05-29T15:43:25.347Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405347, 294530]",
+    "time": "2026-05-29T15:43:25.347Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405348, 398576]",
+    "time": "2026-05-29T15:43:25.348Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405348, 496011]",
+    "time": "2026-05-29T15:43:25.348Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405349, 271992]",
+    "time": "2026-05-29T15:43:25.349Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405349, 903701]",
+    "time": "2026-05-29T15:43:25.349Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405350, 69040]",
+    "time": "2026-05-29T15:43:25.350Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405350, 412208]",
+    "time": "2026-05-29T15:43:25.350Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405351, 153063]",
+    "time": "2026-05-29T15:43:25.351Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405351, 174071]",
+    "time": "2026-05-29T15:43:25.351Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405352, 409291]",
+    "time": "2026-05-29T15:43:25.352Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405352, 867503]",
+    "time": "2026-05-29T15:43:25.352Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069405629, 681222]",
+    "time": "2026-05-29T15:43:25.629Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=2011735812998,chunkIndex=10],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-a3fb91a5-44fb-4403-a21c-4940882f3f1c/15/shuffle_5_9726_0.data,offset=3048244,length=622759]] to /10.42.45.59:55532; closing connection"
+  },
+  {
+    "id": "[1780069405632, 325942]",
+    "time": "2026-05-29T15:43:25.632Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=2011735812998,chunkIndex=12],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-a3fb91a5-44fb-4403-a21c-4940882f3f1c/0c/shuffle_5_9749_0.data,offset=1820747,length=376305]] to /10.42.45.59:55532; closing connection"
+  },
+  {
+    "id": "[1780069405632, 515078]",
+    "time": "2026-05-29T15:43:25.632Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=2011735812998,chunkIndex=11],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-a3fb91a5-44fb-4403-a21c-4940882f3f1c/33/shuffle_5_9739_0.data,offset=3036634,length=627007]] to /10.42.45.59:55532; closing connection"
+  },
+  {
+    "id": "[1780069405633, 364246]",
+    "time": "2026-05-29T15:43:25.633Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=2011735812998,chunkIndex=13],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-a3fb91a5-44fb-4403-a21c-4940882f3f1c/05/shuffle_5_9753_0.data,offset=2443907,length=500179]] to /10.42.45.59:55532; closing connection"
+  },
+  {
+    "id": "[1780069405633, 672630]",
+    "time": "2026-05-29T15:43:25.633Z",
+    "level": "error",
+    "message": "Error sending result ChunkFetchSuccess[streamChunkId=StreamChunkId[streamId=2011735812998,chunkIndex=14],buffer=FileSegmentManagedBuffer[file=/var/data/spark-3cecdb91-5c17-4a22-b3e7-083340399548/blockmgr-a3fb91a5-44fb-4403-a21c-4940882f3f1c/3f/shuffle_5_9771_0.data,offset=3142008,length=643312]] to /10.42.45.59:55532; closing connection"
+  },
+  {
+    "id": "[1780069405937, 86347]",
+    "time": "2026-05-29T15:43:25.937Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 3.0 in stage 21.2 (TID 9776),5,main]"
+  },
+  {
+    "id": "[1780069406155, 752294]",
+    "time": "2026-05-29T15:43:26.155Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#62,Executor task launch worker for task 4.0 in stage 21.2 (TID 9777),5,main]"
+  },
+  {
+    "id": "[1780069406682, 719623]",
+    "time": "2026-05-29T15:43:26.682Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#59,Executor task launch worker for task 6.0 in stage 21.2 (TID 9779),5,main]"
+  },
+  {
+    "id": "[1780069406792, 325584]",
+    "time": "2026-05-29T15:43:26.792Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780069406931, 629215]",
+    "time": "2026-05-29T15:43:26.931Z",
+    "level": "error",
+    "message": "Lost executor 69 on 10.42.53.92: \nThe executor with id 69 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:32:07Z\n\t container finished at: 2026-05-29T15:43:25Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069406946, 300968]",
+    "time": "2026-05-29T15:43:26.946Z",
+    "level": "error",
+    "message": "Lost executor 67 on 10.42.45.59: \nThe executor with id 67 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:32:07Z\n\t container finished at: 2026-05-29T15:43:25Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069407349, 312487]",
+    "time": "2026-05-29T15:43:27.349Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780069407351, 289221]",
+    "time": "2026-05-29T15:43:27.351Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407352, 807189]",
+    "time": "2026-05-29T15:43:27.352Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407353, 395531]",
+    "time": "2026-05-29T15:43:27.353Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407353, 603326]",
+    "time": "2026-05-29T15:43:27.353Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407354, 802200]",
+    "time": "2026-05-29T15:43:27.354Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407354, 813893]",
+    "time": "2026-05-29T15:43:27.354Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407355, 565095]",
+    "time": "2026-05-29T15:43:27.355Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407356, 127045]",
+    "time": "2026-05-29T15:43:27.356Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407356, 605898]",
+    "time": "2026-05-29T15:43:27.356Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407357, 31483]",
+    "time": "2026-05-29T15:43:27.357Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407357, 383699]",
+    "time": "2026-05-29T15:43:27.357Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407358, 58764]",
+    "time": "2026-05-29T15:43:27.358Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407358, 422023]",
+    "time": "2026-05-29T15:43:27.358Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407358, 598641]",
+    "time": "2026-05-29T15:43:27.358Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407359, 350667]",
+    "time": "2026-05-29T15:43:27.359Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407359, 452678]",
+    "time": "2026-05-29T15:43:27.359Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407360, 202872]",
+    "time": "2026-05-29T15:43:27.360Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069407691, 635376]",
+    "time": "2026-05-29T15:43:27.691Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 2.0 in stage 21.2 (TID 9775),5,main]"
+  },
+  {
+    "id": "[1780069407792, 209920]",
+    "time": "2026-05-29T15:43:27.792Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 8 partition 6"
+  },
+  {
+    "id": "[1780069407795, 997099]",
+    "time": "2026-05-29T15:43:27.795Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 8 partition 6\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780069407805, 14642]",
+    "time": "2026-05-29T15:43:27.805Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780069408013, 707282]",
+    "time": "2026-05-29T15:43:28.013Z",
+    "level": "error",
+    "message": "Lost executor 68 on 10.42.135.148: \nThe executor with id 68 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:32:10Z\n\t container finished at: 2026-05-29T15:43:25Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069408054, 162302]",
+    "time": "2026-05-29T15:43:28.054Z",
+    "level": "error",
+    "message": "Lost executor 49 on 10.42.135.141: \nThe executor with id 49 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:03Z\n\t container finished at: 2026-05-29T15:43:27Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069408063, 355302]",
+    "time": "2026-05-29T15:43:28.063Z",
+    "level": "error",
+    "message": "Lost executor 63 on 10.42.194.204: \nThe executor with id 63 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:32:05Z\n\t container finished at: 2026-05-29T15:43:26Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069410590, 335246]",
+    "time": "2026-05-29T15:43:30.590Z",
+    "level": "error",
+    "message": "Lost executor 70 on 10.42.255.31: \nThe executor with id 70 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:32:07Z\n\t container finished at: 2026-05-29T15:43:28Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069412620, 277514]",
+    "time": "2026-05-29T15:43:32.620Z",
+    "level": "error",
+    "message": "Lost executor 65 on 10.42.118.30: \nThe executor with id 65 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:32:04Z\n\t container finished at: 2026-05-29T15:43:26Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069534907, 759938]",
+    "time": "2026-05-29T15:45:34.907Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780069534912, 420494]",
+    "time": "2026-05-29T15:45:34.912Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534914, 196717]",
+    "time": "2026-05-29T15:45:34.914Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534915, 737333]",
+    "time": "2026-05-29T15:45:34.915Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534916, 384774]",
+    "time": "2026-05-29T15:45:34.916Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534916, 721125]",
+    "time": "2026-05-29T15:45:34.916Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534917, 416205]",
+    "time": "2026-05-29T15:45:34.917Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534918, 162233]",
+    "time": "2026-05-29T15:45:34.918Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534918, 492881]",
+    "time": "2026-05-29T15:45:34.918Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534919, 890614]",
+    "time": "2026-05-29T15:45:34.919Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534920, 491137]",
+    "time": "2026-05-29T15:45:34.920Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534920, 550785]",
+    "time": "2026-05-29T15:45:34.920Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534921, 383891]",
+    "time": "2026-05-29T15:45:34.921Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534922, 343710]",
+    "time": "2026-05-29T15:45:34.922Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534922, 376781]",
+    "time": "2026-05-29T15:45:34.922Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534923, 424033]",
+    "time": "2026-05-29T15:45:34.923Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534924, 267269]",
+    "time": "2026-05-29T15:45:34.924Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069534925, 723962]",
+    "time": "2026-05-29T15:45:34.925Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.226.161:37831"
+  },
+  {
+    "id": "[1780069537081, 389602]",
+    "time": "2026-05-29T15:45:37.081Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 7.0 in stage 21.2 (TID 9780),5,main]"
+  },
+  {
+    "id": "[1780069537203, 426059]",
+    "time": "2026-05-29T15:45:37.203Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780069538682, 287055]",
+    "time": "2026-05-29T15:45:38.682Z",
+    "level": "error",
+    "message": "Lost executor 64 on 10.42.148.179: \nThe executor with id 64 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:32:06Z\n\t container finished at: 2026-05-29T15:45:37Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780069557913, 155218]",
+    "time": "2026-05-29T15:45:57.913Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 12 partition 1"
+  },
+  {
+    "id": "[1780069557932, 153928]",
+    "time": "2026-05-29T15:45:57.932Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 12 partition 1\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat geotrellis.spark.ContextRDD.compute(ContextRDD.scala:36)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780069557967, 970444]",
+    "time": "2026-05-29T15:45:57.967Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 12 partition 4"
+  },
+  {
+    "id": "[1780069670166, 585147]",
+    "time": "2026-05-29T15:47:50.166Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780069670168, 996994]",
+    "time": "2026-05-29T15:47:50.168Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.148.179:33659"
+  },
+  {
+    "id": "[1780069670892, 344013]",
+    "time": "2026-05-29T15:47:50.892Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 1 outstanding blocks"
+  },
+  {
+    "id": "[1780069670894, 509744]",
+    "time": "2026-05-29T15:47:50.894Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.148.179:33659"
+  },
+  {
+    "id": "[1780070436195, 860437]",
+    "time": "2026-05-29T16:00:36.195Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#58,Executor task launch worker for task 0.0 in stage 21.3 (TID 13012),5,main]"
+  },
+  {
+    "id": "[1780070436276, 615579]",
+    "time": "2026-05-29T16:00:36.276Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 16 outstanding blocks"
+  },
+  {
+    "id": "[1780070436306, 615119]",
+    "time": "2026-05-29T16:00:36.306Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780070436340, 178778]",
+    "time": "2026-05-29T16:00:36.340Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 23 outstanding blocks"
+  },
+  {
+    "id": "[1780070436405, 930188]",
+    "time": "2026-05-29T16:00:36.405Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 17 outstanding blocks"
+  },
+  {
+    "id": "[1780070437074, 16666]",
+    "time": "2026-05-29T16:00:37.074Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 18 outstanding blocks"
+  },
+  {
+    "id": "[1780070437077, 773856]",
+    "time": "2026-05-29T16:00:37.077Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437078, 674283]",
+    "time": "2026-05-29T16:00:37.078Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437079, 769652]",
+    "time": "2026-05-29T16:00:37.079Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437080, 86170]",
+    "time": "2026-05-29T16:00:37.080Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437080, 468167]",
+    "time": "2026-05-29T16:00:37.080Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437080, 959444]",
+    "time": "2026-05-29T16:00:37.080Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437081, 459387]",
+    "time": "2026-05-29T16:00:37.081Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437081, 951948]",
+    "time": "2026-05-29T16:00:37.081Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437081, 981168]",
+    "time": "2026-05-29T16:00:37.081Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437082, 101507]",
+    "time": "2026-05-29T16:00:37.082Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437082, 950002]",
+    "time": "2026-05-29T16:00:37.082Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437082, 967949]",
+    "time": "2026-05-29T16:00:37.082Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437083, 163575]",
+    "time": "2026-05-29T16:00:37.083Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437083, 724984]",
+    "time": "2026-05-29T16:00:37.083Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437084, 135652]",
+    "time": "2026-05-29T16:00:37.084Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437084, 974029]",
+    "time": "2026-05-29T16:00:37.084Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437085, 331278]",
+    "time": "2026-05-29T16:00:37.085Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437085, 586899]",
+    "time": "2026-05-29T16:00:37.085Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437499, 365891]",
+    "time": "2026-05-29T16:00:37.499Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 23 outstanding blocks"
+  },
+  {
+    "id": "[1780070437504, 101507]",
+    "time": "2026-05-29T16:00:37.504Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437505, 843436]",
+    "time": "2026-05-29T16:00:37.505Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437506, 230219]",
+    "time": "2026-05-29T16:00:37.506Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437506, 311614]",
+    "time": "2026-05-29T16:00:37.506Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437506, 987196]",
+    "time": "2026-05-29T16:00:37.506Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437507, 104176]",
+    "time": "2026-05-29T16:00:37.507Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437507, 126862]",
+    "time": "2026-05-29T16:00:37.507Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437507, 805378]",
+    "time": "2026-05-29T16:00:37.507Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437508, 459119]",
+    "time": "2026-05-29T16:00:37.508Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437508, 511235]",
+    "time": "2026-05-29T16:00:37.508Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437509, 65696]",
+    "time": "2026-05-29T16:00:37.509Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437509, 492061]",
+    "time": "2026-05-29T16:00:37.509Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437510, 238844]",
+    "time": "2026-05-29T16:00:37.510Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437510, 978688]",
+    "time": "2026-05-29T16:00:37.510Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437510, 992464]",
+    "time": "2026-05-29T16:00:37.510Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437511, 349444]",
+    "time": "2026-05-29T16:00:37.511Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437511, 853837]",
+    "time": "2026-05-29T16:00:37.511Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437511, 857270]",
+    "time": "2026-05-29T16:00:37.511Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437512, 151644]",
+    "time": "2026-05-29T16:00:37.512Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437512, 678792]",
+    "time": "2026-05-29T16:00:37.512Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437512, 956632]",
+    "time": "2026-05-29T16:00:37.512Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437513, 607988]",
+    "time": "2026-05-29T16:00:37.513Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437513, 684610]",
+    "time": "2026-05-29T16:00:37.513Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437679, 630330]",
+    "time": "2026-05-29T16:00:37.679Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 23 outstanding blocks"
+  },
+  {
+    "id": "[1780070437682, 906784]",
+    "time": "2026-05-29T16:00:37.682Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437684, 676653]",
+    "time": "2026-05-29T16:00:37.684Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437685, 376952]",
+    "time": "2026-05-29T16:00:37.685Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437685, 899294]",
+    "time": "2026-05-29T16:00:37.685Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437686, 547544]",
+    "time": "2026-05-29T16:00:37.686Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437686, 942017]",
+    "time": "2026-05-29T16:00:37.686Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437687, 45701]",
+    "time": "2026-05-29T16:00:37.687Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437687, 159037]",
+    "time": "2026-05-29T16:00:37.687Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437688, 99627]",
+    "time": "2026-05-29T16:00:37.688Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437688, 656134]",
+    "time": "2026-05-29T16:00:37.688Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437689, 405675]",
+    "time": "2026-05-29T16:00:37.689Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437689, 985588]",
+    "time": "2026-05-29T16:00:37.689Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437690, 173021]",
+    "time": "2026-05-29T16:00:37.690Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437690, 580917]",
+    "time": "2026-05-29T16:00:37.690Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437691, 8672]",
+    "time": "2026-05-29T16:00:37.691Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437691, 730684]",
+    "time": "2026-05-29T16:00:37.691Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437692, 15736]",
+    "time": "2026-05-29T16:00:37.692Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437692, 360626]",
+    "time": "2026-05-29T16:00:37.692Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437692, 676371]",
+    "time": "2026-05-29T16:00:37.692Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437693, 463024]",
+    "time": "2026-05-29T16:00:37.693Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437693, 539226]",
+    "time": "2026-05-29T16:00:37.693Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437694, 528973]",
+    "time": "2026-05-29T16:00:37.694Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070437694, 874420]",
+    "time": "2026-05-29T16:00:37.694Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438843, 589164]",
+    "time": "2026-05-29T16:00:38.843Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 16 outstanding blocks"
+  },
+  {
+    "id": "[1780070438846, 551694]",
+    "time": "2026-05-29T16:00:38.846Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438848, 215971]",
+    "time": "2026-05-29T16:00:38.848Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438849, 968087]",
+    "time": "2026-05-29T16:00:38.849Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438850, 923456]",
+    "time": "2026-05-29T16:00:38.850Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438851, 814488]",
+    "time": "2026-05-29T16:00:38.851Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438852, 520493]",
+    "time": "2026-05-29T16:00:38.852Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438853, 3572]",
+    "time": "2026-05-29T16:00:38.853Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438854, 805451]",
+    "time": "2026-05-29T16:00:38.854Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438855, 900371]",
+    "time": "2026-05-29T16:00:38.855Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438856, 966974]",
+    "time": "2026-05-29T16:00:38.856Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438857, 320684]",
+    "time": "2026-05-29T16:00:38.857Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438857, 831679]",
+    "time": "2026-05-29T16:00:38.857Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438858, 793810]",
+    "time": "2026-05-29T16:00:38.858Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438859, 960441]",
+    "time": "2026-05-29T16:00:38.859Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438859, 995189]",
+    "time": "2026-05-29T16:00:38.859Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438860, 949082]",
+    "time": "2026-05-29T16:00:38.860Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070438946, 800694]",
+    "time": "2026-05-29T16:00:38.946Z",
+    "level": "error",
+    "message": "Lost executor 47 on 10.42.254.196: \nThe executor with id 47 exited with exit code 52(JVM OOM).\n\n\n\nThe API gave the following container statuses:\n\n\n\t container name: spark-kubernetes-executor\n\t container image: registry.internal/prod/openeo-geotrellis-kube-python311:20260527-748\n\t container state: terminated\n\t container started at: 2026-05-29T15:24:02Z\n\t container finished at: 2026-05-29T16:00:36Z\n\t exit code: 52\n\t termination reason: Error\n      "
+  },
+  {
+    "id": "[1780070439062, 772410]",
+    "time": "2026-05-29T16:00:39.062Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 10 outstanding blocks"
+  },
+  {
+    "id": "[1780070439063, 332931]",
+    "time": "2026-05-29T16:00:39.063Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439064, 384342]",
+    "time": "2026-05-29T16:00:39.064Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439064, 755849]",
+    "time": "2026-05-29T16:00:39.064Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439065, 585938]",
+    "time": "2026-05-29T16:00:39.065Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439066, 35864]",
+    "time": "2026-05-29T16:00:39.066Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439066, 93203]",
+    "time": "2026-05-29T16:00:39.066Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439066, 304903]",
+    "time": "2026-05-29T16:00:39.066Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439067, 377541]",
+    "time": "2026-05-29T16:00:39.067Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439067, 561499]",
+    "time": "2026-05-29T16:00:39.067Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439067, 880758]",
+    "time": "2026-05-29T16:00:39.067Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439322, 366808]",
+    "time": "2026-05-29T16:00:39.322Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 16 outstanding blocks"
+  },
+  {
+    "id": "[1780070439323, 432944]",
+    "time": "2026-05-29T16:00:39.323Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439324, 207693]",
+    "time": "2026-05-29T16:00:39.324Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439324, 813300]",
+    "time": "2026-05-29T16:00:39.324Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439325, 164372]",
+    "time": "2026-05-29T16:00:39.325Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439325, 405368]",
+    "time": "2026-05-29T16:00:39.325Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439325, 683940]",
+    "time": "2026-05-29T16:00:39.325Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439325, 869358]",
+    "time": "2026-05-29T16:00:39.325Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439326, 75289]",
+    "time": "2026-05-29T16:00:39.326Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439326, 292294]",
+    "time": "2026-05-29T16:00:39.326Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439326, 561562]",
+    "time": "2026-05-29T16:00:39.326Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439326, 838109]",
+    "time": "2026-05-29T16:00:39.326Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439327, 516741]",
+    "time": "2026-05-29T16:00:39.327Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439327, 631837]",
+    "time": "2026-05-29T16:00:39.327Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439327, 721628]",
+    "time": "2026-05-29T16:00:39.327Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 11 outstanding blocks"
+  },
+  {
+    "id": "[1780070439327, 881355]",
+    "time": "2026-05-29T16:00:39.327Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439327, 884165]",
+    "time": "2026-05-29T16:00:39.327Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439328, 721528]",
+    "time": "2026-05-29T16:00:39.328Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439330, 411423]",
+    "time": "2026-05-29T16:00:39.330Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439332, 744304]",
+    "time": "2026-05-29T16:00:39.332Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439332, 750533]",
+    "time": "2026-05-29T16:00:39.332Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439333, 132000]",
+    "time": "2026-05-29T16:00:39.333Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439333, 862298]",
+    "time": "2026-05-29T16:00:39.333Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439334, 25404]",
+    "time": "2026-05-29T16:00:39.334Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439334, 26493]",
+    "time": "2026-05-29T16:00:39.334Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439334, 992808]",
+    "time": "2026-05-29T16:00:39.334Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439335, 212774]",
+    "time": "2026-05-29T16:00:39.335Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439336, 77873]",
+    "time": "2026-05-29T16:00:39.336Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439336, 147192]",
+    "time": "2026-05-29T16:00:39.336Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070439963, 219767]",
+    "time": "2026-05-29T16:00:39.963Z",
+    "level": "error",
+    "message": "Missing an output location for shuffle 5 partition 0"
+  },
+  {
+    "id": "[1780070439976, 399411]",
+    "time": "2026-05-29T16:00:39.976Z",
+    "level": "error",
+    "message": "Stage error: org.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 5 partition 0\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780070439982, 897170]",
+    "time": "2026-05-29T16:00:39.982Z",
+    "level": "error",
+    "message": "Stage error: Job aborted due to stage failure: ShuffleMapStage 21 (apply_dimension target='t' Some(ConfigurableSpaceTimePartitioner with indexReduction 12 and keyIndex SfCurveZSpaceTimeKeyIndex)) has failed the maximum allowable number of times: 4. Most recent failure reason:\norg.apache.spark.shuffle.MetadataFetchFailedException: Missing an output location for shuffle 5 partition 0\n\tat org.apache.spark.MapOutputTracker$.validateStatus(MapOutputTracker.scala:1770)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11(MapOutputTracker.scala:1715)\n\tat org.apache.spark.MapOutputTracker$.$anonfun$convertMapStatuses$11$adapted(MapOutputTracker.scala:1714)\n\tat scala.collection.IterableOnceOps.foreach(IterableOnce.scala:619)\n\tat scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:617)\n\tat scala.collection.AbstractIterator.foreach(Iterator.scala:1306)\n\tat org.apache.spark.MapOutputTracker$.convertMapStatuses(MapOutputTracker.scala:1714)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorIdImpl(MapOutputTracker.scala:1348)\n\tat org.apache.spark.MapOutputTrackerWorker.getMapSizesByExecutorId(MapOutputTracker.scala:1310)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:135)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader(ShuffleManager.scala:67)\n\tat org.apache.spark.shuffle.ShuffleManager.getReader$(ShuffleManager.scala:61)\n\tat org.apache.spark.shuffle.sort.SortShuffleManager.getReader(SortShuffleManager.scala:73)\n\tat org.apache.spark.rdd.ShuffledRDD.compute(ShuffledRDD.scala:106)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)\n\tat org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:374)\n\tat org.apache.spark.rdd.RDD.iterator(RDD.scala:338)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:107)\n\tat org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:54)\n\tat org.apache.spark.TaskContext.runTaskWithListeners(TaskContext.scala:171)\n\tat org.apache.spark.scheduler.Task.run(Task.scala:147)\n\tat org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$5(Executor.scala:647)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally(SparkErrorUtils.scala:80)\n\tat org.apache.spark.util.SparkErrorUtils.tryWithSafeFinally$(SparkErrorUtils.scala:77)\n\tat org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:99)\n\tat org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:650)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)\n\tat java.base/java.lang.Thread.run(Thread.java:1583)\n"
+  },
+  {
+    "id": "[1780070440082, 774270]",
+    "time": "2026-05-29T16:00:40.082Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#105,Executor task launch worker for task 1.0 in stage 21.3 (TID 13013),5,main]"
+  },
+  {
+    "id": "[1780070440126, 979649]",
+    "time": "2026-05-29T16:00:40.126Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 3.0 in stage 21.3 (TID 13015),5,main]"
+  },
+  {
+    "id": "[1780070440165, 662547]",
+    "time": "2026-05-29T16:00:40.165Z",
+    "level": "error",
+    "message": "Uncaught exception in thread Thread[#57,Executor task launch worker for task 4.0 in stage 21.3 (TID 13016),5,main]"
+  },
+  {
+    "id": "[1780070440312, 358192]",
+    "time": "2026-05-29T16:00:40.312Z",
+    "level": "error",
+    "message": "Exception while beginning fetch of 23 outstanding blocks"
+  },
+  {
+    "id": "[1780070440324, 911369]",
+    "time": "2026-05-29T16:00:40.324Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440327, 963076]",
+    "time": "2026-05-29T16:00:40.327Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440328, 926780]",
+    "time": "2026-05-29T16:00:40.328Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440329, 801473]",
+    "time": "2026-05-29T16:00:40.329Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440330, 30702]",
+    "time": "2026-05-29T16:00:40.330Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440331, 997354]",
+    "time": "2026-05-29T16:00:40.331Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440332, 256849]",
+    "time": "2026-05-29T16:00:40.332Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440333, 414544]",
+    "time": "2026-05-29T16:00:40.333Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440333, 925940]",
+    "time": "2026-05-29T16:00:40.333Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440334, 412974]",
+    "time": "2026-05-29T16:00:40.334Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440334, 490784]",
+    "time": "2026-05-29T16:00:40.334Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440335, 742270]",
+    "time": "2026-05-29T16:00:40.335Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440336, 29793]",
+    "time": "2026-05-29T16:00:40.336Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440337, 57535]",
+    "time": "2026-05-29T16:00:40.337Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440337, 282164]",
+    "time": "2026-05-29T16:00:40.337Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440338, 368788]",
+    "time": "2026-05-29T16:00:40.338Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440339, 484918]",
+    "time": "2026-05-29T16:00:40.339Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440339, 711640]",
+    "time": "2026-05-29T16:00:40.339Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440340, 168446]",
+    "time": "2026-05-29T16:00:40.340Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440340, 797674]",
+    "time": "2026-05-29T16:00:40.340Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440341, 822797]",
+    "time": "2026-05-29T16:00:40.341Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440341, 864619]",
+    "time": "2026-05-29T16:00:40.341Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070440342, 803826]",
+    "time": "2026-05-29T16:00:40.342Z",
+    "level": "error",
+    "message": "Failed to get block(s) from 10.42.254.196:35435"
+  },
+  {
+    "id": "[1780070441430, 578156]",
+    "time": "2026-05-29T16:00:41.430Z",
+    "level": "error",
+    "message": "OpenEO batch job failed: A part of your process graph failed multiple times. Simply try submitting again, or use batch job logs to find more detailed information in case of persistent failures. Increasing executor memory may help if the root cause is not clear from the logs."
+  }
+]

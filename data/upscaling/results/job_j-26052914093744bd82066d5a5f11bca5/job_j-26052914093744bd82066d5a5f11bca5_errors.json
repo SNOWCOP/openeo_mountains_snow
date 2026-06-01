@@ -1,0 +1,8 @@
+[
+  {
+    "id": "[1780063818242, 567537]",
+    "time": "2026-05-29T14:10:18.242Z",
+    "level": "error",
+    "message": "OpenEO batch job failed: ProcessGraphComplexityException(status_code=400, code='ProcessGraphComplexity', message=\"The process graph is computationally too heavy and will likely time out. Disable this check with 'job_options.do_extent_check': collection_id 'SENTINEL2_L2A': Unsupported spatial extent: {'west': -2489.1160639885543, 'south': -2453.278170150954, 'east': 2510.8839360114457, 'north': 2546.721829849046, 'crs': 'EPSG:4326'}\", id='no-request')"
+  }
+]

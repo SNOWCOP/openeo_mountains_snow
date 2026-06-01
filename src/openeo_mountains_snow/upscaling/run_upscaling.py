@@ -16,5 +16,14 @@ if __name__ == "__main__":
         default=JOB_DATABASE_PATH,
         help="Path to Parquet job database.",
     )
+    parser.add_argument(
+        "--max-spatial-tiles",
+        type=int,
+        default=None,
+        help="Compatibility option; tile size is fixed to the 20 km standard.",
+    )
     args = parser.parse_args()
-    run(db_path=args.db_path)
+    run(
+        db_path=args.db_path,
+        max_spatial_tiles=args.max_spatial_tiles,
+    )

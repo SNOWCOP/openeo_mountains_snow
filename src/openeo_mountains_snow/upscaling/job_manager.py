@@ -3,24 +3,27 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
 from pathlib import Path
 
 import pandas as pd
 import openeo
+from pyproj import Transformer
 from openeo.extra.job_management import MultiBackendJobManager, ParquetJobDatabase
 
 from openeo_mountains_snow.upscaling.config import (
     BACKEND,
+    DEFAULT_TILE_SIZE_M,
     FULL_SENTINEL_TEMPORAL_EXTENT,
     JOB_DATABASE_PATH,
     JOB_OPTIONS,
     MAX_PARALLEL_JOBS,
     SPATIAL_EXTENT,
-    WINDOW_MONTHS,
     WORKSPACE,
 )
-from openeo_mountains_snow.upscaling.pipeline import build_conditional_probability_cube
+from openeo_mountains_snow.snowcoverarea_reconstruction.config import CRS
+from openeo_mountains_snow.upscaling.pipeline import (
+    build_conditional_probability_with_inputs_cube,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,57 +33,81 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Temporal windowing helpers
-# ---------------------------------------------------------------------------
+def _square_extent_from_center(extent: dict, tile_size_m: int) -> dict:
+    """Create a square extent in target CRS units (meters), centered on input AOI."""
+    west = float(extent["west"])
+    east = float(extent["east"])
+    south = float(extent["south"])
+    north = float(extent["north"])
+    source_crs = extent["crs"]
+    target_crs = f"EPSG:{CRS}"
 
-def _sentinel_windows(extent: list[str]) -> list[list[str]]:
-    """Split the full temporal extent into WINDOW_MONTHS-sized chunks."""
-    global_start = date.fromisoformat(extent[0])
-    global_end = date.fromisoformat(extent[1])
+    center_x_src = (west + east) / 2.0
+    center_y_src = (south + north) / 2.0
 
-    windows: list[list[str]] = []
-    current = global_start
+    if source_crs == target_crs:
+        center_x = center_x_src
+        center_y = center_y_src
+    else:
+        transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
+        center_x, center_y = transformer.transform(center_x_src, center_y_src)
 
-    while current < global_end:
-        end_year = current.year + (current.month + WINDOW_MONTHS - 1 - 1) // 12
-        end_month = (current.month + WINDOW_MONTHS - 1 - 1) % 12 + 1
-        last_day = (date(end_year + end_month // 12, end_month % 12 + 1, 1) - date(end_year, end_month, 1)).days
-        window_end = min(date(end_year, end_month, last_day), global_end)
-        windows.append([current.isoformat(), window_end.isoformat()])
-        # Advance to next window
-        next_month = current.month + WINDOW_MONTHS
-        next_year = current.year + (next_month - 1) // 12
-        next_month = (next_month - 1) % 12 + 1
-        current = date(next_year, next_month, 1)
+    half = tile_size_m / 2.0
 
-    return windows
+    return {
+        "west": center_x - half,
+        "south": center_y - half,
+        "east": center_x + half,
+        "north": center_y + half,
+        "crs": target_crs,
+    }
 
 
 # ---------------------------------------------------------------------------
 # Job database creation
 # ---------------------------------------------------------------------------
 
-def create_job_dataframe() -> pd.DataFrame:
-    """Build a DataFrame with one row per temporal window, ready for ParquetJobDatabase."""
-    windows = _sentinel_windows(FULL_SENTINEL_TEMPORAL_EXTENT)
+def create_job_dataframe(
+    max_spatial_tiles: int | None = None,
+) -> pd.DataFrame:
+    """Build a DataFrame with one row for the standard 20 km tile-size setup.
+
+    All jobs use the full configured timeline. Temporal windowing is disabled.
+    No split_area call is used.
+    """
+    selected_tile_sizes = [DEFAULT_TILE_SIZE_M]
+    if max_spatial_tiles is not None and max_spatial_tiles < 1:
+        logger.info("max_spatial_tiles < 1 requested; forcing to one standard tile-size scenario")
 
     rows = []
-    for window in windows:
+    for tile_idx_local, tile_size_m in enumerate(selected_tile_sizes):
+        tile = _square_extent_from_center(SPATIAL_EXTENT, tile_size_m)
         rows.append({
-            "temporal_extent": window,
-            "spatial_extent": SPATIAL_EXTENT,
-            "title": f"swe_upscale_{window[0]}_{window[1]}",
+            "temporal_extent": FULL_SENTINEL_TEMPORAL_EXTENT,
+            "spatial_extent": tile,
+            "tile_size_m": tile_size_m,
+            "title": (
+                f"swe_upscale_{FULL_SENTINEL_TEMPORAL_EXTENT[0]}_"
+                f"{FULL_SENTINEL_TEMPORAL_EXTENT[1]}_"
+                f"{tile_size_m // 1000}km_tile{tile_idx_local:02d}"
+            ),
         })
 
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    logger.info("Job dataframe contains %d row(s) for the fixed 20 km tile-size", len(df))
+    return df
 
 
-def create_job_database(db_path: Path = JOB_DATABASE_PATH) -> ParquetJobDatabase:
+def create_job_database(
+    db_path: Path = JOB_DATABASE_PATH,
+    max_spatial_tiles: int | None = None,
+) -> ParquetJobDatabase:
     """Initialize or load an existing ParquetJobDatabase for the upscaling run."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
     job_db = ParquetJobDatabase(db_path)
-    df = create_job_dataframe()
+    df = create_job_dataframe(
+        max_spatial_tiles=max_spatial_tiles,
+    )
     return job_db.initialize_from_df(df, on_exists="skip")
 
 
@@ -89,14 +116,14 @@ def create_job_database(db_path: Path = JOB_DATABASE_PATH) -> ParquetJobDatabase
 # ---------------------------------------------------------------------------
 
 def start_job(row: pd.Series, connection: openeo.Connection, **kwargs) -> openeo.BatchJob:
-    """Build the conditional probability cube for one temporal window and create a batch job."""
+    """Build the output cube (CP + pre-division inputs) for one tile and submit."""
     temporal_extent = row["temporal_extent"]
     spatial_extent = row["spatial_extent"]
     title = row.get("title", "swe_upscale")
 
-    logger.info("Building conditional probability cube for %s", title)
+    logger.info("Building CP and pre-division inputs cube for %s", title)
 
-    cube = build_conditional_probability_cube(
+    cube = build_conditional_probability_with_inputs_cube(
         connection=connection,
         temporal_extent=temporal_extent,
         spatial_extent=spatial_extent,
@@ -115,14 +142,20 @@ def start_job(row: pd.Series, connection: openeo.Connection, **kwargs) -> openeo
 # Main runner
 # ---------------------------------------------------------------------------
 
-def run(db_path: Path = JOB_DATABASE_PATH) -> None:
+def run(
+    db_path: Path = JOB_DATABASE_PATH,
+    max_spatial_tiles: int | None = None,
+) -> None:
     """Connect, initialize the database, and run the job manager."""
     logger.info("Connecting to %s", BACKEND)
     connection = openeo.connect(BACKEND, auto_validate=False)
     connection.authenticate_oidc()
 
     logger.info("Initializing job database at %s", db_path)
-    job_db = create_job_database(db_path)
+    job_db = create_job_database(
+        db_path=db_path,
+        max_spatial_tiles=max_spatial_tiles,
+    )
 
     job_manager = MultiBackendJobManager(root_dir=str(db_path.parent / "results"))
     job_manager.add_backend("cdse", connection=connection, parallel_jobs=MAX_PARALLEL_JOBS)
@@ -130,3 +163,5 @@ def run(db_path: Path = JOB_DATABASE_PATH) -> None:
     logger.info("Starting job manager...")
     job_manager.run_jobs(start_job=start_job, job_db=job_db)
     logger.info("Job manager finished.")
+
+
