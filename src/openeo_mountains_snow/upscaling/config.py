@@ -32,8 +32,15 @@ SPATIAL_EXTENT_WGS84 = {
     "crs": "EPSG:4326",
 }
 
-# This extent will be re-projected by split_area() to EPSG:32632 for tiling.
-SPATIAL_EXTENT = SPATIAL_EXTENT_WGS84
+# SWE-relevant region centered on Senales.
+# Fixed to ~30 x 30 km so we get a deterministic 3x3 grid of 10 x 10 km jobs.
+SPATIAL_EXTENT = {
+    "west": 10.6879,
+    "south": 46.5868,
+    "east": 11.0799,
+    "north": 46.8568,
+    "crs": "EPSG:4326",
+}
 
 # Workspace for persisting results as a STAC collection.
 WORKSPACE = "snowcop-workspace"
@@ -41,14 +48,32 @@ WORKSPACE = "snowcop-workspace"
 # Full Sentinel-2 era used for every upscaling job.
 FULL_SENTINEL_TEMPORAL_EXTENT = ["2015-01-01", "2025-12-31"]
 
-# Last date available in the MODIS STAC collection.
-MODIS_END_DATE = "2023-12-31"
+# Hydra config defaults for snow_cover_fraction_cube
+DEFAULT_SCF_CONFIG = {
+    "connection": {
+        "endpoint": "https://openeo.dataspace.copernicus.eu/"
+    },
+    "sentinel2_l2a": {
+        "collection": "SENTINEL2_L2A",
+        "scl_band": "SCL",
+        "cloud_values": [8, 9, 3, 10]
+    },
+    "sentinel2_l1c": {
+        "collection": "SENTINEL2_L1C",
+        "bands": ["B02", "B03", "B04", "B08", "B11", "sunZenithAngles", "sunAzimuthAngles"]
+    },
+    "water_mask": {
+        "collection": "ESA_WORLDCOVER_10M_2021_V2",
+        "band": "MAP",
+        "water_values": [80]
+    }
+}
 
-# Standard spatial tile size (meters): 20 km.
-DEFAULT_TILE_SIZE_M = 20000
+# Standard spatial tile size (meters): 10 km.
+DEFAULT_TILE_SIZE_M = 10000
 
 # How many jobs to run in parallel on the backend.
-MAX_PARALLEL_JOBS = 5
+MAX_PARALLEL_JOBS = 2
 
 # Local paths for job tracking (Parquet-based, standard openEO format).
 UPSCALE_ROOT = Path("data") / "upscaling"

@@ -76,10 +76,10 @@ NEIGHBORHOOD_SIZE = 64
 # ==============================
 
 JOB_OPTIONS = {
-    "executor-memory": "8G",
+    "executor-memory": "7G",
     "executor-memoryOverhead": "3G",
     "driver-memory": "2G",
-    "driver-memoryOverhead": "1G",
+    "driver-memoryOverhead": "2G",
     "python-memory": None, 
 }
 

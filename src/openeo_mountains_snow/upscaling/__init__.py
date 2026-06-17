@@ -5,17 +5,17 @@ for robust distributed job tracking and retry logic.
 """
 
 from .config import FULL_SENTINEL_TEMPORAL_EXTENT
-from .job_manager import create_job_database, run, start_job
-from .pipeline import (
-    build_conditional_probability_cube,
-    build_conditional_probability_with_inputs_cube,
+from .job_manager import (
+    create_job_database,
+    preview_jobs,
+    run,
+    start_job,
 )
 
 __all__ = [
     "FULL_SENTINEL_TEMPORAL_EXTENT",
-    "build_conditional_probability_cube",
-    "build_conditional_probability_with_inputs_cube",
     "create_job_database",
+    "preview_jobs",
     "run",
     "start_job",
 ]
