@@ -98,11 +98,19 @@ def run_openeo(cfg : DictConfig) -> None:
     representative_pixels.execute_batch( "representative_pixels_senales_multirange_classified.nc", title=(cfg.experiment.title_prefix or "") , filename_prefix=cfg.experiment.title_prefix , job_options=job_options)
 
 
-def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
+def snow_cover_fraction_cube(aoi, time_period, c, cfg, neighborhood_size: int = 3038):
+    """Build the SCF cube for the given AOI.
+
+    Args:
+        neighborhood_size: apply_neighborhood window size in pixels (x and y).
+            Set this to the pixel dimensions of the input AOI at 10 m resolution
+            so the UDF receives the full area in one block without NaN padding.
+            Defaults to 3038 (≈30×30 km at 10 m, the original full-area size).
+    """
     bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
     representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"),
-                                                             size=[{"dimension": "x", "value": 3038, "unit": "px"},
-                                                                   {"dimension": "y", "value": 3038, "unit": "px"},
+                                                             size=[{"dimension": "x", "value": neighborhood_size, "unit": "px"},
+                                                                   {"dimension": "y", "value": neighborhood_size, "unit": "px"},
                                                                    {"dimension": "t", "value": "P1D"}])
     representative_pixels = representative_pixels.rename_labels(dimension="bands",
                                                                 target=[REPRESENTATIVE_PIXEL_BAND_NAME])

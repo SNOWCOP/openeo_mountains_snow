@@ -1,4 +1,4 @@
-"""CLI entrypoint for Sentinel-era SWE upscaling."""
+"""CLI entrypoint for snow cover fraction upscaling."""
 
 from pathlib import Path
 
@@ -9,7 +9,7 @@ from openeo_mountains_snow.upscaling.job_manager import run
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run SWE upscaling job manager")
+    parser = argparse.ArgumentParser(description="Run snow cover fraction upscaling job manager")
     parser.add_argument(
         "--db-path",
         type=Path,
@@ -17,13 +17,14 @@ if __name__ == "__main__":
         help="Path to Parquet job database.",
     )
     parser.add_argument(
-        "--max-spatial-tiles",
-        type=int,
-        default=None,
-        help="Compatibility option; tile size is fixed to the 20 km standard.",
+        "--preview",
+        action="store_true",
+        help="Preview jobs without submitting.",
     )
     args = parser.parse_args()
-    run(
-        db_path=args.db_path,
-        max_spatial_tiles=args.max_spatial_tiles,
-    )
+    
+    if args.preview:
+        from openeo_mountains_snow.upscaling import preview_jobs
+        preview_jobs()
+    else:
+        run(db_path=args.db_path)

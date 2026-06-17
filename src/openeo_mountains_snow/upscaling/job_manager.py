@@ -1,17 +1,24 @@
-"""Job management for large-scale SWE upscaling using the openEO standard API."""
+"""Job management for large-scale snowflakes upscaling using the openEO standard API."""
 
 from __future__ import annotations
 
 import logging
 from pathlib import Path
+from datetime import datetime, timezone
+import uuid
+import os
 
 import pandas as pd
 import openeo
-from pyproj import Transformer
-from openeo.extra.job_management import MultiBackendJobManager, ParquetJobDatabase
+from openeo.extra.job_management import (
+    MultiBackendJobManager,
+    CsvJobDatabase,
+    split_area,
+)
 
 from openeo_mountains_snow.upscaling.config import (
     BACKEND,
+    DEFAULT_SCF_CONFIG,
     DEFAULT_TILE_SIZE_M,
     FULL_SENTINEL_TEMPORAL_EXTENT,
     JOB_DATABASE_PATH,
@@ -21,9 +28,18 @@ from openeo_mountains_snow.upscaling.config import (
     WORKSPACE,
 )
 from openeo_mountains_snow.snowcoverarea_reconstruction.config import CRS
-from openeo_mountains_snow.upscaling.pipeline import (
-    build_conditional_probability_with_inputs_cube,
-)
+from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
+
+try:
+    from openeo_mountains_snow.upscaling.local_auth import (
+        OPENEO_AUTH_CLIENT_ID as LOCAL_OPENEO_AUTH_CLIENT_ID,
+        OPENEO_AUTH_CLIENT_SECRET as LOCAL_OPENEO_AUTH_CLIENT_SECRET,
+        OPENEO_AUTH_PROVIDER_ID as LOCAL_OPENEO_AUTH_PROVIDER_ID,
+    )
+except ImportError:
+    LOCAL_OPENEO_AUTH_CLIENT_ID = None
+    LOCAL_OPENEO_AUTH_CLIENT_SECRET = None
+    LOCAL_OPENEO_AUTH_PROVIDER_ID = None
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,36 +49,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _square_extent_from_center(extent: dict, tile_size_m: int) -> dict:
-    """Create a square extent in target CRS units (meters), centered on input AOI."""
-    west = float(extent["west"])
-    east = float(extent["east"])
-    south = float(extent["south"])
-    north = float(extent["north"])
-    source_crs = extent["crs"]
-    target_crs = f"EPSG:{CRS}"
-
-    center_x_src = (west + east) / 2.0
-    center_y_src = (south + north) / 2.0
-
-    if source_crs == target_crs:
-        center_x = center_x_src
-        center_y = center_y_src
-    else:
-        transformer = Transformer.from_crs(source_crs, target_crs, always_xy=True)
-        center_x, center_y = transformer.transform(center_x_src, center_y_src)
-
-    half = tile_size_m / 2.0
-
-    return {
-        "west": center_x - half,
-        "south": center_y - half,
-        "east": center_x + half,
-        "north": center_y + half,
-        "crs": target_crs,
-    }
-
-
 # ---------------------------------------------------------------------------
 # Job database creation
 # ---------------------------------------------------------------------------
@@ -70,44 +56,69 @@ def _square_extent_from_center(extent: dict, tile_size_m: int) -> dict:
 def create_job_dataframe(
     max_spatial_tiles: int | None = None,
 ) -> pd.DataFrame:
-    """Build a DataFrame with one row for the standard 20 km tile-size setup.
+    """Build a DataFrame with one row per split_area tile over Senales AOI.
 
-    All jobs use the full configured timeline. Temporal windowing is disabled.
-    No split_area call is used.
+    Uses the official openEO split_area helper to tile the configured AOI.
+    All jobs use the full configured timeline.
     """
-    selected_tile_sizes = [DEFAULT_TILE_SIZE_M]
-    if max_spatial_tiles is not None and max_spatial_tiles < 1:
-        logger.info("max_spatial_tiles < 1 requested; forcing to one standard tile-size scenario")
+    from pyproj import Transformer
+    from shapely.geometry import box
+    from shapely.ops import transform as shp_transform
+
+    # Build AOI box in WGS84 and reproject to the tiling CRS (EPSG:32632).
+    aoi_wgs84 = box(
+        SPATIAL_EXTENT["west"], SPATIAL_EXTENT["south"],
+        SPATIAL_EXTENT["east"], SPATIAL_EXTENT["north"],
+    )
+    transformer = Transformer.from_crs("EPSG:4326", f"EPSG:{CRS}", always_xy=True)
+    aoi_projected = shp_transform(transformer.transform, aoi_wgs84)
+
+    gdf = split_area(
+        aoi=aoi_projected,
+        tile_size=DEFAULT_TILE_SIZE_M,
+        projection=f"EPSG:{CRS}",
+    )
 
     rows = []
-    for tile_idx_local, tile_size_m in enumerate(selected_tile_sizes):
-        tile = _square_extent_from_center(SPATIAL_EXTENT, tile_size_m)
+    for tile_idx, geom in enumerate(gdf.geometry):
+        bounds = geom.bounds  # (minx, miny, maxx, maxy) in projection CRS
+        tile_extent = {
+            "west": bounds[0],
+            "south": bounds[1],
+            "east": bounds[2],
+            "north": bounds[3],
+            "crs": f"EPSG:{CRS}",
+        }
         rows.append({
             "temporal_extent": FULL_SENTINEL_TEMPORAL_EXTENT,
-            "spatial_extent": tile,
-            "tile_size_m": tile_size_m,
+            "spatial_extent": tile_extent,
+            "tile_size_m": DEFAULT_TILE_SIZE_M,
             "title": (
-                f"swe_upscale_{FULL_SENTINEL_TEMPORAL_EXTENT[0]}_"
+                f"snowflakes_upscale_{FULL_SENTINEL_TEMPORAL_EXTENT[0]}_"
                 f"{FULL_SENTINEL_TEMPORAL_EXTENT[1]}_"
-                f"{tile_size_m // 1000}km_tile{tile_idx_local:02d}"
+                f"{DEFAULT_TILE_SIZE_M // 1000}km_tile{tile_idx:02d}"
             ),
         })
 
+    if max_spatial_tiles is not None:
+        rows = rows[:max_spatial_tiles]
+
     df = pd.DataFrame(rows)
-    logger.info("Job dataframe contains %d row(s) for the fixed 20 km tile-size", len(df))
+    logger.info(
+        "Job dataframe contains %d row(s) from split_area tiles of %d km",
+        len(df),
+        DEFAULT_TILE_SIZE_M // 1000,
+    )
     return df
 
 
 def create_job_database(
     db_path: Path = JOB_DATABASE_PATH,
-    max_spatial_tiles: int | None = None,
-) -> ParquetJobDatabase:
-    """Initialize or load an existing ParquetJobDatabase for the upscaling run."""
+) -> CsvJobDatabase:
+    """Initialize or load an existing CsvJobDatabase for the upscaling run."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    job_db = ParquetJobDatabase(db_path)
-    df = create_job_dataframe(
-        max_spatial_tiles=max_spatial_tiles,
-    )
+    job_db = CSVJobDatabase(db_path)
+    df = create_job_dataframe()
     return job_db.initialize_from_df(df, on_exists="skip")
 
 
@@ -115,27 +126,106 @@ def create_job_database(
 # start_job callback (called by MultiBackendJobManager per row)
 # ---------------------------------------------------------------------------
 
-def start_job(row: pd.Series, connection: openeo.Connection, **kwargs) -> openeo.BatchJob:
-    """Build the output cube (CP + pre-division inputs) for one tile and submit."""
-    temporal_extent = row["temporal_extent"]
-    spatial_extent = row["spatial_extent"]
-    title = row.get("title", "swe_upscale")
+def _to_wgs84(spatial_extent: dict) -> dict:
+    """Convert a projected spatial extent to WGS84 for STAC endpoints."""
+    from pyproj import Transformer
 
-    logger.info("Building CP and pre-division inputs cube for %s", title)
+    source_crs = str(spatial_extent.get("crs", "EPSG:4326"))
+    if source_crs == "EPSG:4326":
+        return spatial_extent
+    tr = Transformer.from_crs(source_crs, "EPSG:4326", always_xy=True)
+    west, south = tr.transform(spatial_extent["west"], spatial_extent["south"])
+    east, north = tr.transform(spatial_extent["east"], spatial_extent["north"])
+    return {"west": west, "south": south, "east": east, "north": north, "crs": "EPSG:4326"}
 
-    cube = build_conditional_probability_with_inputs_cube(
-        connection=connection,
-        temporal_extent=temporal_extent,
-        spatial_extent=spatial_extent,
+
+def start_job(
+    row: pd.Series,
+    connection: openeo.Connection,
+    **kwargs,
+) -> openeo.BatchJob:
+    """Start a single upscaling job for one tile using snow_cover_fraction_cube.
+
+    The row must contain 'spatial_extent' (in EPSG:32632) and 'temporal_extent'.
+    This function converts the spatial extent to WGS84 before passing to the pipeline.
+    """
+    logger.info("Starting job '%s' (tile_size=%d m)", row["title"], row["tile_size_m"])
+
+    # Compute neighborhood_size from the projected tile bounds (EPSG:32632, in metres).
+    # This ensures apply_neighborhood receives exactly the tile area with no NaN padding.
+    import math
+    SENTINEL2_RESOLUTION_M = 10.0
+    projected = row["spatial_extent"]
+    width_px = math.ceil((projected["east"] - projected["west"]) / SENTINEL2_RESOLUTION_M)
+    height_px = math.ceil((projected["north"] - projected["south"]) / SENTINEL2_RESOLUTION_M)
+    neighborhood_size = max(width_px, height_px)
+    logger.info("Computed neighborhood_size=%d px (%dx%d)", neighborhood_size, width_px, height_px)
+
+    # Convert tile extent from EPSG:32632 to WGS84 for OpenEO.
+    spatial_extent_wgs84 = _to_wgs84(row["spatial_extent"])
+
+    # snow_cover_fraction_cube expects a shapely geometry, not a bbox dict.
+    from shapely.geometry import box as shapely_box
+    aoi = shapely_box(
+        spatial_extent_wgs84["west"],
+        spatial_extent_wgs84["south"],
+        spatial_extent_wgs84["east"],
+        spatial_extent_wgs84["north"],
     )
 
-    result = cube.save_result(format="netCDF")
-    result = result.export_workspace(
+    # Build Hydra-style config from defaults.
+    from omegaconf import OmegaConf
+    cfg = OmegaConf.create(DEFAULT_SCF_CONFIG)
+
+    # Convert temporal extent to list (row returns numpy array)
+    temporal_extent = list(row["temporal_extent"])
+
+    # Call the snow_cover_fraction_cube pipeline.
+    result_cube = snow_cover_fraction_cube(
+        aoi=aoi,
+        time_period=temporal_extent,
+        c=connection,
+        cfg=cfg,
+        neighborhood_size=neighborhood_size,
+    )
+
+    # Persist each tile result in user workspace with a unique merge path.
+    unique_suffix = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "_" + uuid.uuid4().hex[:8]
+    merge_path = f"snowflakes_upscaling/{row['title']}_{unique_suffix}"
+    result = result_cube.save_result(format="NetCDF").export_workspace(
         workspace=WORKSPACE,
-        merge=title,
+        merge=merge_path,
     )
 
-    return result.create_job(title=title, job_options=JOB_OPTIONS)
+    batch_job = result.create_job(
+        title=row["title"],
+        job_options=JOB_OPTIONS,
+    )
+
+    return batch_job
+
+
+
+# ---------------------------------------------------------------------------
+# Job preview/validation
+# ---------------------------------------------------------------------------
+
+def preview_jobs() -> None:
+    """Preview and validate the job dataframe before running."""
+    df = create_job_dataframe()
+    
+    print(f"\n{'='*70}")
+    print(f"UPSCALING JOB PREVIEW")
+    print(f"{'='*70}")
+    print(f"Total jobs: {len(df)}")
+    print(f"Temporal extent: {df.iloc[0]['temporal_extent']}")
+    print(f"Tile size: {df.iloc[0]['tile_size_m'] / 1000:.0f} km")
+    print(f"\nJob titles:")
+    for idx, row in df.iterrows():
+        extent = row["spatial_extent"]
+        print(f"  {idx:2d}: {row['title']}")
+        print(f"       extent: {extent['west']:.0f}, {extent['south']:.0f} → {extent['east']:.0f}, {extent['north']:.0f} ({extent['crs']})")
+    print(f"{'='*70}\n")
 
 
 # ---------------------------------------------------------------------------
@@ -144,24 +234,32 @@ def start_job(row: pd.Series, connection: openeo.Connection, **kwargs) -> openeo
 
 def run(
     db_path: Path = JOB_DATABASE_PATH,
-    max_spatial_tiles: int | None = None,
 ) -> None:
     """Connect, initialize the database, and run the job manager."""
     logger.info("Connecting to %s", BACKEND)
     connection = openeo.connect(BACKEND, auto_validate=False)
-    connection.authenticate_oidc()
+
+    client_id = os.environ.get("OPENEO_AUTH_CLIENT_ID") or LOCAL_OPENEO_AUTH_CLIENT_ID
+    client_secret = os.environ.get("OPENEO_AUTH_CLIENT_SECRET") or LOCAL_OPENEO_AUTH_CLIENT_SECRET
+    provider_id = os.environ.get("OPENEO_AUTH_PROVIDER_ID") or LOCAL_OPENEO_AUTH_PROVIDER_ID
+    if not client_id or not client_secret:
+        raise RuntimeError(
+            "Missing OPENEO_AUTH_CLIENT_ID and/or OPENEO_AUTH_CLIENT_SECRET for client credentials authentication."
+        )
+    connection.authenticate_oidc_client_credentials(
+        client_id=client_id,
+        client_secret=client_secret,
+        provider_id=provider_id,
+    )
 
     logger.info("Initializing job database at %s", db_path)
-    job_db = create_job_database(
-        db_path=db_path,
-        max_spatial_tiles=max_spatial_tiles,
-    )
+    job_db = create_job_database(db_path=db_path)
 
     job_manager = MultiBackendJobManager(root_dir=str(db_path.parent / "results"))
     job_manager.add_backend("cdse", connection=connection, parallel_jobs=MAX_PARALLEL_JOBS)
 
     logger.info("Starting job manager...")
-    job_manager.run_jobs(start_job=start_job, job_db=job_db)
-    logger.info("Job manager finished.")
+    #job_manager.run_jobs(start_job=start_job, job_db=job_db)
+    #logger.info("Job manager finished.")
 
 
