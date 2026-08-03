@@ -1,7 +1,6 @@
 import importlib
 import json
 import math
-from importlib.resources import Package, Resource, files
 from pathlib import Path
 from typing import TextIO
 
@@ -98,6 +97,32 @@ def run_openeo(cfg : DictConfig) -> None:
     representative_pixels.execute_batch( "representative_pixels_senales_multirange_classified.nc", title=(cfg.experiment.title_prefix or "") , filename_prefix=cfg.experiment.title_prefix , job_options=job_options)
 
 
+def apply_representative_pixels(bands_indices: openeo.DataCube, neighborhood_size: int = 500) -> openeo.DataCube:
+    """Apply the SnowFLAKES representative pixels UDF to a pre-built inputs cube.
+
+    Sensor-agnostic: any cube whose bands match the names expected by
+    representative_pixels.py (B02, B03, B04, B08, B11, NDVI, NDSI,
+    diff_B_NIR, SI, local_solar_incidence_angle) can be passed in, regardless
+    of the original sensor (Sentinel-2, Landsat, …).
+
+    Args:
+        bands_indices: Pre-built inputs cube with the standard SnowFLAKES bands.
+        neighborhood_size: apply_neighborhood window size in pixels (x and y).
+            Use ≈ AOI_size_m / sensor_resolution_m so the UDF gets the full
+            tile in one block without NaN padding.
+            Defaults to 500 px (≈5 km at 10 m, suitable for small test areas).
+    """
+    result = bands_indices.apply_neighborhood(
+        process=get_udf("representative_pixels.py"),
+        size=[
+            {"dimension": "x", "value": neighborhood_size, "unit": "px"},
+            {"dimension": "y", "value": neighborhood_size, "unit": "px"},
+            {"dimension": "t", "value": "P1D"},
+        ],
+    )
+    return result.rename_labels(dimension="bands", target=[REPRESENTATIVE_PIXEL_BAND_NAME])
+
+
 def snow_cover_fraction_cube(aoi, time_period, c, cfg, neighborhood_size: int = 3038):
     """Build the SCF cube for the given AOI.
 
@@ -108,17 +133,11 @@ def snow_cover_fraction_cube(aoi, time_period, c, cfg, neighborhood_size: int = 
             Defaults to 3038 (≈30×30 km at 10 m, the original full-area size).
     """
     bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
-    representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"),
-                                                             size=[{"dimension": "x", "value": neighborhood_size, "unit": "px"},
-                                                                   {"dimension": "y", "value": neighborhood_size, "unit": "px"},
-                                                                   {"dimension": "t", "value": "P1D"}])
-    representative_pixels = representative_pixels.rename_labels(dimension="bands",
-                                                                target=[REPRESENTATIVE_PIXEL_BAND_NAME])
-    return representative_pixels
+    return apply_representative_pixels(bands_indices, neighborhood_size)
 
 
 def get_udf(name):
-    with (files('openeo_mountains_snow') / name).open('r') as fp:
+    with (Path(__file__).parent / name).open('r') as fp:
         udf_code = fp.read()
         return UDF( code= udf_code, runtime="Python", version="3.11", context={"classify":True})
 

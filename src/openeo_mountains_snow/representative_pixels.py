@@ -7,12 +7,80 @@
 
 
 
+import logging
 import xarray
 import numpy as np
 from openeo.metadata import CubeMetadata
 from openeo.udf import inspect
 
 REPRESENTATIVE_PIXEL_BAND_NAME = "representative"
+logger = logging.getLogger(__name__)
+
+
+def _nan_stats(name, array_like):
+    """Emit compact NaN diagnostics for an array-like object."""
+    arr = np.asarray(array_like, dtype=float)
+    total = int(arr.size)
+    nan_count = int(np.isnan(arr).sum()) if total > 0 else 0
+    finite_count = int(np.isfinite(arr).sum()) if total > 0 else 0
+    nan_ratio = float(nan_count / total) if total > 0 else 0.0
+    payload = {
+        "name": name,
+        "shape": list(arr.shape),
+        "total": total,
+        "nan_count": nan_count,
+        "finite_count": finite_count,
+        "nan_ratio": nan_ratio,
+    }
+    logger.info("NaN stats: %s", payload)
+    inspect(
+        data=payload,
+        message=f"NaN stats: {name}",
+    )
+
+
+def _finite_value_stats(name, array_like):
+    """Log compact finite-value statistics to inspect units/scales."""
+    arr = np.asarray(array_like, dtype=float)
+    finite = arr[np.isfinite(arr)]
+
+    if finite.size == 0:
+        payload = {"name": name, "finite_count": 0}
+    else:
+        payload = {
+            "name": name,
+            "finite_count": int(finite.size),
+            "min": float(np.min(finite)),
+            "p05": float(np.percentile(finite, 5)),
+            "median": float(np.median(finite)),
+            "p95": float(np.percentile(finite, 95)),
+            "max": float(np.max(finite)),
+        }
+
+    logger.info("Finite stats: %s", payload)
+    inspect(data=payload, message=f"Finite stats: {name}")
+
+
+def _normalize_solar_incidence_angle(angle_array):
+    """Normalize local solar incidence angle to degrees when needed."""
+    angle = np.asarray(angle_array, dtype=float)
+    finite = angle[np.isfinite(angle)]
+
+    if finite.size == 0:
+        return angle, "no_finite_values"
+
+    median_val = float(np.median(finite))
+    max_val = float(np.max(finite))
+
+    # Landsat angle assets are often encoded in centi-degrees.
+    if median_val > 180.0 and max_val <= 18000.0:
+        return angle / 100.0, "centidegrees_to_degrees"
+
+    # Some products may use radians.
+    if max_val <= (2.0 * np.pi + 0.5):
+        return np.degrees(angle), "radians_to_degrees"
+
+    return angle, "already_degrees"
 
 def apply_metadata(metadata: CubeMetadata, context: dict) -> CubeMetadata:
     """Rename the bands by using apply metadata
@@ -25,18 +93,52 @@ def apply_metadata(metadata: CubeMetadata, context: dict) -> CubeMetadata:
 
 def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
 
+    logger.info("Running representative pixel UDF with bands=%s", list(cube.bands.values))
     inspect(data = cube.bands, message="Running representative pixel UDF")
+    _nan_stats("cube_input", cube.values)
+
+    # xarray .sel requires a unique index. Keep first occurrence if duplicates are present.
+    band_labels = np.asarray(cube.bands.values)
+    if band_labels.size > 0:
+        _, first_indices = np.unique(band_labels, return_index=True)
+        if first_indices.size != band_labels.size:
+            first_indices = np.sort(first_indices)
+            cube = cube.isel(bands=first_indices)
+            logger.warning("Removed duplicate band labels before selection: bands=%s", list(cube.bands.values))
+            inspect(data=cube.bands, message="Removed duplicate band labels before selection")
 
     total_samples = context.get("total_samples", 500)
     ranges = ((0, 20), (20, 45), (45, 70), (70, 90), (90, 180))
-    solar_incidence_angle = cube.sel(bands="local_solar_incidence_angle").values.astype(float)
+    solar_incidence_angle_raw = cube.sel(bands="local_solar_incidence_angle").values.astype(float)
+    _nan_stats("local_solar_incidence_angle_raw", solar_incidence_angle_raw)
+    _finite_value_stats("local_solar_incidence_angle_raw", solar_incidence_angle_raw)
+    solar_incidence_angle, angle_normalization = _normalize_solar_incidence_angle(solar_incidence_angle_raw)
+    logger.info("local_solar_incidence_angle normalization: %s", angle_normalization)
+    inspect(data={"normalization": angle_normalization}, message="Local angle normalization")
+    _nan_stats("local_solar_incidence_angle", solar_incidence_angle)
+    _finite_value_stats("local_solar_incidence_angle", solar_incidence_angle)
 
     range_samples = calculate_training_samples(solar_incidence_angle, ranges, total_samples)
+    range_samples_payload = [
+        {"range_start": int(curr_range[0]), "range_end": int(curr_range[1]), "samples": int(sample_count)}
+        for curr_range, sample_count in range_samples.items()
+    ]
+    logger.info("Range samples: %s", range_samples_payload)
+    inspect(data=range_samples_payload, message="Range samples")
 
     curr_bands = cube.sel(bands=["B02", "B03", "B04", "B08", "B11"])
     curr_NDVI = cube.sel(bands="NDVI")
+    _nan_stats("curr_bands", curr_bands.values)
+    _nan_stats("curr_NDVI", curr_NDVI.values)
 
     curr_scene_valid = np.isnan(curr_NDVI.values.astype(float)) | np.isnan(solar_incidence_angle)
+    invalid_stats = {
+        "invalid_pixels": int(curr_scene_valid.sum()),
+        "total_pixels": int(curr_scene_valid.size),
+        "invalid_ratio": float(curr_scene_valid.sum() / curr_scene_valid.size) if curr_scene_valid.size > 0 else 0.0,
+    }
+    logger.info("Scene invalid mask stats: %s", invalid_stats)
+    inspect(data=invalid_stats, message="Scene invalid mask stats")
 
     # Calculate distance from snow_sure
     # snow_sure = (cube.sel(bands="NDSI").values.astype(float) > 0.6) & (
@@ -87,6 +189,7 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
                     if representative_pixels_mask_noSnow.shape[0] > 0:
                             values[~mask] +=  representative_pixels_mask_noSnow * 4
             except Exception as e:
+                logger.exception("Error while finding representative pixels for range=%s sample_count=%s shape=%s", curr_range, sample_count, curr_NDVI_masked.shape)
                 inspect(data=str(e), message=f"Error while finding representative pixels for {curr_range} and count {sample_count} {curr_NDVI_masked.shape} {e} ")
 
     if(context.get("classify", False)):
@@ -101,18 +204,22 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
 
                 SCF_map = classify(curr_bands.values, ~curr_scene_valid, normalizer, svm)
                 values = SCF_map
+                _nan_stats("SCF_map", SCF_map)
         except Exception as e:
+            logger.exception("Error during classification")
             inspect(data=str(e), message=f"Error during classification, not classifying pixels {e} {curr_bands.values[:,values==10].shape}  {curr_bands.values[:,values==8].shape}  ")
 
     cube.loc['B03'] = 0
 
     if values is not None and values.shape[0] > 0:
         cube.loc['B03'] = values
+        _nan_stats("values_assigned_to_B03", values)
 
     bands_to_drop = list(cube.bands.values)
     bands_to_drop.remove("B03")
 
     cube = cube.drop_sel(bands=bands_to_drop)
+    _nan_stats("cube_output", cube.values)
     return cube
 
 def calculate_training_samples(solar_incidence_angle, ranges, total_samples):
@@ -198,7 +305,7 @@ def model_training_svm(snow_training, no_snow_training, gamma=None):
         idx_max_std = np.argmax(std_list)
         best_gamma = gamma_range[idx_max_std]
 
-        print('The best Gamma is: ' + str(best_gamma))
+        logger.info("Selected gamma for SVM: %s", best_gamma)
 
     else:
         best_gamma = gamma
