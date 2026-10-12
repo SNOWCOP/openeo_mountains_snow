@@ -83,7 +83,8 @@ JOB_OPTIONS = {
 # ==============================
 
 MODIS_RESOLUTION = 25  # meters
-MODIS_STAC_URL = "https://stac.eurac.edu/collections/MOD10A1v61"
+MODIS_STAC_URL = "https://stac.dataspace.copernicus.eu/v1/collections/modis-terra-mod10a1"
+MODIS_SNOW_BAND = "NDSI_Snow_Cover"  # 0-100 valid, >100 flag codes (cloud, water, fill...)
 
 # ==============================
 # UDF Configuration
