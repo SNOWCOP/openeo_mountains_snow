@@ -1,9 +1,31 @@
-"""Sentinel-2 SCL based snow/cloud classification used as high-resolution snow input."""
+"""High-resolution snow maps for the snow cover area step: band `snow` = 0 / 100 / CLOUD_VALUE.
+
+Two sources:
+- `snow_map_from_snow_cover_fraction`: step-1 representative-pixels SCF, binarized (main pipeline).
+- `calculate_snow`: Sentinel-2 L2A SCL classes (used by upscaling).
+"""
 
 import openeo
-from openeo.processes import if_, array_create
+from openeo.processes import if_, is_nan, array_create
 
-from openeo_mountains_snow.config import CLOUD_VALUE, CRS, RESOLUTION
+from openeo_mountains_snow.config import CLOUD_VALUE, CRS, RESOLUTION, SNOW_FRACTION_THRESHOLD
+
+
+def snow_map_from_snow_cover_fraction(snow_cover_fraction: openeo.DataCube) -> openeo.DataCube:
+    """Binarize step-1 SCF (0-100, 255 = masked/no data) to snow (100) / no snow (0) / cloud.
+
+    `snow_cover_fraction` is the cube from `snow_cover_fraction.snow_cover_fraction_cube`
+    (band `representative`), run with classify=True.
+    """
+    def binarize(bands):
+        scf = bands[0]
+        snow = if_(scf >= SNOW_FRACTION_THRESHOLD, 100.0, 0.0)
+        return if_(is_nan(scf).or_(scf > 100), float(CLOUD_VALUE), snow)
+
+    return (snow_cover_fraction
+            .resample_spatial(resolution=RESOLUTION, projection=CRS, method="near")  # "average" would mix 255 into valid SCF
+            .apply_dimension(dimension="bands", process=binarize)
+            .rename_labels(dimension="bands", target=["snow"]))
 
 
 def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0) -> openeo.DataCube:

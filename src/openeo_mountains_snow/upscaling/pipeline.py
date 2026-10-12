@@ -8,17 +8,20 @@ from __future__ import annotations
 
 import openeo
 
+from openeo_mountains_snow.config import CLOUD_PROB
 from openeo_mountains_snow.snow_cover_area.conditional_probability import (
     compute_conditional_probability,
-    compute_snow_cover_fraction_masks,
+    compute_snow_cover_fraction_range_masks,
 )
+from openeo_mountains_snow.snow_cover_area.snow_map import calculate_snow
 from openeo_mountains_snow.upscaling.config import MODIS_END_DATE
 
 
 def _conditional_probability(connection, temporal_extent, spatial_extent):
     modis_temporal_extent = [temporal_extent[0], min(temporal_extent[1], MODIS_END_DATE)]
-    all_masks, labels = compute_snow_cover_fraction_masks(
-        connection, temporal_extent, spatial_extent, modis_temporal_extent=modis_temporal_extent
+    snow = calculate_snow(connection, temporal_extent, spatial_extent, CLOUD_PROB)
+    all_masks, labels = compute_snow_cover_fraction_range_masks(
+        connection, snow, modis_temporal_extent, spatial_extent
     )
     return compute_conditional_probability(all_masks, labels), labels
 

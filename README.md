@@ -8,7 +8,7 @@ Full method docs: [docs/](docs/index.md) (Quarto).
 ```mermaid
 flowchart LR
     S2[Sentinel-2 / Landsat] --> SCF["1. snow_cover_fraction/<br/>snow cover fraction"]
-    SCF --> SCA["2. snow_cover_area/<br/>daily snow cover area"]
+    SCF -- "binarized: snow_map_from_snow_cover_fraction" --> SCA["2. snow_cover_area/<br/>daily snow cover area"]
     MODIS[MODIS] --> SCA
     AGERA[AGERA5 + DEM] --> SWE["3. snow_water_equivalent/<br/>snow water equivalent"]
     SCA --> SWE

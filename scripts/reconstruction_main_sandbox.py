@@ -15,11 +15,11 @@ from openeo_mountains_snow.config import (
     MODIS_TEMPORAL_EXTENT, SCA_RECONSTRUCTION_UDF, SWE_RECONSTRUCTION_UDF
 )
 from openeo_mountains_snow.snow_cover_area.conditional_probability import (
-    compute_snow_cover_fraction_masks,
+    compute_snow_cover_fraction_range_masks,
     create_modis_snow_cover_fraction_cube,
 )
 from openeo_mountains_snow.snow_water_equivalent.downscale_variables import downscale_shortwave_radiation, downscale_temperature_humidity, preprocess_low_resolution_agera
-from openeo_mountains_snow.snow_cover_area.sentinel2_snow_mask import calculate_snow
+from openeo_mountains_snow.snow_cover_area.snow_map import calculate_snow
 
 
 def main():
@@ -36,7 +36,9 @@ def main():
     # 1. Compute SCF Masks & Conditional Probabilities
     # ==============================
     
-    all_masks, labels_scf = compute_snow_cover_fraction_masks(eoconn)
+    all_masks, labels_scf = compute_snow_cover_fraction_range_masks(
+        eoconn, calculate_snow(eoconn, TEMPORAL_EXTENT, SPATIAL_EXTENT), MODIS_TEMPORAL_EXTENT, SPATIAL_EXTENT
+    )
     
     # ==============================
     # 2. Compute Conditional Probabilities
