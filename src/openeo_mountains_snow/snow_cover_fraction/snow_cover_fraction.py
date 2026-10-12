@@ -28,8 +28,6 @@ def elevation_mask(region, conn: openeo.Connection, cfg:DictConfig):
 
 
 
-
-
 def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfig):
     scl = conn.load_collection(
         cfg.sentinel2_l2a.collection,

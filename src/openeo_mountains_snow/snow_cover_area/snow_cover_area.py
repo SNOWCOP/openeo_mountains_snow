@@ -11,20 +11,23 @@ from openeo_mountains_snow.config import (
 )
 from openeo_mountains_snow.snow_cover_area.conditional_probability import (
     compute_conditional_probability,
-    compute_snow_cover_fraction_masks,
+    compute_snow_cover_fraction_range_masks,
     create_modis_snow_cover_fraction_cube,
 )
-from openeo_mountains_snow.snow_cover_area.sentinel2_snow_mask import calculate_snow
 
 
 def snow_cover_area_cube(
     connection: openeo.Connection,
-    temporal_extent: list[str],
+    high_resolution_snow: openeo.DataCube,
     spatial_extent: dict,
 ) -> openeo.DataCube:
-    """Build the reconstructed snow cover area cube."""
-    all_masks, labels = compute_snow_cover_fraction_masks(
-        connection, temporal_extent, spatial_extent, modis_temporal_extent=MODIS_TEMPORAL_EXTENT
+    """Build the reconstructed snow cover area cube.
+
+    `high_resolution_snow` is a 0/100/205 `snow` cube, normally
+    `snow_map_from_snow_cover_fraction(...)` of the step-1 representative-pixels output.
+    """
+    all_masks, labels = compute_snow_cover_fraction_range_masks(
+        connection, high_resolution_snow, MODIS_TEMPORAL_EXTENT, spatial_extent
     )
     conditional_probability, _, occurrences = compute_conditional_probability(all_masks, labels)
     conditional_probability = conditional_probability.rename_labels(
@@ -32,7 +35,6 @@ def snow_cover_area_cube(
     )
     occurrences = occurrences.rename_labels(dimension="bands", target=[f"occ_{b}" for b in labels])
 
-    high_resolution_snow = calculate_snow(connection, temporal_extent, spatial_extent)
     modis_snow_cover_fraction = create_modis_snow_cover_fraction_cube(
         connection, MODIS_TEMPORAL_EXTENT, spatial_extent
     )

@@ -8,10 +8,10 @@ from openeo import DataCube
 from openeo.processes import eq, gt, or_, if_, is_nan, array_create
 
 from openeo_mountains_snow.config import (
-    CLOUD_PROB, CLOUD_VALUE, CRS, DELTA, EPSILON, INVALID_THRESHOLD, INVALID_VALUE,
+    CLOUD_VALUE, CRS, DELTA, EPSILON, INVALID_THRESHOLD, INVALID_VALUE,
     MODIS_RESOLUTION, MODIS_STAC_URL, RESOLUTION,
 )
-from openeo_mountains_snow.snow_cover_area.sentinel2_snow_mask import calculate_snow, create_mask
+from openeo_mountains_snow.snow_cover_area.snow_map import create_mask
 
 
 def get_snow_cover_fraction_ranges(delta, epsilon):
@@ -47,17 +47,20 @@ def low_resolution_snow_cover_fraction(
             .rename_labels(dimension="bands", target=["scf"]))
 
 
-def compute_snow_cover_fraction_masks(
+def compute_snow_cover_fraction_range_masks(
     connection: openeo.Connection,
-    temporal_extent: list[str],
+    snow: DataCube,
+    modis_temporal_extent: list[str],
     spatial_extent: dict,
-    modis_temporal_extent: list[str] | None = None,
 ) -> tuple[DataCube, list[str]]:
-    """Per-SCF-range binary masks at high resolution, merged with `valid`/`snow` bands."""
-    snow = calculate_snow(connection, temporal_extent, spatial_extent, CLOUD_PROB)
+    """Per-range binary masks of a coarse snow fraction, merged with `valid`/`snow` bands.
+
+    The coarse fraction is the high-resolution `snow` map (0/100/205) averaged onto the MODIS
+    grid. It is an input for conditional probability, not the step-1 snow cover fraction product.
+    """
     valid_and_snow_mask = create_mask(snow)
     scf_low_res = low_resolution_snow_cover_fraction(
-        connection, valid_and_snow_mask, modis_temporal_extent or temporal_extent, spatial_extent
+        connection, valid_and_snow_mask, modis_temporal_extent, spatial_extent
     )
 
     ranges = get_snow_cover_fraction_ranges(DELTA, EPSILON)
