@@ -3,7 +3,7 @@
 from pathlib import Path
 import json
 
-from openeo_mountains_snow.reconstruction.config import (  # noqa: F401
+from openeo_mountains_snow.config import (  # noqa: F401
     BACKEND,
     JOB_OPTIONS,
     CRS,
@@ -47,6 +47,9 @@ WORKSPACE = "snowcop-workspace"
 
 # Full Sentinel-2 era used for every upscaling job.
 FULL_SENTINEL_TEMPORAL_EXTENT = ["2015-01-01", "2025-12-31"]
+
+# Last date of the MODIS STAC collection (restored from git history; pipeline.py needs it).
+MODIS_END_DATE = "2023-12-31"
 
 # Hydra config defaults for snow_cover_fraction_cube
 DEFAULT_SCF_CONFIG = {

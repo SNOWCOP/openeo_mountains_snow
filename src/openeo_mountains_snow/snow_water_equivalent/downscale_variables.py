@@ -11,7 +11,7 @@ from openeo import DataCube, UDF
 from openeo.processes import ProcessBuilder, array_create, exp, clip
 import numpy as np
 
-from openeo_mountains_snow.reconstruction.config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
+from openeo_mountains_snow.config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
 
 # Vapor pressure coefficients for Northern and Southern hemispheres
 VP_COEFF_NOHEM = np.array([0.41, 0.42, 0.40, 0.39, 0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40]) / 1000.0
@@ -158,18 +158,3 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
                                 .apply_dimension(dimension="bands", process=compute_incidence))
 
     return shortwave_radiation_downscaled
-
-    def downscale_shortwave(radiation_incidence: ProcessBuilder) -> ProcessBuilder:
-        """Apply topographic correction to shortwave radiation."""
-        ssrd = radiation_incidence["solar-radiation-flux-downscaled"]
-        incidence = radiation_incidence["incidence_angle"]
-        zenith = radiation_incidence["zenith"]
-
-        cos_i = np.clip(np.cos(np.radians(incidence)), 0, 1)
-        cosZ = np.cos(zenith)
-        # Topographic correction
-        Qsi_daily = ssrd * (cos_i / (cosZ + 1e-6))
-        return Qsi_daily
-
-    result = radiation_with_incidence.apply_dimension(dimension="bands", process=downscale_shortwave)
-    return result.rename_labels(dimension="bands", target=["shortwave_radiation_downscaled"])

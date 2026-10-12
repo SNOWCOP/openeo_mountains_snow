@@ -9,17 +9,17 @@ reconstructing snow cover, downscaling climate data, and executing batch jobs.
 
 import openeo
 
-from openeo_mountains_snow.reconstruction.config import (
+from openeo_mountains_snow.config import (
     BACKEND, TEMPORAL_EXTENT, SPATIAL_EXTENT, JOB_OPTIONS, 
     N_DAYS_TO_RECONSTRUCT, NEIGHBORHOOD_SIZE, AGERA_TEMPORAL_EXTENT, 
     MODIS_TEMPORAL_EXTENT, SCA_RECONSTRUCTION_UDF, SWE_RECONSTRUCTION_UDF
 )
-from openeo_mountains_snow.reconstruction.snow_cover_fraction_processing import (
+from openeo_mountains_snow.snow_cover_area.conditional_probability import (
     compute_snow_cover_fraction_masks,
     create_modis_snow_cover_fraction_cube,
 )
 from openeo_mountains_snow.snow_water_equivalent.downscale_variables import downscale_shortwave_radiation, downscale_temperature_humidity, preprocess_low_resolution_agera
-from openeo_mountains_snow.reconstruction.utils_gapfilling import calculate_snow
+from openeo_mountains_snow.snow_cover_area.sentinel2_snow_mask import calculate_snow
 
 
 def main():

@@ -12,7 +12,7 @@ import pandas as pd
 import openeo
 from openeo.extra.job_management import (
     MultiBackendJobManager,
-    CsvJobDatabase,
+    ParquetJobDatabase,
     split_area,
 )
 
@@ -27,7 +27,7 @@ from openeo_mountains_snow.upscaling.config import (
     SPATIAL_EXTENT,
     WORKSPACE,
 )
-from openeo_mountains_snow.reconstruction.config import CRS
+from openeo_mountains_snow.config import CRS
 from openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction import snow_cover_fraction_cube
 
 try:
@@ -114,10 +114,10 @@ def create_job_dataframe(
 
 def create_job_database(
     db_path: Path = JOB_DATABASE_PATH,
-) -> CsvJobDatabase:
-    """Initialize or load an existing CsvJobDatabase for the upscaling run."""
+) -> ParquetJobDatabase:
+    """Initialize or load an existing ParquetJobDatabase for the upscaling run."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    job_db = CsvJobDatabase(db_path)
+    job_db = ParquetJobDatabase(db_path)
     df = create_job_dataframe()
     return job_db.initialize_from_df(df, on_exists="skip")
 

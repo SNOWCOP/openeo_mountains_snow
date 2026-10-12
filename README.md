@@ -8,7 +8,7 @@ Full method docs: [docs/](docs/index.md) (Quarto).
 ```mermaid
 flowchart LR
     S2[Sentinel-2 / Landsat] --> SCF["1. snow_cover_fraction/<br/>snow cover fraction"]
-    SCF --> SCA["2. reconstruction/<br/>daily snow cover area"]
+    SCF --> SCA["2. snow_cover_area/<br/>daily snow cover area"]
     MODIS[MODIS] --> SCA
     AGERA[AGERA5 + DEM] --> SWE["3. snow_water_equivalent/<br/>snow water equivalent"]
     SCA --> SWE
@@ -34,7 +34,7 @@ pip install -e .[dev]
 |------|---------|--------|
 | SCF | `python -m openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction +experiment=andes_snow_cover_fraction` | `conf/` (Hydra) |
 | SCF UDP (writes JSON) | `python -m openeo_mountains_snow.snow_cover_fraction.udp.snow_cover_fraction_udp` | `conf/` (Hydra) |
-| SCA reconstruction + SWE | `python -m openeo_mountains_snow.reconstruction.main` | `reconstruction/config.py` |
+| SCA reconstruction + SWE | `python -m openeo_mountains_snow.main` | `config.py` |
 | Upscaling | `python -m openeo_mountains_snow.upscaling.run_upscaling [--preview]` | `upscaling/config.py` |
 | Tests | `pytest` | |
 
@@ -46,7 +46,9 @@ src/openeo_mountains_snow/
 ├── snow_cover_fraction/             Step 1: snow cover fraction
 │   ├── udfs/        UDFs run on the backend
 │   └── udp/         UDP builder + published JSON
-├── reconstruction/  Step 2: SCA timeseries reconstruction (+ main pipeline entry)
+├── config.py        Shared settings for main.py and upscaling
+├── main.py          Runs snow cover area -> snow water equivalent as one batch job
+├── snow_cover_area/ Step 2: daily snow cover area reconstruction (+ conditional probability)
 │   └── udfs/
 ├── snow_water_equivalent/             Step 3: SWE + meteo downscaling
 │   └── udfs/

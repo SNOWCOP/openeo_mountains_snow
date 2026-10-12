@@ -1,17 +1,9 @@
 """
-Configuration parameters for historical snow cover reconstruction.
-
-Contains all configuration parameters and constants used across the pipeline.
+Shared configuration for the snow cover area and snow water equivalent pipeline (main.py)
+and for upscaling. Single source for processing constants.
 """
 
-import os
-
-# ==============================
-# Output Configuration
-# ==============================
-
-OUTPUT_DIR = "../results"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+from pathlib import Path
 
 # ==============================
 # Temporal Configuration
@@ -51,6 +43,7 @@ PIXEL_RATIO = 25  # Ratio between LR and HR pixel sizes
 
 # Non-valid values configuration
 INVALID_CODES = [205, 210, 254, 255]
+CLOUD_VALUE = 205  # cloud code in snow maps; the UDFs hardcode the same value
 INVALID_VALUE = 255
 INVALID_THRESHOLD = 10  # % invalid pixels allowed in LR pixel
 
@@ -89,15 +82,15 @@ JOB_OPTIONS = {
 # ==============================
 
 MODIS_RESOLUTION = 25  # meters
+MODIS_STAC_URL = "https://stac.eurac.edu/collections/MOD10A1v61"
+
 # ==============================
 # UDF Configuration
 # ==============================
 
-from pathlib import Path
-
-UDF_DIR = Path(__file__).parent / 'udfs'
-SWE_UDF_DIR = Path(__file__).parent.parent / 'snow_water_equivalent' / 'udfs'
-SCA_RECONSTRUCTION_UDF = UDF_DIR / 'historical_reconstruction_udf.py'
+SCA_UDF_DIR = Path(__file__).parent / 'snow_cover_area' / 'udfs'
+SWE_UDF_DIR = Path(__file__).parent / 'snow_water_equivalent' / 'udfs'
+SCA_RECONSTRUCTION_UDF = SCA_UDF_DIR / 'snow_cover_area_reconstruction_udf.py'
 SWE_RECONSTRUCTION_UDF = SWE_UDF_DIR / 'snow_water_equivalent_udf.py'
 SOLAR_POSITION_UDF = SWE_UDF_DIR / 'solar_position_udf.py'
 INCIDENCE_ANGLE_UDF = SWE_UDF_DIR / 'incidence_angle_udf.py'
