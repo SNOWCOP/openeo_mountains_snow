@@ -3,7 +3,7 @@
 from pathlib import Path
 import json
 
-from openeo_mountains_snow.snowcoverarea_reconstruction.config import (  # noqa: F401
+from openeo_mountains_snow.reconstruction.config import (  # noqa: F401
     BACKEND,
     JOB_OPTIONS,
     CRS,
