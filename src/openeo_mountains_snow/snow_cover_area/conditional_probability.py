@@ -5,11 +5,11 @@ Single implementation used by both `main.py` and `upscaling/pipeline.py`.
 
 import openeo
 from openeo import DataCube
-from openeo.processes import eq, gt, or_, if_, is_nan, array_create
+from openeo.processes import gt, if_, is_nan, array_create
 
 from openeo_mountains_snow.config import (
     CLOUD_VALUE, CRS, DELTA, EPSILON, INVALID_THRESHOLD, INVALID_VALUE,
-    MODIS_RESOLUTION, MODIS_STAC_URL, RESOLUTION,
+    MODIS_RESOLUTION, MODIS_SNOW_BAND, MODIS_STAC_URL, RESOLUTION,
 )
 from openeo_mountains_snow.snow_cover_area.snow_map import create_mask
 
@@ -34,6 +34,7 @@ def low_resolution_snow_cover_fraction(
         MODIS_STAC_URL,
         temporal_extent=temporal_extent,
         spatial_extent=spatial_extent,
+        bands=[MODIS_SNOW_BAND],
     )
     average = valid_and_snow_mask.resample_cube_spatial(modis, method="average")
 
@@ -105,14 +106,16 @@ def create_modis_snow_cover_fraction_cube(
         url=MODIS_STAC_URL,
         temporal_extent=temporal_extent,
         spatial_extent=spatial_extent,
-        bands=["SCF"],
+        bands=[MODIS_SNOW_BAND],
     )
 
     def clean(pixel):
-        value = pixel.array_element(index=0)
-        # MODIS codes: 254 water, 255 no data, >100 other invalid.
-        invalid = or_(eq(value, 254), or_(eq(value, 255), gt(value, 100)))
-        return if_(invalid, CLOUD_VALUE, value)
+        #TODO double check this
+        ndsi = pixel.array_element(index=0)
+        # MOD10A1 NDSI_Snow_Cover: 0-100 = NDSI*100; >100 = flags (cloud, night, water, fill...).
+        # NDSI -> fractional snow cover (Salomonson & Appel 2004), clipped to 0-100.
+        scf = (-1.0 + 1.45 * ndsi).clip(0, 100)
+        return if_(gt(ndsi, 100), CLOUD_VALUE, scf)
 
     return (modis.apply(clean)
             .resample_spatial(resolution=MODIS_RESOLUTION, projection=CRS, method="near")
