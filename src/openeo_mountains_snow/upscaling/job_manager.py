@@ -27,8 +27,8 @@ from openeo_mountains_snow.upscaling.config import (
     SPATIAL_EXTENT,
     WORKSPACE,
 )
-from openeo_mountains_snow.snowcoverarea_reconstruction.config import CRS
-from openeo_mountains_snow.snow_cover_fraction import snow_cover_fraction_cube
+from openeo_mountains_snow.reconstruction.config import CRS
+from openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction import snow_cover_fraction_cube
 
 try:
     from openeo_mountains_snow.upscaling.local_auth import (
@@ -117,7 +117,7 @@ def create_job_database(
 ) -> CsvJobDatabase:
     """Initialize or load an existing CsvJobDatabase for the upscaling run."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    job_db = CSVJobDatabase(db_path)
+    job_db = CsvJobDatabase(db_path)
     df = create_job_dataframe()
     return job_db.initialize_from_df(df, on_exists="skip")
 
@@ -259,7 +259,7 @@ def run(
     job_manager.add_backend("cdse", connection=connection, parallel_jobs=MAX_PARALLEL_JOBS)
 
     logger.info("Starting job manager...")
-    #job_manager.run_jobs(start_job=start_job, job_db=job_db)
-    #logger.info("Job manager finished.")
+    job_manager.run_jobs(start_job=start_job, job_db=job_db)
+    logger.info("Job manager finished.")
 
 

@@ -1,6 +1,6 @@
 """Pipeline assembly for conditional probability upscaling runs.
 
-Mirrors the workflow in downscaling_distribution.py, parametrized for
+Mirrors the workflow in experimental/downscaling_distribution.py, parametrized for
 submission via the openEO MultiBackendJobManager.
 """
 
@@ -10,13 +10,13 @@ import openeo
 from openeo.processes import is_nan, if_, array_create, ProcessBuilder
 
 from openeo_mountains_snow.upscaling.config import MODIS_END_DATE
-from openeo_mountains_snow.snowcoverarea_reconstruction.utils_gapfilling import (
+from openeo_mountains_snow.reconstruction.utils_gapfilling import (
     calculate_snow,
     get_scf_ranges,
     create_mask,
 )
 
-# Processing parameters (same as downscaling_distribution.py)
+# Processing parameters (same as experimental/downscaling_distribution.py)
 CLOUD_PROB = 80
 RESOLUTION = 20.0
 INVALID_VALUE = 205
@@ -112,7 +112,7 @@ def build_conditional_probability_cube(
 ) -> openeo.DataCube:
     """Build the conditional probability datacube for one temporal window.
 
-    This is the upscalable version of downscaling_distribution.py.
+    This is the upscalable version of experimental/downscaling_distribution.py.
     """
     all_masks, labels_scf = _compute_scf_masks(
         connection, temporal_extent, spatial_extent
