@@ -1,5 +1,3 @@
-#%%
-
 """
 Landsat process-graph pipeline for SnowFLAKES representative pixels.
 
@@ -25,20 +23,6 @@ import sys
 
 import openeo
 from openeo.processes import array_append, array_create
-
-_pkg_dir = Path(__file__).resolve().parent
-_src_pkg_dir = _pkg_dir.parent / "src" / "openeo_mountains_snow"
-
-if _src_pkg_dir.is_dir():
-    __path__ = [str(_src_pkg_dir)]
-else:
-    __path__ = [str(_pkg_dir)]
-
-
-src_dir = Path(__file__).resolve().parents[2]
-if str(src_dir) not in sys.path:
-    sys.path.insert(0, str(src_dir))
-from openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction import apply_representative_pixels
 
 
 # Map Landsat L1C names to the Sentinel-2-like names used downstream.
@@ -211,50 +195,6 @@ def landsat_inputs_cube(
     with_scaled_angles = _scale_angles_and_set_local_incidence(mapped)
     return _compute_indices(with_scaled_angles)
 
-#%%
-
-url = "https://openeo.prod.eu-west-1.openeo-int.v1.dataspace.copernicus.eu/openeo"
-conn = openeo.connect(url).authenticate_oidc()
-
-
-aoi = {
-        "west": 10.851177,
-        "south": 46.699372,
-        "east": 10.916695,
-        "north": 46.744288,
-        "crs": "EPSG:4326",
-    }
-time_period = ["2025-04-01", "2025-09-01"]
-
-inputs = landsat_inputs_cube(
-        aoi=aoi,
-        time_period=time_period,
-        connection=conn,
-        max_cloud_cover=70,
-    )
-
-#job = inputs.save_result(format="NetCDF").create_job(title="Landsat representative pixels")
-#job.start_and_wait()
-
-#%%
-import os
-import xarray as xr
-
-results = job.get_results()
-download_dir = r"C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\tmp\landsat_input_cube3"
-os.makedirs(download_dir, exist_ok=True)
-results.download_files(download_dir)
-
-# open the downloaded openEO.nc if present and show basic info
-nc_path = os.path.join(download_dir, "openEO.nc")
-if os.path.exists(nc_path):
-    ds = xr.open_dataset(nc_path)
-    print("Downloaded NetCDF bands:", list(ds.coords.get("bands", [])))
-    ds.close()
-else:
-    print("No openEO.nc found in", download_dir)
-#%%
-
 
 def landsat_representative_pixels_cube(
     aoi: dict,
@@ -272,67 +212,3 @@ def landsat_representative_pixels_cube(
         max_cloud_cover=max_cloud_cover,
     )
     return apply_representative_pixels(inputs, neighborhood_size=neighborhood_size)
-
-
-
-# %%
-
-url = "https://openeo.prod.eu-west-1.openeo-int.v1.dataspace.copernicus.eu/openeo"
-conn = openeo.connect(url).authenticate_oidc()
-
-aoi = {
-    "west": 10.818380,
-    "south": 46.676915,
-    "east": 10.949492,
-    "north": 46.766745,
-    "crs": "EPSG:4326",
-}
-time_period = ["2015-09-01", "2025-09-01"]
-
-result_cube = landsat_representative_pixels_cube(
-    aoi=aoi,
-    time_period=time_period,
-    connection=conn,
-    neighborhood_size=100,
-    max_cloud_cover=70,
-)
-
-job_options ={
-  "driver-memory": "2G",
-  "driver-memoryOverhead": "2G",
-  "executor-memory": "7G",
-  "executor-memoryOverhead": "3G",
-}
-
-job = result_cube.save_result(format="NetCDF").create_job(title="Landsat representative pixels", job_options=job_options)
-job.start_and_wait()
-
-
-
-#%%
-
-import os
-import xarray as xr
-
-results = job.get_results()
-download_dir = r"C:\Git_projects\openeo_mountains_snow\src\openeo_mountains_snow\tmp\landsat_snowflakes_AWS_output2"
-os.makedirs(download_dir, exist_ok=True)
-results.download_files(download_dir)
-
-nc_path = os.path.join(download_dir, "openEO.nc")
-ds = xr.open_dataset(nc_path)
-ds
-
-# %%
-
-import matplotlib.pyplot as plt
-
-
-da = ds['representative'].isel(t=0)
-
-plt.figure(figsize=(8,6))
-da.plot(cmap='viridis')  # or 'gray', 'Blues', etc.
-plt.title("My Data")
-plt.show()
-
-# %%

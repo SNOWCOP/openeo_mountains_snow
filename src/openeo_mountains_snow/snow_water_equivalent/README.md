@@ -10,5 +10,6 @@ on the reconstructed snow cover.
 | `udfs/solar_position_udf.py` | Solar zenith/azimuth per pixel and timestamp. |
 | `udfs/incidence_angle_udf.py` | Solar incidence angle on sloped terrain. |
 
-- **Config:** `../reconstruction/config.py` (UDF paths and extents live there).
-- **Run:** as part of `python -m openeo_mountains_snow.reconstruction.main`.
+- **Entry point:** `snow_water_equivalent.py` → `snow_water_equivalent_cube()`.
+- **Config:** `../config.py` (UDF paths and extents live there).
+- **Run:** as part of `python -m openeo_mountains_snow.main`.
