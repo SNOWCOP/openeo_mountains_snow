@@ -7,7 +7,7 @@ then fills clouds with the reconstruction UDF. Output band: `sca` (0 / 100 / 205
 import openeo
 
 from openeo_mountains_snow.config import (
-    MODIS_TEMPORAL_EXTENT, N_DAYS_TO_RECONSTRUCT, NEIGHBORHOOD_SIZE, SCA_RECONSTRUCTION_UDF,
+    N_DAYS_TO_RECONSTRUCT, NEIGHBORHOOD_SIZE, SCA_RECONSTRUCTION_UDF, TEMPORAL_EXTENT,
 )
 from openeo_mountains_snow.snow_cover_area.conditional_probability import (
     compute_conditional_probability,
@@ -27,7 +27,7 @@ def snow_cover_area_cube(
     `snow_map_from_snow_cover_fraction(...)` of the step-1 representative-pixels output.
     """
     all_masks, labels = compute_snow_cover_fraction_range_masks(
-        connection, high_resolution_snow, MODIS_TEMPORAL_EXTENT, spatial_extent
+        connection, high_resolution_snow, TEMPORAL_EXTENT, spatial_extent
     )
     conditional_probability, _, occurrences = compute_conditional_probability(all_masks, labels)
     conditional_probability = conditional_probability.rename_labels(
@@ -36,7 +36,7 @@ def snow_cover_area_cube(
     occurrences = occurrences.rename_labels(dimension="bands", target=[f"occ_{b}" for b in labels])
 
     modis_snow_cover_fraction = create_modis_snow_cover_fraction_cube(
-        connection, MODIS_TEMPORAL_EXTENT, spatial_extent
+        connection, TEMPORAL_EXTENT, spatial_extent
     )
 
     first_date = high_resolution_snow.metadata.temporal_dimension.extent[0]
@@ -58,4 +58,4 @@ def snow_cover_area_cube(
             {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
         ],
     )
-    return sca.add_dimension(name="bands", label="sca", type="bands")
+    return sca

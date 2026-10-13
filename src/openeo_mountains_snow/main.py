@@ -3,15 +3,12 @@
     python -m openeo_mountains_snow.main
 """
 
-from pathlib import Path
-
 import openeo
-from omegaconf import OmegaConf
 from shapely.geometry import box
 from shapely.ops import transform
 from pyproj import Transformer
 
-from openeo_mountains_snow.config import BACKEND, JOB_OPTIONS, SPATIAL_EXTENT, TEMPORAL_EXTENT
+from openeo_mountains_snow.config import BACKEND, JOB_OPTIONS, SPATIAL_EXTENT, TEMPORAL_EXTENT, build_scf_config
 from openeo_mountains_snow.snow_cover_area.snow_cover_area import snow_cover_area_cube
 from openeo_mountains_snow.snow_cover_area.snow_map import snow_map_from_snow_cover_fraction
 from openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction import snow_cover_fraction_cube
@@ -26,7 +23,7 @@ def main():
     to_wgs84 = Transformer.from_crs(SPATIAL_EXTENT["crs"], "EPSG:4326", always_xy=True).transform
     aoi = transform(to_wgs84, box(SPATIAL_EXTENT["west"], SPATIAL_EXTENT["south"],
                                    SPATIAL_EXTENT["east"], SPATIAL_EXTENT["north"]))
-    scf_cfg = OmegaConf.load(Path(__file__).parent / "conf" / "config.yaml")
+    scf_cfg = build_scf_config()
     snow_cover_fraction = snow_cover_fraction_cube(aoi, TEMPORAL_EXTENT, connection, scf_cfg)
 
     high_resolution_snow = snow_map_from_snow_cover_fraction(snow_cover_fraction)
