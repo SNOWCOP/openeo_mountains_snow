@@ -6,12 +6,25 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "openeo",
-    "hydra-core"
+    "hydra-core",
+    "pyarrow",
+    "numpy",
+    "pandas",
+    "xarray",
+    "pyproj",
+    "shapely",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest"
+    "pytest",
+    "scikit-learn",
+    "scipy",
+]
+experimental = [
+    "geopandas",
+    "typer",
+    "matplotlib",
 ]
 
 [tool.pytest.ini_options]
