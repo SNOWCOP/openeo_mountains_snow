@@ -4,6 +4,7 @@ and for upscaling. Single source for processing constants.
 """
 
 from pathlib import Path
+from types import SimpleNamespace
 
 # ==============================
 # Temporal Configuration
@@ -11,11 +12,11 @@ from pathlib import Path
 
 TEMPORAL_EXTENT = ['2021-09-01', '2024-09-30']
 
-# Separate temporal extent for MODIS data
-MODIS_TEMPORAL_EXTENT = ["2023-01-20", "2023-01-21"]
+# Single temporal extent policy for all pipeline inputs.
+# Backward-compatible aliases kept for older scripts.
+MODIS_TEMPORAL_EXTENT = TEMPORAL_EXTENT.copy()
 
-# Separate temporal extent for climate data (AGERA5)
-AGERA_TEMPORAL_EXTENT = ['2023-07-01', '2023-07-05']
+AGERA_TEMPORAL_EXTENT = TEMPORAL_EXTENT.copy()
 
 
 
@@ -96,3 +97,39 @@ SCA_RECONSTRUCTION_UDF = SCA_UDF_DIR / 'snow_cover_area_reconstruction_udf.py'
 SWE_RECONSTRUCTION_UDF = SWE_UDF_DIR / 'snow_water_equivalent_udf.py'
 SOLAR_POSITION_UDF = SWE_UDF_DIR / 'solar_position_udf.py'
 INCIDENCE_ANGLE_UDF = SWE_UDF_DIR / 'incidence_angle_udf.py'
+
+
+# ==============================
+# SCF (Step-1) Configuration
+# ==============================
+
+# Keep the SnowFLAKES step-1 settings in Python so scripts can run without OmegaConf.
+SCF_SETTINGS = {
+    "sentinel2_l2a": {
+        "collection": "SENTINEL2_L2A",
+        "scl_band": "SCL",
+        "cloud_values": [8, 9, 3, 10],
+    },
+    "sentinel2_l1c": {
+        "collection": "SENTINEL2_L1C",
+        "bands": ["B02", "B03", "B04", "B08", "B11", "sunZenithAngles", "sunAzimuthAngles"],
+    },
+    "water_mask": {
+        "collection": "ESA_WORLDCOVER_10M_2021_V2",
+        "band": "MAP",
+        "water_values": [80],
+    },
+}
+
+
+def _as_namespace(value):
+    if isinstance(value, dict):
+        return SimpleNamespace(**{k: _as_namespace(v) for k, v in value.items()})
+    if isinstance(value, list):
+        return [_as_namespace(v) for v in value]
+    return value
+
+
+def build_scf_config() -> SimpleNamespace:
+    """Return a config object with attribute access expected by snow_cover_fraction.py."""
+    return _as_namespace(SCF_SETTINGS)

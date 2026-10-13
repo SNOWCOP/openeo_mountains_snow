@@ -3,7 +3,7 @@
 import openeo
 
 from openeo_mountains_snow.config import (
-    AGERA_TEMPORAL_EXTENT, NEIGHBORHOOD_SIZE, SWE_RECONSTRUCTION_UDF,
+    NEIGHBORHOOD_SIZE, SWE_RECONSTRUCTION_UDF, TEMPORAL_EXTENT,
 )
 from openeo_mountains_snow.snow_water_equivalent.downscale_variables import (
     downscale_shortwave_radiation,
@@ -26,7 +26,7 @@ def snow_water_equivalent_cube(
     agera = connection.load_stac(
         "https://stac.openeo.vito.be/collections/agera5_daily",
         spatial_extent=spatial_extent,
-        temporal_extent=AGERA_TEMPORAL_EXTENT,
+        temporal_extent=TEMPORAL_EXTENT,
     )
     agera = agera.filter_bands(bands=["2m_temperature_mean", "dewpoint_temperature_mean", "solar_radiation_flux"])
     agera = agera.rename_labels(
