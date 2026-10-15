@@ -148,77 +148,42 @@ def shadow_mask(s2_cube, region):
     
     nir = select_band(s2_cube, "B08")
     red = select_band(s2_cube, "B04")
-    
-    CLOSDI = (1 - 1.5*nir -0.1*red)*100/(1+3.5*nir+4.9*red)
-    
-    CLOSDI
-    
-    
-    threshold = shadow_score.aggregate_spatial(
-        geometries=region,
-        reducer=lambda data: quantiles(
-            data, probabilities=[0.85], ignore_nodata=True
-        )
-    ).vector_to_raster(target=shadow_score)
-
-
-
-
-    norm_band_names = ["idx6", "SI", "NDVI", "EVI", "B08"]
-    norm_bands = s2_cube.filter_bands(norm_band_names)
-
-    band_min = norm_bands.aggregate_spatial(
-        geometries=region,
-        reducer=lambda data: openeo_min(data, ignore_nodata=True),
-    ).vector_to_raster(target=norm_bands)
-    band_max = norm_bands.aggregate_spatial(
-        geometries=region,
-        reducer=lambda data: openeo_max(data, ignore_nodata=True),
-    ).vector_to_raster(target=norm_bands)
-    band_range = band_max - band_min
-    # Adding one only for a zero-width range reproduces the local
-    # ``zeros_like`` branch without an eager Python/NumPy conditional.
-    safe_range = band_range + (band_range == 0)
-    normed = (norm_bands - band_min) / safe_range
-
-
-
-    nir_n = select_band(normed, "B08")
-    ndvi_n = select_band(normed, "NDVI")
-    idx6_n = select_band(normed, "idx6")
-    shad_idx_n = select_band(normed, "SI")
-    evi_n = select_band(normed, "EVI")
     sia = select_band(s2_cube, "local_solar_incidence_angle")
+    
+    curr_angle_valid = (sia >= 70) & (sia <= 90)
 
-    shadow_score = (
-        (idx6_n + shad_idx_n)
-        / (ndvi_n + evi_n + nir_n + 1e-6)
-    )
+    
+    
+    # DIFFERENT SHADOWS: i) cloud shadows, ii) self-shadows, and iii) cast-shadows 
+    # cloud_shadow = cloud_mask == 3
+    self_shadow = sia > 90
 
-    threshold = shadow_score.aggregate_spatial(
+    # spectral shadows
+    CLOSDI = (1-1.5*nir-0.1*red)*100/(1+3.5*nir+4.9*red)
+        
+    
+    threshold = CLOSDI.mask(self_shadow).aggregate_spatial(
         geometries=region,
         reducer=lambda data: quantiles(
-            data, probabilities=[0.85], ignore_nodata=True
+            data, probabilities=[0.1], ignore_nodata=True
         )
-    ).vector_to_raster(target=shadow_score)
+    ).vector_to_raster(target=CLOSDI)
+    
+    
+    spectral_shadow = (CLOSDI - threshold) > 0
 
-    curr_angle_valid = (sia >= 70) & (sia < 180)
-    self_shadow = sia >= 90
-    # Comparing two cubes with ``>`` triggers a ``merge_cubes`` with a ``gt``
+    
+    # Comparingtwo cubes with ``>`` triggers a ``merge_cubes`` with a ``gt``
     # overlap resolver, which the geopyspark backend does not support. Merging
     # via ``subtract`` (supported) and then comparing to a scalar sidesteps this.
-    spectral_shadow = (shadow_score - threshold) > 0
-    shadow = (spectral_shadow & curr_angle_valid) | self_shadow
+    shadow = (spectral_shadow & curr_angle_valid) | self_shadow # add | cloud_shadow
 
     shadow = shadow.process_with_node(shadow.result_node(), metadata=sia.metadata)
     shadow_band = shadow.add_dimension(
         name="bands", label="shadow_mask", type="bands"
     )
+    
     return s2_cube.merge_cubes(shadow_band)
-
-
-
-
 
 
 
@@ -234,9 +199,9 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
     # masked_s2 = sentinel2_bands.mask(dem_mask)
     
     s2_with_local_angle = solar_incidence_angle(sentinel2_bands, aoi, connection, cfg)
-
+    s2_with_shadow = shadow_mask(s2_with_local_angle, aoi)
     
-    return s2_with_local_angle
+    return s2_with_shadow
 
 
     
