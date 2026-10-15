@@ -28,27 +28,84 @@ from openeo.processes import (
 )
 
 
-def elevation_mask(region, conn: openeo.Connection, cfg:DictConfig):
-    elevation = conn.load_collection("COPERNICUS_30", spatial_extent=region).max_time()
-    percentile10 = elevation.aggregate_spatial(region, reducer=lambda x: x.quantiles(probabilities = [0.1])).vector_to_raster(target=elevation).rename_labels(dimension="bands", target=["percentile10"])
-
-
-    return elevation.merge_cubes(percentile10).reduce_dimension(dimension="bands", reducer=lambda x: x[0] < x[1] - 200)
-
 #%%
 
+def return_input_bands(aoi, time_period, connection, cfg):
+    
+    sentinel2_bands = connection.load_collection(
+        cfg.sentinel2_l1c.collection,
+        spatial_extent=aoi,
+        temporal_extent=time_period,
+        bands=cfg.sentinel2_l1c.bands)
+    
+    return sentinel2_bands
 
-def slope_aspect(aoi, connection, cfg):
+
+
+#%%
+"""
+Generate auxiliary information: 
+    1. DEM, slope and aspect.
+    2. Solar Incidence Angle
+
+"""
+
+
+def dem_slope_aspect(aoi, connection, cfg):
     dem_spacetime = connection.load_collection("COPERNICUS_30", spatial_extent=aoi)
     dem = dem_spacetime.reduce_dimension(dimension='t', reducer='mean')
+    
+    dem = dem.rename_labels(dimension="bands", target=["dem"])
+    
+    # aspect and slope are computed in radians 
+    # see https://open-eo.github.io/openeo-python-client/_modules/openeo/rest/datacube.html
+    aspect = dem.aspect().rename_labels(dimension="bands", target=["aspect"])
+    slope = dem.slope().rename_labels(dimension="bands", target=["slope"])
 
-    aspect = dem.aspect()
-    slope = dem.slope()
+    return dem.merge_cubes(aspect).merge_cubes(slope)
 
-    aspect_slope = aspect.merge_cubes(slope).rename_labels(
-        dimension="bands", target=["aspect", "slope"]
+
+def solar_incidence_angle(s2_cube, aoi, connection, cfg, bands_to_retain= ["B02", "B03", "B04", "B08", "B11"]):
+    slope_aspect_cube = dem_slope_aspect(aoi, connection, cfg)
+    combined = s2_cube.merge_cubes(slope_aspect_cube)
+
+    # degree - radians conversions
+    deg2rad = math.pi / 180.0
+    rad2deg = 180.0 / math.pi
+    
+    bands_to_retain = combined.metadata.band_names # tengo tutte le bande per ora!
+
+    # define the solar incidence angle function per-pixel
+    def compute_sia(data):
+        zenith_rad = data["sunZenithAngles"] * deg2rad
+        azimuth_rad = data["sunAzimuthAngles"] * deg2rad
+        slope_rad = data["slope"] 
+        aspect_rad = data["aspect"]
+
+        cos_theta = (
+            cos(zenith_rad) * cos(slope_rad) +
+                sin(zenith_rad) * sin(slope_rad) *
+                cos(aspect_rad - azimuth_rad)
+        )
+
+        cos_theta_clipped = cos_theta.max(-1).min(1)
+        local_angle = arccos(cos_theta_clipped) * rad2deg
+
+        bands = [data[b] for b in bands_to_retain]
+        bands.append(local_angle)
+
+        return array_create( bands )
+
+    # apply the function
+    extended_cube = combined.apply_dimension(
+        dimension="bands",
+        process=lambda data: compute_sia(data)
     )
-    return aspect_slope
+    extended_cube = extended_cube.rename_labels(dimension="bands", 
+                                                target=bands_to_retain + ["local_solar_incidence_angle"])
+
+    return extended_cube
+
 
 
 
@@ -81,6 +138,32 @@ def shadow_mask(s2_cube, region):
     # Bands that need spatial min-max normalization. Aggregating them together
     # in a single ``aggregate_spatial`` call (per statistic) is much faster than
     # doing it band-by-band.
+    
+    def select_band(cube, name):
+        # ``DataCube.band`` enables a special client-side band-math mode that
+        # cannot be combined with the aggregated statistic cubes above.
+        return cube.filter_bands([name]).reduce_dimension(
+            dimension="bands", reducer="first"
+        )
+    
+    nir = select_band(s2_cube, "B08")
+    red = select_band(s2_cube, "B04")
+    
+    CLOSDI = (1 - 1.5*nir -0.1*red)*100/(1+3.5*nir+4.9*red)
+    
+    CLOSDI
+    
+    
+    threshold = shadow_score.aggregate_spatial(
+        geometries=region,
+        reducer=lambda data: quantiles(
+            data, probabilities=[0.85], ignore_nodata=True
+        )
+    ).vector_to_raster(target=shadow_score)
+
+
+
+
     norm_band_names = ["idx6", "SI", "NDVI", "EVI", "B08"]
     norm_bands = s2_cube.filter_bands(norm_band_names)
 
@@ -98,12 +181,7 @@ def shadow_mask(s2_cube, region):
     safe_range = band_range + (band_range == 0)
     normed = (norm_bands - band_min) / safe_range
 
-    def select_band(cube, name):
-        # ``DataCube.band`` enables a special client-side band-math mode that
-        # cannot be combined with the aggregated statistic cubes above.
-        return cube.filter_bands([name]).reduce_dimension(
-            dimension="bands", reducer="first"
-        )
+
 
     nir_n = select_band(normed, "B08")
     ndvi_n = select_band(normed, "NDVI")
@@ -140,95 +218,68 @@ def shadow_mask(s2_cube, region):
 
 
 
-def local_incidence_angle(s2_cube, aoi, connection, cfg, bands_to_retain = ["B02", "B03", "B04", "B08", "B11"]):
-    slope_aspect_cube = slope_aspect(aoi, connection, cfg)
-    combined = s2_cube.merge_cubes(slope_aspect_cube)
-
-    # degree - radians conversions
-    deg2rad = math.pi / 180.0
-    rad2deg = 180.0 / math.pi
-
-    # define the solar incidence angle function per-pixel
-    def compute_sia(data):
-        zenith_rad = data["sunZenithAngles"] * deg2rad
-        azimuth_rad = data["sunAzimuthAngles"] * deg2rad
-        slope_rad = data["slope"] * deg2rad
-        aspect_rad = data["aspect"] * deg2rad
-
-        cos_theta = (
-            cos(zenith_rad) * cos(slope_rad) +
-                sin(zenith_rad) * sin(slope_rad) *
-                cos(aspect_rad - azimuth_rad)
-        )
-
-        cos_theta_clipped = cos_theta.max(-1).min(1)
-        local_angle = arccos(cos_theta_clipped) * rad2deg
-
-        bands = [data[b] for b in bands_to_retain]
-        bands.append(local_angle)
-
-        return array_create( bands )
-
-    # apply the function
-    extended_cube = combined.apply_dimension(
-        dimension="bands",
-        process=lambda data: compute_sia(data)
-    )
-    extended_cube = extended_cube.rename_labels(dimension="bands", target=bands_to_retain + ["local_solar_incidence_angle"])
-
-    return extended_cube
 
 
+
+
+    
 
 def snowflake_inputs_cube(aoi, time_period, connection, cfg):
-    # mask = cloud_water_mask(aoi, time_period, connection, cfg)
-    dem_mask = elevation_mask(aoi, connection, cfg)
-    sentinel2_bands = connection.load_collection(
-        cfg.sentinel2_l1c.collection,
-        spatial_extent=aoi,
-        temporal_extent=time_period,
-        bands=cfg.sentinel2_l1c.bands)
-    # masked_s2 = sentinel2_bands.mask(mask | dem_mask)
-    masked_s2 = sentinel2_bands.mask(dem_mask)
-
-    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, connection, cfg)
-
-
-    from openeo.processes import normalized_difference
-    def compute_indices(bands):
-        nir = bands["B08"]
-        ndvi = normalized_difference(nir, bands["B04"])
-        updated = array_append(bands, ndvi, "NDVI")
-        
-        green = bands["B03"]
-        swir = bands["B11"]
-        ndsi = normalized_difference(green, swir)
-        updated = array_append(updated, ndsi, "NDSI")
-        
-        ndwi = normalized_difference(green, nir)
-        updated = array_append(updated, ndwi, "NDWI")
-
-        blue = bands["B02"]
-        diff_B_NIR = blue - nir
-        updated = array_append(updated, diff_B_NIR, "diff_B_NIR")
-
-        SI = ((green - swir) / (green + swir) / green)
-        updated = array_append(updated, SI, "SI")
-        
-        red = bands["B04"]
-        idx6 = 2 * (2 * green - red - nir) / (2 * green + red + nir)
-        updated = array_append(updated, idx6, "idx6")
-        
-        EVI = 2.5 * (nir - red) / (nir + 2.4 * red + 1)
-        updated = array_append(updated, EVI, "EVI")
-        return updated
-
-    bands_indices = s2_with_local_angle.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
-        dimension="bands", target=s2_with_local_angle.metadata.band_names + ["NDVI", "NDSI", "NDWI", "diff_B_NIR", "SI", "idx6", "EVI"])
     
-    with_shadow_mask = shadow_mask(bands_indices, aoi)
+    # Sentinel-2 bands
+    sentinel2_bands = return_input_bands(aoi, time_period, connection, cfg)
+    # mask = cloud_water_mask(aoi, time_period, connection, cfg)
 
-    return with_shadow_mask
+    # masked_s2 = sentinel2_bands.mask(mask | dem_mask)
+    # masked_s2 = sentinel2_bands.mask(dem_mask)
+    
+    s2_with_local_angle = solar_incidence_angle(sentinel2_bands, aoi, connection, cfg)
+
+    
+    return s2_with_local_angle
+
+
+    
+
+
+
+
+    
+
+    # from openeo.processes import normalized_difference
+    # def compute_indices(bands):
+    #     nir = bands["B08"]
+    #     ndvi = normalized_difference(nir, bands["B04"])
+    #     updated = array_append(bands, ndvi, "NDVI")
+        
+    #     green = bands["B03"]
+    #     swir = bands["B11"]
+    #     ndsi = normalized_difference(green, swir)
+    #     updated = array_append(updated, ndsi, "NDSI")
+        
+    #     ndwi = normalized_difference(green, nir)
+    #     updated = array_append(updated, ndwi, "NDWI")
+
+    #     blue = bands["B02"]
+    #     diff_B_NIR = blue - nir
+    #     updated = array_append(updated, diff_B_NIR, "diff_B_NIR")
+
+    #     return updated
+
+    # bands_indices = s2_with_local_angle.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
+    #     dimension="bands", target=s2_with_local_angle.metadata.band_names + ["NDVI", "NDSI", "NDWI", "diff_B_NIR"])
+    
+    # # with_shadow_mask = shadow_mask(bands_indices, aoi)
+
+    # return bands_indices
+
+
+
+def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
+    # sentinel2_bands = return_input_bands(aoi, time_period, c, cfg)
+    bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
+
+    return bands_indices    
 
 #%%
 
@@ -270,10 +321,6 @@ def run_openeo(cfg : DictConfig) -> None:
 
 
 
-def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
-    bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
-
-    return bands_indices    
 
 
 
