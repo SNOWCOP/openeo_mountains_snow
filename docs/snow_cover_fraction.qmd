@@ -10,4 +10,4 @@ For each range, representative snow/no-snow pixels are selected.
 This selection of pixels is used to train an SVM model, which is then used to estimate
 snow fraction in all other pixels.
 
-The main entrypoint is: `openeo_mountains_snow.collect_training.run_openeo`.
+The main entrypoint is: `openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction.run_openeo`.
