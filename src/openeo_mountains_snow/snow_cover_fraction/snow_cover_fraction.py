@@ -6,13 +6,16 @@ from typing import TextIO
 
 import hydra
 import openeo
+import requests
 import shapely
 from omegaconf import DictConfig, OmegaConf
 from openeo import UDF
+from openeo.api.process import Parameter
 from openeo.extra.spectral_indices import compute_indices
 from openeo.processes import any, array_append, process, cos, sin, arccos, array_create, quantiles
 from pyproj import Transformer
 
+from openeo_mountains_snow.config import SOLAR_POSITION_UDF
 from openeo_mountains_snow.snow_cover_fraction.udfs.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
 
 
@@ -150,7 +153,7 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
         bands=cfg.sentinel2_l1c.bands)
     masked_s2 = sentinel2_bands.mask(mask | dem_mask)
 
-    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, connection, cfg)
+    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, time_period, connection, cfg)
 
 
     from openeo.processes import normalized_difference
@@ -192,7 +195,45 @@ def slope_aspect(aoi, connection, cfg):
 
 
 
-def local_incidence_angle(s2_cube, aoi, connection, cfg, bands_to_retain = ["B02", "B03", "B04", "B08", "B11"]):
+def s2_tile_sun_angles(aoi, time_period, collection="sentinel-2-l1c"):
+    """Per date, ``[lon, lat, sun_zenith, sun_azimuth]`` at each S2 tile centre, from the CDSE STAC.
+
+    S2 sun angles are tile means, valid at the tile centre: the solar position UDF
+    recovers the overpass time there instead of at the (offset) chunk centre.
+    """
+    if isinstance(aoi, dict):
+        features = aoi.get("features", [aoi])
+        aoi = shapely.unary_union([shapely.geometry.shape(f.get("geometry", f)) for f in features])
+    url = "https://stac.dataspace.copernicus.eu/v1/search"
+    body = {"collections": [collection], "bbox": list(aoi.bounds), "limit": 1000,
+            "datetime": f"{time_period[0]}T00:00:00Z/{time_period[1]}T23:59:59Z"}
+    tiles = {}
+    while body:
+        response = requests.post(url, json=body, timeout=60)
+        response.raise_for_status()
+        page = response.json()
+        for item in page["features"]:
+            props = item["properties"]
+            asset = next(a for a in item["assets"].values() if "proj:bbox" in a)
+            x0, y0, x1, y1 = asset["proj:bbox"]
+            lon, lat = Transformer.from_crs(asset["proj:code"], "EPSG:4326", always_xy=True).transform(
+                (x0 + x1) / 2, (y0 + y1) / 2)
+            tiles.setdefault(props["datetime"][:10], []).append(
+                [lon, lat, 90 - props["view:sun_elevation"], props["view:sun_azimuth"]])
+        body = next((link.get("body") for link in page.get("links", []) if link["rel"] == "next"), None)
+    return tiles
+
+
+def local_incidence_angle(s2_cube, aoi, time_period, connection, cfg, bands_to_retain = ["B02", "B03", "B04", "B08", "B11"]):
+    # Per-pixel sun angles (radians) at the overpass, replacing the scene-constant S2 angles.
+    # UDP builds have parameterised AOI/time: no STAC lookup, the UDF uses the S2 angle bands.
+    context = {}
+    if not isinstance(aoi, Parameter) and not isinstance(time_period, Parameter):
+        context = {"s2_tiles": s2_tile_sun_angles(aoi, time_period)}
+    s2_cube = s2_cube.apply_dimension(
+        dimension="bands", process=UDF.from_file(str(SOLAR_POSITION_UDF), context=context)
+    ).rename_labels(dimension="bands", target=s2_cube.metadata.band_names + ["zenith", "azimuth"])
+
     slope_aspect_cube = slope_aspect(aoi, connection, cfg)
     combined = s2_cube.merge_cubes(slope_aspect_cube)
 
@@ -202,8 +243,8 @@ def local_incidence_angle(s2_cube, aoi, connection, cfg, bands_to_retain = ["B02
 
     # define the solar incidence angle function per-pixel
     def compute_sia(data):
-        zenith_rad = data["sunZenithAngles"] * deg2rad
-        azimuth_rad = data["sunAzimuthAngles"] * deg2rad
+        zenith_rad = data["zenith"]
+        azimuth_rad = data["azimuth"]
         slope_rad = data["slope"] * deg2rad
         aspect_rad = data["aspect"] * deg2rad
 
