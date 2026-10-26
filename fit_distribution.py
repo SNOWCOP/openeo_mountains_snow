@@ -7,22 +7,14 @@ Created on Thu Jul 16 09:02:50 2026
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import stats
-import os
-
 
 
 
 def fit_distribution_and_median(
     feature,
-    feature_name,
     mask,
-    outfolder,
     distribution="auto",
-    bins=50,
-    plot=True,
-    ax=None,
     default_median=np.nan
 ):
     """
@@ -36,8 +28,6 @@ def fit_distribution_and_median(
     feature : ndarray
         Input feature array.
 
-    feature_name : str
-        Feature name used for labels and the output filename.
 
     mask : ndarray of bool
         Boolean mask with the same shape as feature.
@@ -47,15 +37,6 @@ def fit_distribution_and_median(
 
     distribution : {"gaussian", "lognormal", "auto"}
         Distribution to fit.
-
-    bins : int
-        Number of histogram bins.
-
-    plot : bool
-        Whether to create and save the histogram.
-
-    ax : matplotlib.axes.Axes or None
-        Existing plotting axes.
 
     default_median : float
         Median returned when fitting is not possible.
@@ -228,6 +209,7 @@ def fit_distribution_and_median(
 
             if not fits:
                 return make_default_result(
+                    default_median=default_median,
                     n_samples=values.size,
                     reason="Neither Gaussian nor lognormal fitting succeeded."
                 )
@@ -236,6 +218,7 @@ def fit_distribution_and_median(
 
     except (ValueError, RuntimeError, FloatingPointError) as error:
         result = make_default_result(
+            default_median=default_median,
             n_samples=values.size,
             reason=str(error)
         )
@@ -257,86 +240,5 @@ def fit_distribution_and_median(
         "fit_success": True,
         "reason": None,
     })
-
-    if plot:
-        created_figure = ax is None
-
-        if created_figure:
-            _, ax = plt.subplots(figsize=(8, 5))
-
-        ax.hist(
-            values,
-            bins=bins,
-            density=True,
-            alpha=0.5,
-            label="Observed distribution"
-        )
-
-        x_min, x_max = np.percentile(values, [0.1, 99.9])
-
-        if not np.isfinite(x_min) or not np.isfinite(x_max):
-            x_min = values.min()
-            x_max = values.max()
-
-        if x_min == x_max:
-            padding = max(abs(x_min) * 0.01, 1e-6)
-            x_min -= padding
-            x_max += padding
-
-        if selected_fit["distribution"] == "lognormal":
-            x_min = max(x_min, np.finfo(float).eps)
-
-        x = np.linspace(x_min, x_max, 1000)
-        fitted_pdf = selected_fit["pdf"](x)
-
-        ax.plot(
-            x,
-            fitted_pdf,
-            linewidth=2,
-            label=f"Fitted {selected_fit['distribution']}"
-        )
-
-        ax.axvline(
-            empirical_median,
-            linestyle="--",
-            linewidth=2,
-            label=f"Empirical median = {empirical_median:.4f}"
-        )
-
-        ax.axvline(
-            selected_fit["fitted_median"],
-            linestyle=":",
-            linewidth=2,
-            label=(
-                f"Fitted median = "
-                f"{selected_fit['fitted_median']:.4f}"
-            )
-        )
-
-        ax.set_xlabel(feature_name)
-        ax.set_ylabel("Probability density")
-        ax.set_title(
-            f"{selected_fit['distribution'].capitalize()} distribution fit"
-        )
-        ax.legend()
-        ax.grid(alpha=0.25)
-
-        if created_figure:
-            plt.tight_layout()
-
-            safe_feature_name = str(feature_name).replace(os.sep, "_")
-
-            output_path = os.path.join(
-                outfolder,
-                f"{safe_feature_name}_histogram.png"
-            )
-
-            plt.savefig(
-                output_path,
-                dpi=300,
-                bbox_inches="tight"
-            )
-
-            plt.close()
 
     return result

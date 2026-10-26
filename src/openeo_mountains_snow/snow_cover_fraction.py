@@ -39,15 +39,24 @@ def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfi
 
         bands=[cfg.sentinel2_l2a.scl_band])
 
-    cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([ x == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
+    cloud_mask = scl.reduce_dimension(
+        dimension="bands",
+        reducer=lambda x: any([
+            x[0] == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values
+        ]),
+    )
 
     water = conn.load_collection(
         cfg.water_mask.collection,
         spatial_extent=region,
         bands=[cfg.water_mask.band]).max_time()
 
-    water_mask = water.reduce_dimension(dimension="bands", reducer=lambda x: any(
-        [x == cloud_value for cloud_value in cfg.water_mask.water_values]))
+    water_mask = water.reduce_dimension(
+        dimension="bands",
+        reducer=lambda x: any([
+            x[0] == water_value for water_value in cfg.water_mask.water_values
+        ]),
+    )
 
     return cloud_mask | water_mask
 

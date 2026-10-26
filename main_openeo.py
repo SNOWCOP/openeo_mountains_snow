@@ -17,16 +17,20 @@ import json
 from pathlib import Path
 from pyproj import Transformer
 from openeo.processes import (
+    any as openeo_any,
     arccos,
     array_append,
     array_create,
     cos,
-    max as openeo_max,
-    min as openeo_min,
     quantiles,
     sin,
 )
 
+from openeo import UDF
+from representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
+
+
+from solar_position_udf import apply_udf_data
 
 #%%
 
@@ -117,15 +121,24 @@ def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfi
 
         bands=[cfg.sentinel2_l2a.scl_band])
 
-    cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([ x == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
+    cloud_mask = scl.reduce_dimension(
+        dimension="bands",
+        reducer=lambda x: openeo_any([
+            x[0] == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values
+        ]),
+    )
 
     water = conn.load_collection(
         cfg.water_mask.collection,
         spatial_extent=region,
         bands=[cfg.water_mask.band]).max_time()
 
-    water_mask = water.reduce_dimension(dimension="bands", reducer=lambda x: any(
-        [x == cloud_value for cloud_value in cfg.water_mask.water_values]))
+    water_mask = water.reduce_dimension(
+        dimension="bands",
+        reducer=lambda x: openeo_any([
+            x[0] == water_value for water_value in cfg.water_mask.water_values
+        ]),
+    )
 
     return cloud_mask | water_mask
 
@@ -160,9 +173,11 @@ def shadow_mask(s2_cube, region):
 
     # spectral shadows
     CLOSDI = (1-1.5*nir-0.1*red)*100/(1+3.5*nir+4.9*red)
-        
     
-    threshold = CLOSDI.mask(self_shadow).aggregate_spatial(
+    # Keep only self-shadow pixels for threshold estimation
+    CLOSDI_self_shadow = CLOSDI.mask(~self_shadow)
+    
+    threshold = CLOSDI_self_shadow.aggregate_spatial(
         geometries=region,
         reducer=lambda data: quantiles(
             data, probabilities=[0.1], ignore_nodata=True
@@ -193,58 +208,76 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
     
     # Sentinel-2 bands
     sentinel2_bands = return_input_bands(aoi, time_period, connection, cfg)
-    # mask = cloud_water_mask(aoi, time_period, connection, cfg)
+    mask = cloud_water_mask(aoi, time_period, connection, cfg)
 
-    # masked_s2 = sentinel2_bands.mask(mask | dem_mask)
-    # masked_s2 = sentinel2_bands.mask(dem_mask)
+    masked_s2 = sentinel2_bands.mask(mask)
     
-    s2_with_local_angle = solar_incidence_angle(sentinel2_bands, aoi, connection, cfg)
+    s2_with_local_angle = solar_incidence_angle(masked_s2, aoi, connection, cfg)
     s2_with_shadow = shadow_mask(s2_with_local_angle, aoi)
     
-    return s2_with_shadow
-
-
+    # testing the udf for zolar azimuth and zenith angles
+    # solar_udf = openeo.UDF.from_file("solar_position_udf.py")
+    # new_data = sentinel2_bands.apply_dimension(
+    #     dimension="bands", 
+    #     process=solar_udf)
+    
+    # new_data = new_data.rename_labels(
+    #     dimension="bands",
+    #     target=sentinel2_bands.metadata.band_names + ["zenith", "azimuth"],
+    # )
+    # return new_data
     
 
-
-
-
-    
-
-    # from openeo.processes import normalized_difference
-    # def compute_indices(bands):
-    #     nir = bands["B08"]
-    #     ndvi = normalized_difference(nir, bands["B04"])
-    #     updated = array_append(bands, ndvi, "NDVI")
+    from openeo.processes import normalized_difference
+    def compute_indices(bands):
         
-    #     green = bands["B03"]
-    #     swir = bands["B11"]
-    #     ndsi = normalized_difference(green, swir)
-    #     updated = array_append(updated, ndsi, "NDSI")
+        green = bands["B03"]
+        swir = bands["B11"]
+        nir = bands["B08"]
+
+        ndsi = normalized_difference(green, swir)
+        updated = array_append(bands, ndsi, "NDSI")
         
-    #     ndwi = normalized_difference(green, nir)
-    #     updated = array_append(updated, ndwi, "NDWI")
+        ndwi = normalized_difference(green, nir)
+        updated = array_append(updated, ndwi, "NDWI")
 
-    #     blue = bands["B02"]
-    #     diff_B_NIR = blue - nir
-    #     updated = array_append(updated, diff_B_NIR, "diff_B_NIR")
+        blue = bands["B02"]
+        diff_B_NIR = blue - nir
+        updated = array_append(updated, diff_B_NIR, "diff_B_NIR")
 
-    #     return updated
+        return updated
 
-    # bands_indices = s2_with_local_angle.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
-    #     dimension="bands", target=s2_with_local_angle.metadata.band_names + ["NDVI", "NDSI", "NDWI", "diff_B_NIR"])
-    
-    # # with_shadow_mask = shadow_mask(bands_indices, aoi)
-
-    # return bands_indices
+    bands_indices = s2_with_shadow.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
+        dimension="bands", target=s2_with_shadow.metadata.band_names + ["NDSI", "NDWI", "diff_B_NIR"])
+        
+    return bands_indices
 
 
+def get_udf(name):
+    """Load a local UDF and include helpers needed by the remote runtime."""
+    source_directory = Path(__file__).resolve().parent
+    udf_code = (source_directory / name).read_text(encoding="utf-8")
+    if name == "representative_pixels.py":
+        # The backend receives this code string, without local Python modules.
+        helper_code = (source_directory / "fit_distribution.py").read_text(encoding="utf-8")
+        udf_code = udf_code.replace(
+            "from fit_distribution import fit_distribution_and_median",
+            helper_code,
+        )
+    return UDF(code=udf_code, runtime="Python", version="3.11", context={"classify": True})
 
 def snow_cover_fraction_cube(aoi,time_period , c, cfg ):
     # sentinel2_bands = return_input_bands(aoi, time_period, c, cfg)
     bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
 
-    return bands_indices    
+    representative_pixels = bands_indices.apply_neighborhood(process=get_udf("representative_pixels.py"),
+                                                             size=[{"dimension": "x", "value": 3038, "unit": "px"},
+                                                                   {"dimension": "y", "value": 3038, "unit": "px"},
+                                                                   {"dimension": "t", "value": "P1D"}])
+    representative_pixels = representative_pixels.rename_labels(dimension="bands",
+                                                                target=[REPRESENTATIVE_PIXEL_BAND_NAME])
+    return representative_pixels
+
 
 #%%
 
