@@ -60,9 +60,11 @@ def glacier_mask(region, conn: openeo.Connection, cfg: DictConfig):
 
 
 def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfig):
+    """Return (cloud | water mask, cloud shadow mask)."""
     if cfg.omnicloudmask.model_url is not None:
-        cloud_mask = omnicloudmask_classes(region, time_period, conn, cfg).apply(
-            lambda x: (x == 1).or_(x == 2))
+        classes = omnicloudmask_classes(region, time_period, conn, cfg)
+        cloud_mask = classes.apply(lambda x: (x == 1).or_(x == 2))
+        cloud_shadow = classes.apply(lambda x: x == 3)
     else:
         scl = conn.load_collection(
             cfg.sentinel2_l2a.collection,
@@ -71,7 +73,8 @@ def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfi
 
             bands=[cfg.sentinel2_l2a.scl_band])
 
-        cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([ x == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
+        cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([x[0] == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
+        cloud_shadow = scl.reduce_dimension(dimension="bands", reducer=lambda x: x[0] == 3)
 
     water = conn.load_collection(
         cfg.water_mask.collection,
@@ -79,9 +82,9 @@ def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfi
         bands=[cfg.water_mask.band]).max_time()
 
     water_mask = water.reduce_dimension(dimension="bands", reducer=lambda x: any(
-        [x == cloud_value for cloud_value in cfg.water_mask.water_values]))
+        [x[0] == water_value for water_value in cfg.water_mask.water_values]))
 
-    return cloud_mask | water_mask
+    return cloud_mask | water_mask, cloud_shadow
 
 
 def collect_training(inputs_cube):
@@ -134,9 +137,9 @@ def apply_representative_pixels(bands_indices: openeo.DataCube, neighborhood_siz
     """Apply the SnowFLAKES representative pixels UDF to a pre-built inputs cube.
 
     Sensor-agnostic: any cube whose bands match the names expected by
-    representative_pixels.py (B02, B03, B04, B08, B11, NDVI, NDSI,
-    diff_B_NIR, SI, local_solar_incidence_angle) can be passed in, regardless
-    of the original sensor (Sentinel-2, Landsat, …).
+    representative_pixels.py (B02, B03, B04, B08, B11 as reflectance in [0, 1],
+    cloud_shadow, local_solar_incidence_angle, NDSI, NDWI, diff_B_NIR = B02 - B08)
+    can be passed in, regardless of the original sensor (Sentinel-2, Landsat, …).
 
     Args:
         bands_indices: Pre-built inputs cube with the standard SnowFLAKES bands.
@@ -176,40 +179,47 @@ def get_udf(name):
 
 
 def snowflake_inputs_cube(aoi, time_period, connection, cfg):
-    mask = cloud_water_mask(aoi, time_period, connection, cfg)
+    mask, cloud_shadow = cloud_water_mask(aoi, time_period, connection, cfg)
     dem_mask = elevation_mask(aoi, connection, cfg)
     sentinel2_bands = connection.load_collection(
         cfg.sentinel2_l1c.collection,
         spatial_extent=aoi,
         temporal_extent=time_period,
         bands=cfg.sentinel2_l1c.bands)
+    sentinel2_bands = sentinel2_bands.merge_cubes(
+        cloud_shadow.add_dimension(name="bands", label="cloud_shadow", type="bands"))
     masked_s2 = sentinel2_bands.mask(mask | dem_mask)
 
-    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, connection, cfg)
+    spectral = ["B02", "B03", "B04", "B05", "B06", "B07", "B8A", "B08", "B11", "B12"]
+    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, connection, cfg,
+                                                bands_to_retain=spectral + ["cloud_shadow"])
 
-
-    from openeo.processes import normalized_difference
+    # SnowFLAKES reference: reflectance in [0, 1], diff_B_NIR = B02 - B08.
     def compute_indices(bands):
-        nir = bands["B08"]
-        ndvi = normalized_difference(nir, bands["B04"])
-        updated = array_append(bands, ndvi, "NDVI")
-        green = bands["B03"]
-        swir = bands["B11"]
-        ndsi = (green - swir) / (green + swir)
-        updated = array_append(updated, ndsi, "NDSI")
+        reflectances = [bands[b] / 10000 for b in spectral]
+        blue, green, nir, swir = (reflectances[spectral.index(b)] for b in ["B02", "B03", "B08", "B11"])
+        return array_create(reflectances + [
+            bands["cloud_shadow"], bands["local_solar_incidence_angle"],
+            (green - swir) / (green + swir),
+            (green - nir) / (green + nir),
+            blue - nir,
+        ])
 
-        blue = bands["B02"]
-        diff_B_NIR = (blue - nir) / (blue + nir)
-        updated = array_append(updated, diff_B_NIR, "diff_B_NIR")
+    inputs = s2_with_local_angle.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
+        dimension="bands",
+        target=spectral + ["cloud_shadow", "local_solar_incidence_angle", "NDSI", "NDWI", "diff_B_NIR"])
 
-        SI = ((green - swir) / (green + swir) / green)
-        updated = array_append(updated, SI, "SI")
-        return updated
+    # Cast-shadow CLOSDI threshold: 10th percentile over self-shadow pixels of the whole AOI, per date.
+    def self_shadow_closdi(bands):
+        red, nir = bands["B04"], bands["B08"]
+        closdi = (1 - 1.5 * nir - 0.1 * red) * 100 / (1 + 3.5 * nir + 4.9 * red)
+        return array_create([if_(bands["local_solar_incidence_angle"] > 90, closdi)])
 
-    bands_indices = s2_with_local_angle.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
-        dimension="bands", target=s2_with_local_angle.metadata.band_names + ["NDVI", "NDSI", "diff_B_NIR", "SI"])
-
-    return bands_indices
+    closdi_threshold = (inputs.apply_dimension(dimension="bands", process=self_shadow_closdi)
+                        .aggregate_spatial(aoi, reducer=lambda x: x.quantiles(probabilities=[0.1]))
+                        .vector_to_raster(target=inputs)
+                        .rename_labels(dimension="bands", target=["closdi_threshold"]))
+    return inputs.merge_cubes(closdi_threshold)
 
 
 def slope_aspect(aoi, connection, cfg):
