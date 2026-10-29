@@ -119,6 +119,8 @@ SCF_SETTINGS = {
         "band": "MAP",
         "water_values": [80],
     },
+    "omnicloudmask": {"model_url": "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/omnicloudmask_v4.json"},
+    "glacier_mask": {"stac_url": None, "band": "glacier"},
 }
 
 

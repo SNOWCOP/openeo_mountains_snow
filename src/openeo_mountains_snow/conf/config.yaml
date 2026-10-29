@@ -16,5 +16,14 @@ water_mask:
   band: "MAP"
   water_values: [80]
 
+omnicloudmask:
+  # Public URL of the MLM STAC item built by omnicloudmask/export_onnx.py; null -> L2A SCL cloud mask.
+  model_url: "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/omnicloudmask_v4.json"
+
+glacier_mask:
+  # Public URL of the STAC collection built by stac/glacier/build_collection.py; null -> no glacier mask.
+  stac_url: null
+  band: "glacier"
+
 
 corsa_job: None
