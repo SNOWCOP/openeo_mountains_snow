@@ -69,7 +69,9 @@ DEFAULT_SCF_CONFIG = {
         "collection": "ESA_WORLDCOVER_10M_2021_V2",
         "band": "MAP",
         "water_values": [80]
-    }
+    },
+    "omnicloudmask": {"model_url": "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/omnicloudmask_v4.json"},
+    "glacier_mask": {"stac_url": None, "band": "glacier"}
 }
 
 # Standard spatial tile size (meters): 10 km.
