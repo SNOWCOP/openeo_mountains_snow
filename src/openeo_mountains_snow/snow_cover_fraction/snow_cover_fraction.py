@@ -1,11 +1,13 @@
 import importlib
 import json
 import math
+import time
 from pathlib import Path
 from typing import TextIO
 
 import hydra
 import openeo
+import pandas as pd
 import requests
 import shapely
 from omegaconf import DictConfig, OmegaConf
@@ -205,13 +207,8 @@ def s2_tile_sun_angles(aoi, time_period, collection="sentinel-2-l1c"):
         features = aoi.get("features", [aoi])
         aoi = shapely.unary_union([shapely.geometry.shape(f.get("geometry", f)) for f in features])
     url = "https://stac.dataspace.copernicus.eu/v1/search"
-    body = {"collections": [collection], "bbox": list(aoi.bounds), "limit": 1000,
-            "datetime": f"{time_period[0]}T00:00:00Z/{time_period[1]}T23:59:59Z"}
     tiles = {}
-    while body:
-        response = requests.post(url, json=body, timeout=60)
-        response.raise_for_status()
-        page = response.json()
+    for page in _stac_pages(url, collection, list(aoi.bounds), time_period):
         for item in page["features"]:
             props = item["properties"]
             asset = next(a for a in item["assets"].values() if "proj:bbox" in a)
@@ -220,8 +217,28 @@ def s2_tile_sun_angles(aoi, time_period, collection="sentinel-2-l1c"):
                 (x0 + x1) / 2, (y0 + y1) / 2)
             tiles.setdefault(props["datetime"][:10], []).append(
                 [lon, lat, 90 - props["view:sun_elevation"], props["view:sun_azimuth"]])
-        body = next((link.get("body") for link in page.get("links", []) if link["rel"] == "next"), None)
     return tiles
+
+
+def _stac_pages(url, collection, bbox, time_period, tries=5):
+    """STAC search pages, one query per month: the CDSE replica cancels long queries
+    (SerializationError), which are retried with backoff."""
+    start, end = pd.Timestamp(time_period[0]), pd.Timestamp(time_period[1])
+    while start <= end:
+        stop = min(start + pd.offsets.MonthEnd(0), end)
+        body = {"collections": [collection], "bbox": bbox, "limit": 1000,
+                "datetime": f"{start:%Y-%m-%d}T00:00:00Z/{stop:%Y-%m-%d}T23:59:59Z"}
+        while body:
+            for k in range(tries):
+                response = requests.post(url, json=body, timeout=60)
+                if response.ok or "SerializationError" not in response.text or k == tries - 1:
+                    break
+                time.sleep(2 ** k)
+            response.raise_for_status()
+            page = response.json()
+            yield page
+            body = next((link.get("body") for link in page.get("links", []) if link["rel"] == "next"), None)
+        start = stop + pd.Timedelta(days=1)
 
 
 def local_incidence_angle(s2_cube, aoi, time_period, connection, cfg, bands_to_retain = ["B02", "B03", "B04", "B08", "B11"]):
