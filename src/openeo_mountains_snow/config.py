@@ -112,7 +112,7 @@ SCF_SETTINGS = {
     },
     "sentinel2_l1c": {
         "collection": "SENTINEL2_L1C",
-        "bands": ["B02", "B03", "B04", "B08", "B11", "sunZenithAngles", "sunAzimuthAngles"],
+        "bands": ["B02", "B03", "B04", "B05", "B06", "B07", "B8A", "B08", "B11", "B12", "sunZenithAngles", "sunAzimuthAngles"],
     },
     "water_mask": {
         "collection": "ESA_WORLDCOVER_10M_2021_V2",
