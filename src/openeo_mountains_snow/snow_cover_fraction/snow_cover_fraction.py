@@ -21,16 +21,8 @@ from openeo_mountains_snow.config import SOLAR_POSITION_UDF
 from openeo_mountains_snow.snow_cover_fraction.udfs.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
 
 
-def elevation_mask(region, conn: openeo.Connection, cfg:DictConfig):
-    elevation = conn.load_collection("COPERNICUS_30", spatial_extent=region).max_time()
-    percentile10 = elevation.aggregate_spatial(region, reducer=lambda x: x.quantiles(probabilities = [0.1])).vector_to_raster(target=elevation).rename_labels(dimension="bands", target=["percentile10"])
-
-
-    return elevation.merge_cubes(percentile10).reduce_dimension(dimension="bands", reducer=lambda x: x[0] < x[1] - 200)
-
-    #altitude_min_threshold = 1600 - 200
-    #return conn.load_collection("COPERNICUS_30", spatial_extent=region).max_time().apply(lambda x: x < altitude_min_threshold)
-
+# openEO slope()/aspect() output unit on CDSE: radians (checked: slope max 1.19, aspect max 6.28).
+SLOPE_ASPECT_IN_RADIANS = True
 
 
 def omnicloudmask_classes(region, time_period, conn: openeo.Connection, cfg: DictConfig, dilation_iterations: int = 3):
@@ -76,7 +68,7 @@ def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfi
 
             bands=[cfg.sentinel2_l2a.scl_band])
 
-        cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([ x == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
+        cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([ x[0] == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
 
     water = conn.load_collection(
         cfg.water_mask.collection,
@@ -84,7 +76,7 @@ def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfi
         bands=[cfg.water_mask.band]).max_time()
 
     water_mask = water.reduce_dimension(dimension="bands", reducer=lambda x: any(
-        [x == cloud_value for cloud_value in cfg.water_mask.water_values]))
+        [x[0] == water_value for water_value in cfg.water_mask.water_values]))
 
     return cloud_mask | water_mask
 
@@ -182,39 +174,69 @@ def get_udf(name):
 
 def snowflake_inputs_cube(aoi, time_period, connection, cfg):
     mask = cloud_water_mask(aoi, time_period, connection, cfg)
-    dem_mask = elevation_mask(aoi, connection, cfg)
     sentinel2_bands = connection.load_collection(
         cfg.sentinel2_l1c.collection,
         spatial_extent=aoi,
         temporal_extent=time_period,
         bands=cfg.sentinel2_l1c.bands)
-    masked_s2 = sentinel2_bands.mask(mask | dem_mask)
+    # DN -> reflectance: the training thresholds are in reflectance; sun angle bands stay in degrees.
+    names = sentinel2_bands.metadata.band_names
+    sentinel2_bands = sentinel2_bands.apply_dimension(
+        dimension="bands",
+        process=lambda x: array_create([x[i] / 10000 if n.startswith("B") else x[i] for i, n in enumerate(names)]),
+    ).rename_labels(dimension="bands", target=names)
+    masked_s2 = sentinel2_bands.mask(mask)
 
-    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, time_period, connection, cfg)
+    s2_with_local_angle = local_incidence_angle(masked_s2, aoi, time_period, connection, cfg,
+                                                bands_to_retain=[n for n in names if n.startswith("B")])
+    return add_indices(shadow_mask(s2_with_local_angle, aoi))
 
 
+def add_indices(cube):
+    """Append NDSI, NDWI and diff_B_NIR (blue - nir), from reflectance bands."""
     from openeo.processes import normalized_difference
     def compute_indices(bands):
-        nir = bands["B08"]
-        ndvi = normalized_difference(nir, bands["B04"])
-        updated = array_append(bands, ndvi, "NDVI")
         green = bands["B03"]
-        swir = bands["B11"]
-        ndsi = (green - swir) / (green + swir)
-        updated = array_append(updated, ndsi, "NDSI")
+        nir = bands["B08"]
+        updated = array_append(bands, normalized_difference(green, bands["B11"]), "NDSI")
+        updated = array_append(updated, normalized_difference(green, nir), "NDWI")
+        return array_append(updated, bands["B02"] - nir, "diff_B_NIR")
 
-        blue = bands["B02"]
-        diff_B_NIR = (blue - nir) / (blue + nir)
-        updated = array_append(updated, diff_B_NIR, "diff_B_NIR")
+    return cube.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
+        dimension="bands", target=cube.metadata.band_names + ["NDSI", "NDWI", "diff_B_NIR"])
 
-        SI = ((green - swir) / (green + swir) / green)
-        updated = array_append(updated, SI, "SI")
-        return updated
 
-    bands_indices = s2_with_local_angle.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
-        dimension="bands", target=s2_with_local_angle.metadata.band_names + ["NDVI", "NDSI", "diff_B_NIR", "SI"])
+def shadow_mask(s2_cube, region):
+    """Add the scene-wide composite shadow mask (self-shadow | spectral shadow) as a new band."""
+    def select_band(cube, name):
+        # ``DataCube.band`` enables a client-side band-math mode that cannot be
+        # combined with the aggregated statistic cubes below.
+        return cube.filter_bands([name]).reduce_dimension(dimension="bands", reducer="first")
 
-    return bands_indices
+    nir = select_band(s2_cube, "B08")
+    red = select_band(s2_cube, "B04")
+    sia = select_band(s2_cube, "local_solar_incidence_angle")
+
+    curr_angle_valid = (sia >= 70) & (sia <= 90)
+    self_shadow = sia > 90
+
+    # spectral shadows
+    CLOSDI = (1 - 1.5 * nir - 0.1 * red) * 100 / (1 + 3.5 * nir + 4.9 * red)
+
+    # threshold = 10th percentile of CLOSDI over self-shadow pixels
+    threshold = CLOSDI.mask(~self_shadow).aggregate_spatial(
+        geometries=region,
+        reducer=lambda data: quantiles(data, probabilities=[0.1], ignore_nodata=True)
+    ).vector_to_raster(target=CLOSDI)
+
+    spectral_shadow = (CLOSDI - threshold) > 0
+
+    shadow = (spectral_shadow & curr_angle_valid) | self_shadow
+
+    shadow = shadow.process_with_node(shadow.result_node(), metadata=sia.metadata)
+    shadow_band = shadow.add_dimension(name="bands", label="shadow_mask", type="bands")
+
+    return s2_cube.merge_cubes(shadow_band)
 
 
 def slope_aspect(aoi, connection, cfg):
@@ -297,8 +319,8 @@ def local_incidence_angle(s2_cube, aoi, time_period, connection, cfg, bands_to_r
     def compute_sia(data):
         zenith_rad = data["zenith"]
         azimuth_rad = data["azimuth"]
-        slope_rad = data["slope"] * deg2rad
-        aspect_rad = data["aspect"] * deg2rad
+        slope_rad = data["slope"] if SLOPE_ASPECT_IN_RADIANS else data["slope"] * deg2rad
+        aspect_rad = data["aspect"] if SLOPE_ASPECT_IN_RADIANS else data["aspect"] * deg2rad
 
         cos_theta = (
             cos(zenith_rad) * cos(slope_rad) +

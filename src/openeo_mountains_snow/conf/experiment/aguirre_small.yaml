@@ -1,0 +1,11 @@
+# Small 8x8 km test area (Aguirre), one date; same area as vpremier's PR #24 runs.
+# python -m openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction +experiment=aguirre_small
+aoi:  [ 354000.0, 6014000.0, 362000.0, 6022000.0 ]
+aoi_crs: "EPSG:32719"
+temporal_extent: ['2015-08-18', '2015-08-19']
+title_prefix: "Aguirre SCF test"
+job_options:
+  executor-memory: "3G"
+  python-memory: "disable"
+  executor-memoryOverhead: "6500m"
+  executor-request-cores: "2500m"

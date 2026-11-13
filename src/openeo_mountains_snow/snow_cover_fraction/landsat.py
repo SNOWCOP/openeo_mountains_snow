@@ -8,21 +8,26 @@ Expected source bands (example LANDSAT_L1C stack):
 - B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, SZA, VZA
 
 The representative-pixels UDF expects these logical inputs:
-- B02, B03, B04, B08, B11, local_solar_incidence_angle,
-  NDVI, NDSI, diff_B_NIR, SI
+- B02, B03, B04, B08, B11 (reflectance 0-1), local_solar_incidence_angle,
+  shadow_mask, NDSI, NDWI, diff_B_NIR
 
-Angles are scaled upfront and SZA is renamed to local_solar_incidence_angle
-before entering the representative-pixels UDF.
+Angles and reflectances are scaled upfront and SZA is renamed to
+local_solar_incidence_angle before entering the representative-pixels UDF.
 """
 
 from __future__ import annotations
 
 from typing import Iterable
-from pathlib import Path
-import sys
 
 import openeo
-from openeo.processes import array_append, array_create
+import shapely
+from openeo.processes import array_create
+
+from openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction import (
+    add_indices,
+    apply_representative_pixels,
+    shadow_mask,
+)
 
 
 # Map Landsat L1C names to the Sentinel-2-like names used downstream.
@@ -53,7 +58,7 @@ LANDSAT_INPUT_BANDS = list(LANDSAT_TO_SNOWFLAKES.keys())
 REQUIRED_SPECTRAL_BANDS = ["B02", "B03", "B04", "B08", "B11"]
 REQUIRED_ANGLE_BAND = "SZA"
 ANGLE_BANDS = {"SZA", "VZA", "SAA", "VAA"}
-DERIVED_INDEX_BANDS = ["NDVI", "NDSI", "diff_B_NIR", "SI"]
+THERMAL_BANDS = {"B10", "B11_THERMAL"}
 
 # LANDSAT_L1C scaling assumptions for this backend.
 REFLECTANCE_SCALE = 1e-4
@@ -95,7 +100,7 @@ def _require_bands(
 
 
 def _scale_angles_and_set_local_incidence(cube: openeo.DataCube) -> openeo.DataCube:
-    """Scale Landsat angle bands and rename SZA to local_solar_incidence_angle."""
+    """Scale Landsat angle and reflectance bands and rename SZA to local_solar_incidence_angle."""
     band_names = list(cube.metadata.band_names)
 
     def scale_angles(bands):
@@ -104,6 +109,8 @@ def _scale_angles_and_set_local_incidence(cube: openeo.DataCube) -> openeo.DataC
             value = bands[name]
             if name in ANGLE_BANDS:
                 value = value * ANGLE_SCALE
+            elif name not in THERMAL_BANDS:
+                value = value * REFLECTANCE_SCALE
             scaled.append(value)
         return array_create(scaled)
 
@@ -116,53 +123,6 @@ def _scale_angles_and_set_local_incidence(cube: openeo.DataCube) -> openeo.DataC
         for b in band_names
     ]
     return scaled_cube.rename_labels(dimension="bands", target=renamed)
-
-
-def _compute_indices(cube: openeo.DataCube) -> openeo.DataCube:
-    """Compute only missing NDVI/NDSI/diff_B_NIR/SI bands."""
-
-    existing = set(cube.metadata.band_names)
-    missing_indices = [band for band in DERIVED_INDEX_BANDS if band not in existing]
-    if not missing_indices:
-        return cube
-
-    need_ndvi = "NDVI" in missing_indices
-    need_ndsi = "NDSI" in missing_indices
-    need_diff_b_nir = "diff_B_NIR" in missing_indices
-    need_si = "SI" in missing_indices
-
-    def add_indices(bands):
-        eps = 1e-6
-        nir = bands["B08"] * REFLECTANCE_SCALE
-        red = bands["B04"] * REFLECTANCE_SCALE
-        blue = bands["B02"] * REFLECTANCE_SCALE
-        green = bands["B03"] * REFLECTANCE_SCALE
-        swir = bands["B11"] * REFLECTANCE_SCALE
-
-        updated = bands
-        if need_ndvi:
-            ndvi = (nir - red) / (nir + red + eps)
-            updated = array_append(updated, ndvi, "NDVI")
-
-        if need_ndsi:
-            ndsi = (green - swir) / (green + swir + eps)
-            updated = array_append(updated, ndsi, "NDSI")
-
-        if need_diff_b_nir:
-            diff_b_nir = (blue - nir) / (blue + nir + eps)
-            updated = array_append(updated, diff_b_nir, "diff_B_NIR")
-
-        if need_si:
-            si = ((green - swir) / (green + swir + eps)) / (green + eps)
-            updated = array_append(updated, si, "SI")
-
-        return updated
-
-    base_names = list(cube.metadata.band_names)
-    target_names = base_names + missing_indices
-    return cube.apply_dimension(dimension="bands", process=add_indices).rename_labels(
-        dimension="bands", target=target_names
-    )
 
 
 def landsat_inputs_cube(
@@ -193,7 +153,9 @@ def landsat_inputs_cube(
     _require_bands(mapped, required_bands=[REQUIRED_ANGLE_BAND], context="angle")
 
     with_scaled_angles = _scale_angles_and_set_local_incidence(mapped)
-    return _compute_indices(with_scaled_angles)
+    # aoi is a EPSG:4326 bbox dict; the shadow threshold needs a geometry.
+    region = shapely.box(aoi["west"], aoi["south"], aoi["east"], aoi["north"])
+    return add_indices(shadow_mask(with_scaled_angles, region))
 
 
 def landsat_representative_pixels_cube(
