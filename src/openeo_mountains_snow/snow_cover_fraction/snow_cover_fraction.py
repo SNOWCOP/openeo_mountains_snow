@@ -15,7 +15,7 @@ from openeo import UDF
 from openeo.api.process import Parameter
 from openeo.extra.spectral_indices import compute_indices
 from openeo.processes import any, array_append, process, cos, sin, arccos, array_create, quantiles, if_
-from pyproj import Transformer
+from pyproj import Geod, Transformer
 
 from openeo_mountains_snow.config import SOLAR_POSITION_UDF
 from openeo_mountains_snow.snow_cover_fraction.udfs.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
@@ -153,17 +153,40 @@ def apply_representative_pixels(bands_indices: openeo.DataCube, neighborhood_siz
     return result.rename_labels(dimension="bands", target=[REPRESENTATIVE_PIXEL_BAND_NAME])
 
 
-def snow_cover_fraction_cube(aoi, time_period, c, cfg, neighborhood_size: int = 3038):
+def snow_cover_fraction_cube(aoi, time_period, c, cfg, neighborhood_size: int | None = None):
     """Build the SCF cube for the given AOI.
 
     Args:
         neighborhood_size: apply_neighborhood window size in pixels (x and y).
-            Set this to the pixel dimensions of the input AOI at 10 m resolution
-            so the UDF receives the full area in one block without NaN padding.
-            Defaults to 3038 (≈30×30 km at 10 m, the original full-area size).
+            Default: derived from the AOI (see `aoi_neighborhood_size`) so the UDF trains
+            once on the full area; 3038 for parameterised (UDP) AOIs.
     """
+    if neighborhood_size is None:
+        neighborhood_size = 1024 if isinstance(aoi, Parameter) else aoi_neighborhood_size(aoi)
     bands_indices = snowflake_inputs_cube(aoi, time_period, c, cfg)
     return apply_representative_pixels(bands_indices, neighborhood_size)
+
+
+def aoi_neighborhood_size(aoi, resolution: float = 10, tile: int = 128) -> int:
+    """Window (px) covering the whole AOI in one apply_neighborhood chunk.
+
+    The backend's chunk grid is not aligned to the AOI corner (seen: 128 px offset), so a
+    window equal to the AOI size splits it into small edge chunks that lack training
+    samples. Pad by two tiles and round up to a tile multiple.
+    """
+    x0, y0, x1, y1 = _aoi_shape(aoi).bounds
+    geod = Geod(ellps="WGS84")
+    width = max(geod.inv(x0, y0, x1, y0)[2], geod.inv(x0, y1, x1, y1)[2])
+    height = geod.inv(x0, y0, x0, y1)[2]
+    return (math.ceil(max(width, height) / resolution / tile) + 2) * tile
+
+
+def _aoi_shape(aoi):
+    """Shapely geometry (EPSG:4326) from a shapely geometry or GeoJSON (Feature)Collection."""
+    if isinstance(aoi, dict):
+        features = aoi.get("features", [aoi])
+        return shapely.unary_union([shapely.geometry.shape(f.get("geometry", f)) for f in features])
+    return aoi
 
 
 def get_udf(name):
@@ -260,9 +283,7 @@ def s2_tile_sun_angles(aoi, time_period, collection="sentinel-2-l1c"):
     S2 sun angles are tile means, valid at the tile centre: the solar position UDF
     recovers the overpass time there instead of at the (offset) chunk centre.
     """
-    if isinstance(aoi, dict):
-        features = aoi.get("features", [aoi])
-        aoi = shapely.unary_union([shapely.geometry.shape(f.get("geometry", f)) for f in features])
+    aoi = _aoi_shape(aoi)
     url = "https://stac.dataspace.copernicus.eu/v1/search"
     tiles = {}
     for page in _stac_pages(url, collection, list(aoi.bounds), time_period):

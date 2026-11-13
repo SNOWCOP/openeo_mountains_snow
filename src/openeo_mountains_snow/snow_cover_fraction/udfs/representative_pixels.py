@@ -139,9 +139,12 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
 
         def reshape(v):
             return np.stack(v, axis=-1)
+        training_labels = values
+        # No SVM (missing class or error) -> nodata, not the 0/1/2 training labels.
+        values = np.full_like(values, 255)
         try:
-            snow_representative_pixel_bands = curr_bands.values[:, values == 1]
-            snowfree_representative_pixel_bands = curr_bands.values[:, values == 2]
+            snow_representative_pixel_bands = curr_bands.values[:, training_labels == 1]
+            snowfree_representative_pixel_bands = curr_bands.values[:, training_labels == 2]
             valid_pixels = np.all(np.isfinite(curr_bands.values), axis=0)
 
             if (snow_representative_pixel_bands.shape[1] > 0
