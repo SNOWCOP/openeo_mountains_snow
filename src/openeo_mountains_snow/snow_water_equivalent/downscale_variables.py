@@ -40,7 +40,7 @@ def preprocess_low_resolution_agera(cube: ProcessBuilder, lapse_rate, temp_index
         ProcessBuilder with preprocessed temperature and optionally dewpoint
     """
     t_raw = cube[temp_index] * temp_scale
-    geopotential = 35885.0 / cube["geopotential"]
+    geopotential = 35885.0 / cube["geopotential"]  # TODO(*): unverified; ERA5 height = geopotential / 9.80665
     t_0 = t_raw - lapse_rate * (0 - geopotential)
 
     if dewpoint_index is not None:
@@ -144,8 +144,8 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
         DataCube with topographically corrected shortwave radiation
 
     """
-    solar_flux = sw#.filter_bands(["solar-radiation-flux"])
-    solar_flux = solar_flux / 1000000  # Scale to MJ/m^2 if needed
+    solar_flux = sw.filter_bands(["solar-radiation-flux"])
+    solar_flux = solar_flux / 86400  # J/m^2/day -> W/m^2 (daily mean)
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     
     solar_flux_with_sunpos = solar_flux.apply_dimension(dimension="bands", process=compute_solarposition)

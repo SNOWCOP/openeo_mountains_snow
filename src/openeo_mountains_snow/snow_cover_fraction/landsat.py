@@ -23,10 +23,10 @@ import openeo
 import shapely
 from openeo.processes import array_create
 
+from openeo_mountains_snow.common.terrain import shadow_mask
 from openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction import (
     add_indices,
     apply_representative_pixels,
-    shadow_mask,
 )
 
 

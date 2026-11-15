@@ -20,6 +20,8 @@ dev = [
     "pytest",
     "scikit-learn",
     "scipy",
+    "pvlib",
+    "bottleneck",
 ]
 experimental = [
     "geopandas",

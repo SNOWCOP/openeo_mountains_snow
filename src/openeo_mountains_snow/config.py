@@ -63,7 +63,7 @@ BACKEND = "https://openeo.dataspace.copernicus.eu/"
 # Reconstruction Parameters
 # ==============================
 
-N_DAYS_TO_RECONSTRUCT = 5
+N_DAYS_TO_RECONSTRUCT = None  # None = every day (SWE needs the full season)
 NEIGHBORHOOD_SIZE = 64
 
 # ==============================
@@ -83,7 +83,7 @@ JOB_OPTIONS = {
 # MODIS Configuration
 # ==============================
 
-MODIS_RESOLUTION = 25  # meters
+MODIS_RESOLUTION = PIXEL_RATIO * RESOLUTION  # meters (500 m LR grid, aligned with the HR grid)
 MODIS_STAC_URL = "https://stac.dataspace.copernicus.eu/v1/collections/modis-terra-mod10a1"
 MODIS_SNOW_BAND = "NDSI_Snow_Cover"  # 0-100 valid, >100 flag codes (cloud, water, fill...)
 
@@ -93,10 +93,13 @@ MODIS_SNOW_BAND = "NDSI_Snow_Cover"  # 0-100 valid, >100 flag codes (cloud, wate
 
 SCA_UDF_DIR = Path(__file__).parent / 'snow_cover_area' / 'udfs'
 SWE_UDF_DIR = Path(__file__).parent / 'snow_water_equivalent' / 'udfs'
+SCF_UDF_DIR = Path(__file__).parent / 'snow_cover_fraction' / 'udfs'
+COMMON_UDF_DIR = Path(__file__).parent / 'common' / 'udfs'
 SCA_RECONSTRUCTION_UDF = SCA_UDF_DIR / 'snow_cover_area_reconstruction_udf.py'
 SWE_RECONSTRUCTION_UDF = SWE_UDF_DIR / 'snow_water_equivalent_udf.py'
-SOLAR_POSITION_UDF = SWE_UDF_DIR / 'solar_position_udf.py'
-INCIDENCE_ANGLE_UDF = SWE_UDF_DIR / 'incidence_angle_udf.py'
+REPRESENTATIVE_PIXELS_UDF = SCF_UDF_DIR / 'representative_pixels.py'
+SOLAR_POSITION_UDF = COMMON_UDF_DIR / 'solar_position_udf.py'
+INCIDENCE_ANGLE_UDF = COMMON_UDF_DIR / 'incidence_angle_udf.py'
 
 
 # ==============================

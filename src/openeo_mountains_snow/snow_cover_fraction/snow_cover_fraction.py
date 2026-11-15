@@ -1,84 +1,21 @@
-import importlib
 import json
 import math
-import time
 from pathlib import Path
-from typing import TextIO
 
 import hydra
 import openeo
-import pandas as pd
-import requests
 import shapely
 from omegaconf import DictConfig, OmegaConf
 from openeo import UDF
 from openeo.api.process import Parameter
-from openeo.extra.spectral_indices import compute_indices
-from openeo.processes import any, array_append, process, cos, sin, arccos, array_create, quantiles, if_
+from openeo.processes import array_append, array_create
 from pyproj import Geod, Transformer
 
-from openeo_mountains_snow.config import SOLAR_POSITION_UDF
+from openeo_mountains_snow.common.masks import cloud_water_mask
+from openeo_mountains_snow.common.sun import aoi_shape
+from openeo_mountains_snow.common.terrain import local_incidence_angle, shadow_mask
+from openeo_mountains_snow.config import REPRESENTATIVE_PIXELS_UDF
 from openeo_mountains_snow.snow_cover_fraction.udfs.representative_pixels import REPRESENTATIVE_PIXEL_BAND_NAME
-
-
-# openEO slope()/aspect() output unit on CDSE: radians (checked: slope max 1.19, aspect max 6.28).
-SLOPE_ASPECT_IN_RADIANS = True
-
-
-def omnicloudmask_classes(region, time_period, conn: openeo.Connection, cfg: DictConfig, dilation_iterations: int = 3):
-    """OmniCloudMask on L1C via predict_onnx: 0 clear, 1 thick cloud, 2 thin cloud, 3 shadow, 255 nodata.
-
-    Thick cloud is dilated like SnowFLAKES `create_omnicloudmask` (scipy binary_dilation, cross
-    structure, `dilation_iterations` times == diamond of that radius).
-    """
-    rgn = conn.load_collection(
-        cfg.sentinel2_l1c.collection,
-        spatial_extent=region,
-        temporal_extent=time_period,
-        bands=["B04", "B03", "B8A"])
-    rgn = rgn.process("convert_data_type", data=rgn, data_type="float32")
-    predicted = rgn.process("predict_onnx", data=rgn, model=cfg.omnicloudmask.model_url)
-    classes = predicted.reduce_dimension(dimension="bands", reducer=lambda x: x.array_element(0))
-
-    r = dilation_iterations
-    kernel = [[1 if abs(i) + abs(j) <= r else 0 for j in range(-r, r + 1)] for i in range(-r, r + 1)]
-    thick_dilated = (classes.apply(lambda x: if_(x == 1, 1, 0))
-                     .apply_kernel(kernel)
-                     .apply(lambda x: x > 0))
-    return classes.mask(thick_dilated, replacement=1)
-
-
-def glacier_mask(region, conn: openeo.Connection, cfg: DictConfig):
-    """True on glacier pixels from the hosted glacier STAC collection, None if not configured."""
-    if cfg.glacier_mask.stac_url is None:
-        return None
-    glacier = conn.load_stac(cfg.glacier_mask.stac_url, spatial_extent=region, bands=[cfg.glacier_mask.band])
-    return glacier.max_time().reduce_dimension(dimension="bands", reducer=lambda x: x[0] == 1)
-
-
-def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfig):
-    if cfg.omnicloudmask.model_url is not None:
-        cloud_mask = omnicloudmask_classes(region, time_period, conn, cfg).apply(
-            lambda x: (x == 1).or_(x == 2))
-    else:
-        scl = conn.load_collection(
-            cfg.sentinel2_l2a.collection,
-            spatial_extent=region,
-            temporal_extent=time_period,
-
-            bands=[cfg.sentinel2_l2a.scl_band])
-
-        cloud_mask = scl.reduce_dimension(dimension="bands", reducer=lambda x: any([ x[0] == cloud_value for cloud_value in cfg.sentinel2_l2a.cloud_values]))
-
-    water = conn.load_collection(
-        cfg.water_mask.collection,
-        spatial_extent=region,
-        bands=[cfg.water_mask.band]).max_time()
-
-    water_mask = water.reduce_dimension(dimension="bands", reducer=lambda x: any(
-        [x[0] == water_value for water_value in cfg.water_mask.water_values]))
-
-    return cloud_mask | water_mask
 
 
 def collect_training(inputs_cube):
@@ -143,7 +80,7 @@ def apply_representative_pixels(bands_indices: openeo.DataCube, neighborhood_siz
             Defaults to 500 px (≈5 km at 10 m, suitable for small test areas).
     """
     result = bands_indices.apply_neighborhood(
-        process=get_udf("representative_pixels.py"),
+        process=UDF.from_file(str(REPRESENTATIVE_PIXELS_UDF), runtime="Python", version="3.11", context={"classify": True}),
         size=[
             {"dimension": "x", "value": neighborhood_size, "unit": "px"},
             {"dimension": "y", "value": neighborhood_size, "unit": "px"},
@@ -174,25 +111,11 @@ def aoi_neighborhood_size(aoi, resolution: float = 10, tile: int = 128) -> int:
     window equal to the AOI size splits it into small edge chunks that lack training
     samples. Pad by two tiles and round up to a tile multiple.
     """
-    x0, y0, x1, y1 = _aoi_shape(aoi).bounds
+    x0, y0, x1, y1 = aoi_shape(aoi).bounds
     geod = Geod(ellps="WGS84")
     width = max(geod.inv(x0, y0, x1, y0)[2], geod.inv(x0, y1, x1, y1)[2])
     height = geod.inv(x0, y0, x0, y1)[2]
     return (math.ceil(max(width, height) / resolution / tile) + 2) * tile
-
-
-def _aoi_shape(aoi):
-    """Shapely geometry (EPSG:4326) from a shapely geometry or GeoJSON (Feature)Collection."""
-    if isinstance(aoi, dict):
-        features = aoi.get("features", [aoi])
-        return shapely.unary_union([shapely.geometry.shape(f.get("geometry", f)) for f in features])
-    return aoi
-
-
-def get_udf(name):
-    with (Path(__file__).parent / "udfs" / name).open('r') as fp:
-        udf_code = fp.read()
-        return UDF( code= udf_code, runtime="Python", version="3.11", context={"classify":True})
 
 
 def snowflake_inputs_cube(aoi, time_period, connection, cfg):
@@ -227,145 +150,6 @@ def add_indices(cube):
 
     return cube.apply_dimension(dimension="bands", process=compute_indices).rename_labels(
         dimension="bands", target=cube.metadata.band_names + ["NDSI", "NDWI", "diff_B_NIR"])
-
-
-def shadow_mask(s2_cube, region):
-    """Add the scene-wide composite shadow mask (self-shadow | spectral shadow) as a new band."""
-    def select_band(cube, name):
-        # ``DataCube.band`` enables a client-side band-math mode that cannot be
-        # combined with the aggregated statistic cubes below.
-        return cube.filter_bands([name]).reduce_dimension(dimension="bands", reducer="first")
-
-    nir = select_band(s2_cube, "B08")
-    red = select_band(s2_cube, "B04")
-    sia = select_band(s2_cube, "local_solar_incidence_angle")
-
-    curr_angle_valid = (sia >= 70) & (sia <= 90)
-    self_shadow = sia > 90
-
-    # spectral shadows
-    CLOSDI = (1 - 1.5 * nir - 0.1 * red) * 100 / (1 + 3.5 * nir + 4.9 * red)
-
-    # threshold = 10th percentile of CLOSDI over self-shadow pixels
-    threshold = CLOSDI.mask(~self_shadow).aggregate_spatial(
-        geometries=region,
-        reducer=lambda data: quantiles(data, probabilities=[0.1], ignore_nodata=True)
-    ).vector_to_raster(target=CLOSDI)
-
-    spectral_shadow = (CLOSDI - threshold) > 0
-
-    shadow = (spectral_shadow & curr_angle_valid) | self_shadow
-
-    shadow = shadow.process_with_node(shadow.result_node(), metadata=sia.metadata)
-    shadow_band = shadow.add_dimension(name="bands", label="shadow_mask", type="bands")
-
-    return s2_cube.merge_cubes(shadow_band)
-
-
-def slope_aspect(aoi, connection, cfg):
-    dem_spacetime = connection.load_collection("COPERNICUS_30", spatial_extent=aoi)
-    dem = dem_spacetime.reduce_dimension(dimension='t', reducer='mean')
-
-    aspect = dem.aspect()
-    slope = dem.slope()
-
-    aspect_slope = aspect.merge_cubes(slope).rename_labels(
-        dimension="bands", target=["aspect", "slope"]
-    )
-    return aspect_slope
-
-
-
-
-def s2_tile_sun_angles(aoi, time_period, collection="sentinel-2-l1c"):
-    """Per date, ``[lon, lat, sun_zenith, sun_azimuth]`` at each S2 tile centre, from the CDSE STAC.
-
-    S2 sun angles are tile means, valid at the tile centre: the solar position UDF
-    recovers the overpass time there instead of at the (offset) chunk centre.
-    """
-    aoi = _aoi_shape(aoi)
-    url = "https://stac.dataspace.copernicus.eu/v1/search"
-    tiles = {}
-    for page in _stac_pages(url, collection, list(aoi.bounds), time_period):
-        for item in page["features"]:
-            props = item["properties"]
-            asset = next(a for a in item["assets"].values() if "proj:bbox" in a)
-            x0, y0, x1, y1 = asset["proj:bbox"]
-            lon, lat = Transformer.from_crs(asset["proj:code"], "EPSG:4326", always_xy=True).transform(
-                (x0 + x1) / 2, (y0 + y1) / 2)
-            tiles.setdefault(props["datetime"][:10], []).append(
-                [lon, lat, 90 - props["view:sun_elevation"], props["view:sun_azimuth"]])
-    return tiles
-
-
-def _stac_pages(url, collection, bbox, time_period, tries=5):
-    """STAC search pages, one query per month: the CDSE replica cancels long queries
-    (SerializationError), which are retried with backoff."""
-    start, end = pd.Timestamp(time_period[0]), pd.Timestamp(time_period[1])
-    while start <= end:
-        stop = min(start + pd.offsets.MonthEnd(0), end)
-        body = {"collections": [collection], "bbox": bbox, "limit": 1000,
-                "datetime": f"{start:%Y-%m-%d}T00:00:00Z/{stop:%Y-%m-%d}T23:59:59Z"}
-        while body:
-            for k in range(tries):
-                response = requests.post(url, json=body, timeout=60)
-                if response.ok or "SerializationError" not in response.text or k == tries - 1:
-                    break
-                time.sleep(2 ** k)
-            response.raise_for_status()
-            page = response.json()
-            yield page
-            body = next((link.get("body") for link in page.get("links", []) if link["rel"] == "next"), None)
-        start = stop + pd.Timedelta(days=1)
-
-
-def local_incidence_angle(s2_cube, aoi, time_period, connection, cfg, bands_to_retain = ["B02", "B03", "B04", "B08", "B11"]):
-    # Per-pixel sun angles (radians) at the overpass, replacing the scene-constant S2 angles.
-    # UDP builds have parameterised AOI/time: no STAC lookup, the UDF uses the S2 angle bands.
-    context = {}
-    if not isinstance(aoi, Parameter) and not isinstance(time_period, Parameter):
-        context = {"s2_tiles": s2_tile_sun_angles(aoi, time_period)}
-    s2_cube = s2_cube.apply_dimension(
-        dimension="bands", process=UDF.from_file(str(SOLAR_POSITION_UDF), context=context)
-    ).rename_labels(dimension="bands", target=s2_cube.metadata.band_names + ["zenith", "azimuth"])
-
-    slope_aspect_cube = slope_aspect(aoi, connection, cfg)
-    combined = s2_cube.merge_cubes(slope_aspect_cube)
-
-    # degree - radians conversions
-    deg2rad = math.pi / 180.0
-    rad2deg = 180.0 / math.pi
-
-    # define the solar incidence angle function per-pixel
-    def compute_sia(data):
-        zenith_rad = data["zenith"]
-        azimuth_rad = data["azimuth"]
-        slope_rad = data["slope"] if SLOPE_ASPECT_IN_RADIANS else data["slope"] * deg2rad
-        aspect_rad = data["aspect"] if SLOPE_ASPECT_IN_RADIANS else data["aspect"] * deg2rad
-
-        cos_theta = (
-            cos(zenith_rad) * cos(slope_rad) +
-                sin(zenith_rad) * sin(slope_rad) *
-                cos(aspect_rad - azimuth_rad)
-        )
-
-        cos_theta_clipped = cos_theta.max(-1).min(1)
-        local_angle = arccos(cos_theta_clipped) * rad2deg
-
-        bands = [data[b] for b in bands_to_retain]
-        bands.append(local_angle)
-
-        return array_create( bands )
-
-    # apply the function
-    extended_cube = combined.apply_dimension(
-        dimension="bands",
-        process=lambda data: compute_sia(data)
-    )
-    extended_cube = extended_cube.rename_labels(dimension="bands", target=bands_to_retain + ["local_solar_incidence_angle"])
-
-    return extended_cube
-
 
 
 if "__main__" == __name__:
