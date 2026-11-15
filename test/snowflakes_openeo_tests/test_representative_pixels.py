@@ -7,6 +7,7 @@ import xarray as xr
 pytest.importorskip("sklearn")
 pytest.importorskip("scipy")
 
+from openeo_mountains_snow.config import REPRESENTATIVE_PIXELS_UDF
 from openeo_mountains_snow.snow_cover_fraction.udfs import representative_pixels as rp
 
 SPECTRAL = ["B02", "B03", "B04", "B05", "B06", "B07", "B8A", "B08", "B11", "B12"]
@@ -146,3 +147,11 @@ def test_distribution_fit_recovers_median():
     result = rp.fit_distribution_and_median(values, np.ones_like(values, dtype=bool))
     assert result["fit_success"]
     assert result["fitted_median"] == pytest.approx(0.6, abs=0.01)
+
+
+def test_udf_file_runs_on_backend_cube_layout(run_udf):
+    cube = training_cube().transpose("t", "bands", "y", "x")
+    result = run_udf(REPRESENTATIVE_PIXELS_UDF, cube, {"total_samples": 240, "training_seed": 7})
+    assert result.dims == cube.dims
+    assert list(result.bands.values) == ["B03"]
+    assert set(np.unique(result.values)) == {0, 1, 2}

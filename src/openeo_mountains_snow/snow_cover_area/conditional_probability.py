@@ -29,14 +29,9 @@ def low_resolution_snow_cover_fraction(
     temporal_extent: list[str],
     spatial_extent: dict,
 ) -> DataCube:
-    """Aggregate the high-resolution snow mask to the MODIS grid as SCF (0-100)."""
-    modis = connection.load_stac(
-        MODIS_STAC_URL,
-        temporal_extent=temporal_extent,
-        spatial_extent=spatial_extent,
-        bands=[MODIS_SNOW_BAND],
-    )
-    average = valid_and_snow_mask.resample_cube_spatial(modis, method="average")
+    """Aggregate the high-resolution snow mask to the 500 m LR grid as SCF (0-100)."""
+    average = valid_and_snow_mask.resample_spatial(
+        resolution=MODIS_RESOLUTION, projection=CRS, method="average")
 
     def to_scf(bands):
         valid = bands["valid"]
@@ -118,5 +113,5 @@ def create_modis_snow_cover_fraction_cube(
         return if_(gt(ndsi, 100), CLOUD_VALUE, scf)
 
     return (modis.apply(clean)
-            .resample_spatial(resolution=MODIS_RESOLUTION, projection=CRS, method="near")
+            .resample_spatial(resolution=RESOLUTION, projection=CRS, method="near")
             .rename_labels(dimension="bands", target=["scf"]))
