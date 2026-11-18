@@ -87,6 +87,9 @@ MODIS_RESOLUTION = PIXEL_RATIO * RESOLUTION  # meters (500 m LR grid, aligned wi
 MODIS_STAC_URL = "https://stac.dataspace.copernicus.eu/v1/collections/modis-terra-mod10a1"
 MODIS_SNOW_BAND = "NDSI_Snow_Cover"  # 0-100 valid, >100 flag codes (cloud, water, fill...)
 
+# ERA5 surface geopotential z (m2/s2, 0.1 deg), reference height for the AGERA5 temperature downscaling.
+GEOPOTENTIAL_STAC_URL = "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/geopotential_cdse.json"
+
 # ==============================
 # UDF Configuration
 # ==============================
@@ -123,7 +126,7 @@ SCF_SETTINGS = {
         "water_values": [80],
     },
     "omnicloudmask": {"model_url": "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/omnicloudmask_v4.json"},
-    "glacier_mask": {"stac_url": None, "band": "glacier"},
+    "glacier_mask": {"stac_url": "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/glacier_mask.json", "band": "glacier"},
 }
 
 

@@ -40,7 +40,7 @@ def preprocess_low_resolution_agera(cube: ProcessBuilder, lapse_rate, temp_index
         ProcessBuilder with preprocessed temperature and optionally dewpoint
     """
     t_raw = cube[temp_index] * temp_scale
-    geopotential = 35885.0 / cube["geopotential"]  # TODO(*): unverified; ERA5 height = geopotential / 9.80665
+    geopotential = cube["geopotential"] / 9.80665  # ERA5 surface geopotential (m2/s2) -> height (m)
     t_0 = t_raw - lapse_rate * (0 - geopotential)
 
     if dewpoint_index is not None:
@@ -155,6 +155,9 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
     compute_incidence = UDF.from_file(str(INCIDENCE_ANGLE_UDF))
     shortwave_radiation_downscaled = (solar_flux_with_sunpos
                                 .merge_cubes(slope_aspect)
-                                .apply_dimension(dimension="bands", process=compute_incidence))
+                                .apply_dimension(dimension="bands", process=compute_incidence)
+                                # backend keeps the 5 input labels for the 1-band UDF output; keep only the first
+                                .filter_bands(["solar-radiation-flux"])
+                                .rename_labels(dimension="bands", target=["shortwave-radiation-flux-downscaled"]))
 
     return shortwave_radiation_downscaled

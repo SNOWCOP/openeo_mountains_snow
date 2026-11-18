@@ -48,7 +48,7 @@ def snow_cover_area_inputs(
         connection, temporal_extent, spatial_extent
     )
 
-    first_date = high_resolution_snow.metadata.temporal_dimension.extent[0]
+    first_date = f"{high_resolution_snow.metadata.temporal_dimension.extent[0][:10]}T00:00:00Z"
     return (
         high_resolution_snow
         .merge_cubes(modis_snow_cover_fraction)

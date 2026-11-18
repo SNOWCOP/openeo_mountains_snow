@@ -70,10 +70,12 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
         ) & valid_sun & (shadow_mask == 0)
     )
 
-    # Add glacier exclusions here when a glacier mask is available.
+    # SnowFLAKES excludes glacier pixels from shadow training (glacier band optional).
+    glacier = cube.sel(bands="glacier").values == 1 if "glacier" in cube.bands.values else False
     eligible_shadow = (
         np.isfinite(shadow_mask) & (shadow_mask != 0)
         & np.isfinite(green) & np.isfinite(diff_B_NIR)
+        & ~glacier
     )
 
     # define solar incidence angle ranges

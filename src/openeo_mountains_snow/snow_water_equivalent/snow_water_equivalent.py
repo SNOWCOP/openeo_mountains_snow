@@ -3,7 +3,7 @@
 import openeo
 
 from openeo_mountains_snow.config import (
-    NEIGHBORHOOD_SIZE, SWE_RECONSTRUCTION_UDF, TEMPORAL_EXTENT,
+    GEOPOTENTIAL_STAC_URL, NEIGHBORHOOD_SIZE, SWE_RECONSTRUCTION_UDF, TEMPORAL_EXTENT,
 )
 from openeo_mountains_snow.snow_water_equivalent.downscale_variables import (
     downscale_shortwave_radiation,
@@ -18,6 +18,7 @@ def swe_meteo_cube(
     temporal_extent: list[str] = TEMPORAL_EXTENT,
 ) -> openeo.DataCube:
     """Downscaled AGERA5 meteo on the DEM grid: temperature (°C), precipitation (mm/day), shortwave (W/m²)."""
+    first_date = f"{first_date[:10]}T00:00:00Z"  # backend add_dimension rejects bare dates
     dem = connection.load_collection("COPERNICUS_30", spatial_extent=spatial_extent)
     if dem.metadata.has_temporal_dimension():
         dem = dem.reduce_dimension(dimension="t", reducer="max")
@@ -36,10 +37,8 @@ def swe_meteo_cube(
         dimension="bands", target=["temperature-mean", "dewpoint-temperature", "solar-radiation-flux"]
     )
 
-    # TODO(*): Also verify the `35885 / geopotential` term in
-    # downscale_variables.preprocess_low_resolution_agera (ERA5: height = geopotential / 9.80665).
     geopotential = connection.load_stac(
-        "https://artifactory.vgt.vito.be/artifactory/auxdata-public/geopotential.json",
+        GEOPOTENTIAL_STAC_URL,
         spatial_extent=spatial_extent,
         bands=["geopotential"],
     )
