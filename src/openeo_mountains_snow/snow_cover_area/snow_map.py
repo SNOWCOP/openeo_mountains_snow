@@ -2,7 +2,7 @@
 
 Two sources:
 - `snow_map_from_snow_cover_fraction`: step-1 representative-pixels SCF, binarized (main pipeline).
-- `calculate_snow`: Sentinel-2 L2A SCL classes (used by upscaling).
+- `calculate_snow`: Sentinel-2 L2A SCL classes (used by extras/upscaling).
 """
 
 import openeo

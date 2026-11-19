@@ -6,8 +6,8 @@ Sentinel-2 snow maps, MODIS snow cover fraction and historical conditional proba
 | File | Role |
 |------|------|
 | `snow_cover_area.py` | Entry point: `snow_cover_area_cube()` builds the full SCA graph. |
-| `conditional_probability.py` | SCF-range masks and P(snow \| MODIS SCF range). Also used by `upscaling/pipeline.py`. |
-| `snow_map.py` | High-resolution 0/100/205 snow map: from the step-1 representative-pixels SCF (`snow_map_from_snow_cover_fraction`, main pipeline) or from Sentinel-2 SCL (`calculate_snow`, upscaling). |
+| `conditional_probability.py` | SCF-range masks and P(snow \| MODIS SCF range). Also used by `extras/upscaling/pipeline.py`. |
+| `snow_map.py` | High-resolution 0/100/205 snow map: from the step-1 representative-pixels SCF (`snow_map_from_snow_cover_fraction`, main pipeline) or from Sentinel-2 SCL (`calculate_snow`, extras/upscaling). |
 | `udfs/snow_cover_area_reconstruction_udf.py` | Backend UDF: fills clouds via similar historical days, then via conditional probability. |
 
 - **Config:** `../config.py`.

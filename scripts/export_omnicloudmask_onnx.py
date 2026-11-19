@@ -7,7 +7,8 @@
 # (approach of openeo-community-examples PR #111). Run the cells top to bottom.
 #
 # Upload both files from `OUT_DIR` to public storage (same place as `MODEL_HREF`), then set
-# `omnicloudmask.model_url` in conf/config.yaml to the public URL of the JSON item.
+# `omnicloudmask.model_url` in src/openeo_mountains_snow/conf/config.yaml (and SCF_SETTINGS in config.py)
+# to the public URL of the JSON item.
 #
 # Model contract: float32 (1, 3, H, W) with bands [red B04, green B03, NIR B8A], any reflectance scale,
 # NaN or all-zero = nodata. Output float32 (1, 1, H, W): 0 clear, 1 thick cloud, 2 thin cloud,

@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from openeo_mountains_snow.upscaling.config import JOB_DATABASE_PATH
-from openeo_mountains_snow.upscaling.job_manager import run
+from extras.upscaling.config import JOB_DATABASE_PATH
+from extras.upscaling.job_manager import run
 
 
 if __name__ == "__main__":
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.preview:
-        from openeo_mountains_snow.upscaling import preview_jobs
+        from extras.upscaling import preview_jobs
         preview_jobs()
     else:
         run(db_path=args.db_path)

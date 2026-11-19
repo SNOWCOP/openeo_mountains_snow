@@ -9,7 +9,6 @@ Hydra configuration for pipeline entry points.
 ## Used by
 - snow_cover_fraction/snow_cover_fraction.py
 - snow_cover_fraction/udp/snow_cover_fraction_udp.py
-- experimental/snow_corsa_ml_inference.py
 
 ## Typical usage
 Run an entry point with an experiment override:

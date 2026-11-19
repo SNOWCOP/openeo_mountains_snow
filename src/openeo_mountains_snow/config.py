@@ -1,6 +1,6 @@
 """
 Shared configuration for the snow cover area and snow water equivalent pipeline (main.py)
-and for upscaling. Single source for processing constants.
+and for extras/upscaling. Single source for processing constants.
 """
 
 from pathlib import Path

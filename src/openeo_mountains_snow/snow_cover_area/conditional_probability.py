@@ -1,6 +1,6 @@
 """Conditional probability of high-resolution snow given low-resolution MODIS snow cover fraction.
 
-Single implementation used by both `main.py` and `upscaling/pipeline.py`.
+Single implementation used by both `main.py` and `extras/upscaling/pipeline.py`.
 """
 
 import openeo
