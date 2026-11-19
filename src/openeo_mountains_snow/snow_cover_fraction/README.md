@@ -1,11 +1,11 @@
 # scf — Step 1: snow cover fraction
 
-Computes snow cover fraction (0–100 %) from Sentinel-2 (and Landsat) using representative pixels.
+Computes snow cover fraction (0–100 %) from Sentinel-2 using representative pixels.
+The Landsat variant (work in progress) lives in `extras/landsat/`.
 
 | File | Role |
 |------|------|
 | `snow_cover_fraction.py` | Client code. `snow_cover_fraction_cube()` builds the cube; `run_openeo()` is the Hydra entry point. |
-| `landsat.py` | Landsat variant (work in progress). |
 | `udfs/representative_pixels.py` | UDF run on the backend. |
 | `udp/snow_cover_fraction_udp.py` | Builds the UDP and writes `udp/sentinel2_snow_cover_fraction.json`. |
 

@@ -1,144 +1,57 @@
 """
-Temperature and humidity downscaling module.
+Temperature and shortwave radiation downscaling module.
 
-Provides functions for downscaling temperature, humidity, and shortwave radiation
-from coarse resolution data to high resolution DEM data using lapse rates and
-topographic corrections.
+Downscales AGERA5 temperature and shortwave radiation from coarse resolution to the
+high-resolution DEM using monthly lapse rates and topographic corrections.
 """
 
-from pathlib import Path
 from openeo import DataCube, UDF
-from openeo.processes import ProcessBuilder, array_create, exp, clip
-import numpy as np
 
-from openeo_mountains_snow.config import SOLAR_POSITION_UDF, INCIDENCE_ANGLE_UDF
+from openeo_mountains_snow.config import (
+    INCIDENCE_ANGLE_UDF, NEIGHBORHOOD_SIZE, SOLAR_POSITION_UDF, TEMPERATURE_DOWNSCALING_UDF,
+)
 
-# Vapor pressure coefficients for Northern and Southern hemispheres
-VP_COEFF_NOHEM = np.array([0.41, 0.42, 0.40, 0.39, 0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40]) / 1000.0
-VP_COEFF_SOHEM = np.array([0.38, 0.36, 0.33, 0.33, 0.36, 0.37, 0.40, 0.40, 0.41, 0.42, 0.40, 0.39]) / 1000.0
 
-# Magnus formula constants
-MAGNUS_A = 611.21
-MAGNUS_B = 17.502
-MAGNUS_C = 240.97
-
-def preprocess_low_resolution_agera(cube: ProcessBuilder, lapse_rate, temp_index="temperature-mean",
-                                      dewpoint_index=None, temp_scale=1.0) -> ProcessBuilder:
+def downscale_temperature(agera_cube, elevation_cube, geopotential_cube, southern_hemisphere: bool):
     """
-    Preprocess low-resolution AGERA data for downscaling.
-    
-    Applies lapse rate correction using geopotential height reference.
-    
+    Downscale AGERA5 mean temperature to the DEM with the monthly lapse rate of the hemisphere.
+
     Args:
-        cube: ProcessBuilder with temperature and geopotential bands
-        lapse_rate: Temperature lapse rate (K/m)
-        temp_index: Name of temperature band
-        dewpoint_index: Optional index of dewpoint band (0-11 for month)
-        temp_scale: Scale factor for temperature
-        
+        agera_cube: AGERA5 cube with band `temperature-mean` (K, scale 0.01)
+        elevation_cube: DEM cube (band `DEM`, m)
+        geopotential_cube: ERA5 surface geopotential (m2/s2), no time dimension
+        southern_hemisphere: selects the southern-hemisphere lapse-rate table
+
     Returns:
-        ProcessBuilder with preprocessed temperature and optionally dewpoint
+        DataCube with band `temperature_downscaled` (°C)
     """
-    t_raw = cube[temp_index] * temp_scale
-    geopotential = 35885.0 / cube["geopotential"]  # TODO(*): unverified; ERA5 height = geopotential / 9.80665
-    t_0 = t_raw - lapse_rate * (0 - geopotential)
-
-    if dewpoint_index is not None:
-        d_0 = cube[dewpoint_index] * 0.01 - lapse_rate * (0 - geopotential)
-        return array_create([t_0, d_0])
-    else:
-        return t_0
-
-
-def downscale_t_dewpoint(cube: ProcessBuilder, lapse_rate, temp_index="temperature-mean",
-                         dem_index="DEM") -> ProcessBuilder:
-    """
-    Downscale temperature and compute relative humidity.
-    
-    Args:
-        cube: ProcessBuilder with preprocessed temperature and dewpoint
-        lapse_rate: Temperature lapse rate (K/m)
-        temp_index: Name of temperature band
-        dem_index: Name of DEM elevation band
-        
-    Returns:
-        ProcessBuilder with downscaled temperature and relative humidity
-    """
-    temperature_downscaled = cube[temp_index] - lapse_rate * (cube[dem_index] - 0)
-    temperature_c = temperature_downscaled - 273.15
-    dewpoint_c = cube["dewpoint-temperature"] - 273.15
-    rh = relative_humidity_formula(temperature_c,
-                                    dewpoint_c,
-                                    cube[dem_index], 2)
-    return array_create([temperature_c, rh])
-
-def relative_humidity_formula(temperature_downscaled, dewpoint_temperature_coarse, elevation, month_index):
-    """
-    Calculate relative humidity using Magnus formula.
-    
-    Args:
-        temperature_downscaled: Downscaled temperature in Celsius
-        dewpoint_temperature_coarse: Coarse resolution dewpoint temperature in celcius
-        elevation: Elevation in meters
-        month_index: Month index (0-11) to select appropriate vapor pressure coefficient
-        
-    Returns:
-        Relative humidity clipped to [0, 100]
-    """
-    vp_coeff_all = VP_COEFF_SOHEM  # TODO: select vp_coeff based on hemisphere
-    vp_coeff = vp_coeff_all[month_index]
-    d_t_lapse_rate = vp_coeff * MAGNUS_C / MAGNUS_B
-
-    D_down = dewpoint_temperature_coarse - d_t_lapse_rate * (elevation - 0)
-    es = MAGNUS_A * exp((MAGNUS_B * temperature_downscaled) / (temperature_downscaled + MAGNUS_C))
-    e = MAGNUS_A * exp((MAGNUS_B * D_down) / (D_down + MAGNUS_C))
-    return clip(100 * e / es, 0, 100)
-
-
-
-def downscale_temperature_humidity(agera_cube, elevation_cube, geopotential_cube):
-    """
-    Downscale temperature and humidity data using elevation data.
-    
-    Args:
-        agera_cube: AGERA5 data cube with temperature and dewpoint
-        elevation_cube: DEM elevation data cube
-        geopotential_cube: Geopotential height data cube
-        
-    Returns:
-        DataCube with downscaled temperature and relative humidity
-    """
-    lapse_rate_nohem = np.array([4.4, 5.9, 7.1, 7.8, 8.1, 8.2, 8.1, 8.1, 7.7, 6.8, 5.5, 4.7]) / 1000.0
-    lapse_rate_sohem = np.array([8.1, 8.1, 7.7, 6.8, 5.5, 4.7, 4.4, 5.9, 7.1, 7.8, 8.1, 8.2]) / 1000.0
-    lapse_rate = lapse_rate_sohem[1]
-
-    t0_cube = (agera_cube.merge_cubes(geopotential_cube)
-               .apply_dimension(dimension="bands",
-                                process=lambda x: preprocess_low_resolution_agera(
-                                    x, lapse_rate, temp_index="temperature-mean",
-                                    dewpoint_index=1, temp_scale=0.01))
-               .rename_labels(target=["t0", "dewpoint-temperature"], dimension="bands"))
-    
-    downscale_inputs = (t0_cube.resample_cube_spatial(elevation_cube, method="bilinear")
-                        .merge_cubes(elevation_cube.max_time()))
-
-    downscaled = downscale_inputs.apply_dimension(
-        dimension="bands",
-        process=lambda x: downscale_t_dewpoint(x, lapse_rate, temp_index="t0", dem_index="DEM")
-    )
-    return downscaled.rename_labels(dimension="bands", target=["temperature_downscaled", "relative_humidity"])
+    temperature = agera_cube.filter_bands(["temperature-mean"]) * 0.01
+    height = geopotential_cube / 9.80665  # geopotential (m2/s2) -> height (m)
+    inputs = (temperature.merge_cubes(height)
+              .resample_cube_spatial(elevation_cube, method="bilinear")
+              .merge_cubes(elevation_cube.max_time()))
+    udf = UDF.from_file(str(TEMPERATURE_DOWNSCALING_UDF), context={"southern_hemisphere": southern_hemisphere})
+    return (inputs.apply_neighborhood(
+                process=udf,
+                size=[
+                    {"dimension": "x", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
+                    {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
+                ])
+            # backend keeps the 3 input labels for the 1-band UDF output; keep only the first
+            .filter_bands(["temperature-mean"])
+            .rename_labels(dimension="bands", target=["temperature_downscaled"]))
 
 
 def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
     """
     Downscale shortwave radiation using solar incidence angle correction.
     
-    Requires slope and aspect in radians and computes topographic correction
-    based on solar incidence angle.
+    Requires slope and aspect in degrees (aspect clockwise from north) and computes
+    topographic correction based on solar incidence angle.
     
     Args:
         sw: AGERA5 shortwave radiation DataCube (J/m^2/day) at DEM resolution
-        slope_aspect: DataCube with slope and aspect bands in radians
+        slope_aspect: DataCube with slope and aspect bands in degrees
         
     Returns:
         DataCube with topographically corrected shortwave radiation
@@ -155,6 +68,9 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
     compute_incidence = UDF.from_file(str(INCIDENCE_ANGLE_UDF))
     shortwave_radiation_downscaled = (solar_flux_with_sunpos
                                 .merge_cubes(slope_aspect)
-                                .apply_dimension(dimension="bands", process=compute_incidence))
+                                .apply_dimension(dimension="bands", process=compute_incidence)
+                                # backend keeps the 5 input labels for the 1-band UDF output; keep only the first
+                                .filter_bands(["solar-radiation-flux"])
+                                .rename_labels(dimension="bands", target=["shortwave-radiation-flux-downscaled"]))
 
     return shortwave_radiation_downscaled

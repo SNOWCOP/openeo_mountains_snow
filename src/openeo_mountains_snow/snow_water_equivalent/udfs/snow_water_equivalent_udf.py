@@ -8,6 +8,9 @@ redistributed over the accumulation days in proportion to their precipitation.
 Input bands (per t): 0 = SCA (0/100/205, NaN = no data), 1 = air temperature (°C),
 2 = precipitation (mm/day), 3 = incoming shortwave radiation (W/m²).
 Output band ``swe`` in mm, rounded to whole mm; NaN where SCA is cloud/no data.
+
+Context ``basin_sca`` ({"YYYY-MM-DD": percent}): basin-wide SCA series, as in the original.
+Without it, the SCA of the neighborhood is used.
 """
 import numpy as np
 import xarray as xr
@@ -22,10 +25,11 @@ DEFAULTS = {
 }
 
 
-def get_status_and_delta(sca, ta, pr, p):
+def get_status_and_delta(sca, ta, pr, p, basin_sca=None):
     """1 = accumulation, -1 = melting, 0 = neutral; delta = share of period precipitation."""
-    basin_sca = np.array([np.nanmean(np.where(s <= 100, s, np.nan)) if (s <= 100).any() else np.nan
-                          for s in sca])
+    if basin_sca is None:
+        basin_sca = np.array([np.nanmean(np.where(s <= 100, s, np.nan)) if (s <= 100).any() else np.nan
+                              for s in sca])
     sca_increase = np.concatenate([[0.0], np.diff(basin_sca)])
     wet = pr > p["precipitation_threshold"]
     cold = ta < p["temperature_threshold"]
@@ -128,8 +132,12 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     ta = cube.isel(bands=1).values.astype(np.float32)
     pr = cube.isel(bands=2).values.astype(np.float32)
     sw = cube.isel(bands=3).values.astype(np.float32)
+    basin_sca = None
+    if p.get("basin_sca"):
+        dates = np.datetime_as_string(cube.t.values, unit="D")
+        basin_sca = np.array([p["basin_sca"].get(d, np.nan) for d in dates], dtype=float)
 
-    status, delta = get_status_and_delta(sca, ta, pr, p)
+    status, delta = get_status_and_delta(sca, ta, pr, p, basin_sca)
     melt = get_melt_pomeroy(sca, ta, pr, sw, status, p)
     sca_sum, tot_acc = compute_state_and_accumulation(sca, melt, status, delta)
     swe = np.round(get_swe(sca, melt, status, delta, sca_sum, tot_acc))

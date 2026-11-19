@@ -21,8 +21,8 @@ omnicloudmask:
   model_url: "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/omnicloudmask_v4.json"
 
 glacier_mask:
-  # Public URL of the STAC collection built by stac/glacier/build_collection.py; null -> no glacier mask.
-  stac_url: null
+  # Public URL of the glacier STAC item (source: tmp/glacier/glacier_mask.json); null -> no glacier mask.
+  stac_url: "https://s3.waw3-1.cloudferro.com/project_dependencies/snowcop/glacier_mask.json"
   band: "glacier"
 
 

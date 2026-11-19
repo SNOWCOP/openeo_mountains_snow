@@ -207,8 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 # Local secrets for openEO service account auth
-src/openeo_mountains_snow/upscaling/local_auth.py
+*.env
 
 # Local outputs and scratch
 *.nc
+*.json
 tmp/

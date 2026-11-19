@@ -7,12 +7,11 @@ Full method docs: [docs/](docs/index.md) (Quarto).
 
 ```mermaid
 flowchart LR
-    S2[Sentinel-2 / Landsat] --> SCF["1. snow_cover_fraction/<br/>snow cover fraction"]
+    S2[Sentinel-2] --> SCF["1. snow_cover_fraction/<br/>snow cover fraction"]
     SCF -- "binarized: snow_map_from_snow_cover_fraction" --> SCA["2. snow_cover_area/<br/>daily snow cover area"]
     MODIS[MODIS] --> SCA
     AGERA[AGERA5 + DEM] --> SWE["3. snow_water_equivalent/<br/>snow water equivalent"]
     SCA --> SWE
-    SCF -. large areas .-> UP["upscaling/<br/>tiled batch jobs"]
 ```
 
 | Term | Meaning |
@@ -35,7 +34,7 @@ pip install -e .[dev]
 | SCF | `python -m openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction +experiment=andes_snow_cover_fraction` | `conf/` (Hydra) |
 | SCF UDP (writes JSON) | `python -m openeo_mountains_snow.snow_cover_fraction.udp.snow_cover_fraction_udp` | `conf/` (Hydra) |
 | SCA reconstruction + SWE | `python -m openeo_mountains_snow.main` | `config.py` |
-| Upscaling | `python -m openeo_mountains_snow.upscaling.run_upscaling [--preview]` | `upscaling/config.py` |
+| Upscaling (extra, from repo root) | `python -m extras.upscaling.run_upscaling [--preview]` | `extras/upscaling/config.py` |
 | Tests | `pytest` | |
 
 ## Layout
@@ -46,15 +45,18 @@ src/openeo_mountains_snow/
 ├── snow_cover_fraction/             Step 1: snow cover fraction
 │   ├── udfs/        UDFs run on the backend
 │   └── udp/         UDP builder + published JSON
-├── config.py        Shared settings for main.py and upscaling
+├── config.py        Shared settings for main.py (and extras/upscaling)
 ├── main.py          Runs snow cover area -> snow water equivalent as one batch job
+├── common/          Shared masks, sun and terrain helpers (+ udfs/)
 ├── snow_cover_area/ Step 2: daily snow cover area reconstruction (+ conditional probability)
 │   └── udfs/
 ├── snow_water_equivalent/             Step 3: SWE + meteo downscaling
 │   └── udfs/
-├── upscaling/       Tile a large AOI into many batch jobs
-├── experimental/    Prototypes, not part of the pipeline
 └── senales_wgs84.geojson   Default AOI
+extras/              Not installed; run from the repo root
+├── upscaling/       Tile a large AOI into many batch jobs
+└── landsat/         Landsat SCF variant (work in progress)
+scripts/             export_omnicloudmask_onnx.py + validation/ notebooks
 docs/                Method documentation (Quarto)
 test/                Tests
 ```

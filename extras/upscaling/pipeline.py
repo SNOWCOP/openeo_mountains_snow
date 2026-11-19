@@ -14,7 +14,7 @@ from openeo_mountains_snow.snow_cover_area.conditional_probability import (
     compute_snow_cover_fraction_range_masks,
 )
 from openeo_mountains_snow.snow_cover_area.snow_map import calculate_snow
-from openeo_mountains_snow.upscaling.config import MODIS_END_DATE
+from extras.upscaling.config import MODIS_END_DATE
 
 
 def _conditional_probability(connection, temporal_extent, spatial_extent):

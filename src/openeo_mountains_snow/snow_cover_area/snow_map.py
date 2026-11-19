@@ -2,7 +2,7 @@
 
 Two sources:
 - `snow_map_from_snow_cover_fraction`: step-1 representative-pixels SCF, binarized (main pipeline).
-- `calculate_snow`: Sentinel-2 L2A SCL classes (used by upscaling).
+- `calculate_snow`: Sentinel-2 L2A SCL classes (used by extras/upscaling).
 """
 
 import openeo
@@ -29,7 +29,7 @@ def snow_map_from_snow_cover_fraction(snow_cover_fraction: openeo.DataCube) -> o
 
 
 def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0) -> openeo.DataCube:
-    """Classify Sentinel-2 L2A SCL into 0 (no snow), 100 (snow), CLOUD_VALUE (cloud)."""
+    """Classify Sentinel-2 L2A SCL into 0 (no snow), 100 (snow), CLOUD_VALUE (cloud or invalid)."""
     scl = connection.load_collection(
         "SENTINEL2_L2A",
         temporal_extent=temporal_extent,
@@ -42,8 +42,11 @@ def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0)
     def snow_callback(scl_data):
         classification = scl_data["SCL"]
         snow_pixel = (classification == 11) * 100.0
-        is_cloud = (classification == 7).or_(classification == 8).or_(classification == 9)
-        return if_(is_cloud, float(CLOUD_VALUE), snow_pixel)
+        # no data, saturated, dark/topographic shadow, cloud shadow, unclassified, cloud, cirrus
+        is_invalid = classification == 0
+        for code in (1, 2, 3, 7, 8, 9, 10):
+            is_invalid = is_invalid.or_(classification == code)
+        return if_(is_invalid, float(CLOUD_VALUE), snow_pixel)
 
     snow = scl.apply_dimension(dimension="bands", process=snow_callback)
     return snow.rename_labels(dimension="bands", target=["snow"])

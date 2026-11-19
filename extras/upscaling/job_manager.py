@@ -16,7 +16,7 @@ from openeo.extra.job_management import (
     split_area,
 )
 
-from openeo_mountains_snow.upscaling.config import (
+from extras.upscaling.config import (
     BACKEND,
     DEFAULT_SCF_CONFIG,
     DEFAULT_TILE_SIZE_M,
@@ -31,7 +31,7 @@ from openeo_mountains_snow.config import CRS
 from openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction import snow_cover_fraction_cube
 
 try:
-    from openeo_mountains_snow.upscaling.local_auth import (
+    from extras.upscaling.local_auth import (
         OPENEO_AUTH_CLIENT_ID as LOCAL_OPENEO_AUTH_CLIENT_ID,
         OPENEO_AUTH_CLIENT_SECRET as LOCAL_OPENEO_AUTH_CLIENT_SECRET,
         OPENEO_AUTH_PROVIDER_ID as LOCAL_OPENEO_AUTH_PROVIDER_ID,

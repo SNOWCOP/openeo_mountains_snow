@@ -3,6 +3,7 @@
 from pathlib import Path
 import json
 
+import openeo_mountains_snow
 from openeo_mountains_snow.config import (  # noqa: F401
     BACKEND,
     JOB_OPTIONS,
@@ -10,7 +11,7 @@ from openeo_mountains_snow.config import (  # noqa: F401
 )
 
 # Load full Senales valley boundary from GeoJSON and extract bounding box.
-_GEOJSON_PATH = Path(__file__).parent.parent / "senales_wgs84.geojson"
+_GEOJSON_PATH = Path(openeo_mountains_snow.__file__).parent / "senales_wgs84.geojson"
 with open(_GEOJSON_PATH) as f:
     _geojson = json.load(f)
 

@@ -1,5 +1,5 @@
 #%%
-"""Interactive Landsat runs, moved out of snow_cover_fraction/landsat.py so importing it has no side effects."""
+"""Interactive Landsat runs (run from the repo root so `extras` is importable)."""
 
 import os
 
@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import openeo
 import xarray as xr
 
-from openeo_mountains_snow.snow_cover_fraction.landsat import (
+from extras.landsat.landsat import (
     landsat_inputs_cube,
     landsat_representative_pixels_cube,
 )
@@ -68,7 +68,7 @@ job.start_and_wait()
 #%% Download and inspect
 
 results = job.get_results()
-download_dir = os.path.join("src", "openeo_mountains_snow", "tmp", "landsat_snowflakes_AWS_output2")
+download_dir = os.path.join("tmp", "landsat_snowflakes_AWS_output2")
 os.makedirs(download_dir, exist_ok=True)
 results.download_files(download_dir)
 

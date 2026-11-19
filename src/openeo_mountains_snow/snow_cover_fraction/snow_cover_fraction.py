@@ -11,7 +11,7 @@ from openeo.api.process import Parameter
 from openeo.processes import array_append, array_create
 from pyproj import Geod, Transformer
 
-from openeo_mountains_snow.common.masks import cloud_water_mask
+from openeo_mountains_snow.common.masks import cloud_water_mask, glacier_mask
 from openeo_mountains_snow.common.sun import aoi_shape
 from openeo_mountains_snow.common.terrain import local_incidence_angle, shadow_mask
 from openeo_mountains_snow.config import REPRESENTATIVE_PIXELS_UDF
@@ -135,7 +135,11 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
 
     s2_with_local_angle = local_incidence_angle(masked_s2, aoi, time_period, connection, cfg,
                                                 bands_to_retain=[n for n in names if n.startswith("B")])
-    return add_indices(shadow_mask(s2_with_local_angle, aoi))
+    inputs = add_indices(shadow_mask(s2_with_local_angle, aoi))
+    glacier = glacier_mask(aoi, connection, cfg)
+    if glacier is not None:
+        inputs = inputs.merge_cubes(glacier.add_dimension(name="bands", label="glacier", type="bands"))
+    return inputs
 
 
 def add_indices(cube):

@@ -120,6 +120,18 @@ def test_sampling_covers_sun_angles_and_preserves_shadow_labels():
     assert not np.any(labels[:, :, :3])
 
 
+def test_glacier_pixels_are_never_shadow_training():
+    cube = training_cube()
+    glacier = np.zeros(cube.sel(bands="B03").shape)
+    glacier[:, 12:36, 25:32] = 1
+    cube = xr.concat([cube, xr.DataArray(glacier, dims=("t", "y", "x")).expand_dims(bands=["glacier"])], dim="bands")
+    with patch.object(rp, "inspect"):
+        labels = rp.apply_datacube(cube, {"total_samples": 240, "training_seed": 7}).sel(bands="B03").values
+    shadow = cube.sel(bands="shadow_mask").values == 1
+    assert not np.any(labels[glacier == 1])
+    assert np.any(labels[shadow & (glacier == 0)] > 0)
+
+
 def test_empty_and_missing_scenes():
     cube = training_cube()
     empty = np.zeros(cube.sel(bands="B03").shape, dtype=bool)
