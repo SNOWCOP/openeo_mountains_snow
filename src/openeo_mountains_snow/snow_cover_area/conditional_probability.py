@@ -8,8 +8,8 @@ from openeo import DataCube
 from openeo.processes import gt, if_, is_nan, array_create
 
 from openeo_mountains_snow.config import (
-    CLOUD_VALUE, CRS, DELTA, EPSILON, INVALID_THRESHOLD, INVALID_VALUE,
-    MODIS_RESOLUTION, MODIS_SNOW_BAND, MODIS_STAC_URL, RESOLUTION,
+    CLOUD_VALUE, CRS, DELTA, EPSILON, INVALID_PIXEL_THRESHOLD, INVALID_VALUE,
+    MODIS_RESOLUTION, MODIS_SNOW_BAND, MODIS_STAC_URL, PIXEL_RATIO, RESOLUTION,
 )
 from openeo_mountains_snow.snow_cover_area.snow_map import create_mask
 
@@ -37,7 +37,8 @@ def low_resolution_snow_cover_fraction(
         valid = bands["valid"]
         scf = 100.0 * bands["snow"] / valid
         scf = if_(is_nan(scf), CLOUD_VALUE, scf)
-        return if_(valid <= 1 - INVALID_THRESHOLD / 100, INVALID_VALUE, scf)
+        invalid_pixels = (1 - valid) * PIXEL_RATIO**2
+        return if_(invalid_pixels > INVALID_PIXEL_THRESHOLD - 0.5, INVALID_VALUE, scf)  # 0.5: float tolerance
 
     return (average.apply_dimension(dimension="bands", process=to_scf)
             .rename_labels(dimension="bands", target=["scf"]))

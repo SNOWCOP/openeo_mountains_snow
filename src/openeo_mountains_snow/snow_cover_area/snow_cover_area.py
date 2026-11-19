@@ -7,7 +7,8 @@ then fills clouds with the reconstruction UDF. Output band: `sca` (0 / 100 / 205
 import openeo
 
 from openeo_mountains_snow.config import (
-    MODIS_RESOLUTION, N_DAYS_TO_RECONSTRUCT, NEIGHBORHOOD_SIZE, SCA_RECONSTRUCTION_UDF, TEMPORAL_EXTENT,
+    MODIS_RESOLUTION, N_DAYS_TO_RECONSTRUCT, NEIGHBORHOOD_SIZE, SCA_NEIGHBORHOOD_OVERLAP, SCA_RECONSTRUCTION_UDF,
+    TEMPORAL_EXTENT,
 )
 from openeo_mountains_snow.snow_cover_area.conditional_probability import (
     compute_conditional_probability,
@@ -74,6 +75,10 @@ def snow_cover_area_cube(
         size=[
             {"dimension": "x", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
             {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
+        ],
+        overlap=[
+            {"dimension": "x", "value": SCA_NEIGHBORHOOD_OVERLAP, "unit": "px"},
+            {"dimension": "y", "value": SCA_NEIGHBORHOOD_OVERLAP, "unit": "px"},
         ],
     )
     return sca

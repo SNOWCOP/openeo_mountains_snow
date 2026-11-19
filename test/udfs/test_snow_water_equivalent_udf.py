@@ -37,3 +37,16 @@ def test_daily_meteo_is_used(make_cube, run_udf):
     hot = run_udf(SWE_RECONSTRUCTION_UDF, swe_cube(make_cube, sca, ta=hotter, precip=precip))
     assert np.nanmax(mild.values) > 0
     assert not np.array_equal(mild.values, hot.values, equal_nan=True)
+
+
+def test_basin_sca_context_replaces_neighborhood_sca(make_cube, run_udf):
+    # warm, wet snowfall day: only accumulation if the SCA increases by more than 10 points
+    sca = np.repeat(np.array([0, 100, 100, 100, 0, 0], float)[:, None, None], 3, axis=1).repeat(4, axis=2)
+    precip = np.zeros_like(sca)
+    precip[1] = 10.0
+    cube = swe_cube(make_cube, sca, ta=5.0, precip=precip)
+    local = run_udf(SWE_RECONSTRUCTION_UDF, cube)
+    flat_basin = {str(t)[:10]: 20.0 for t in cube.t.values}
+    basin = run_udf(SWE_RECONSTRUCTION_UDF, cube, context={"basin_sca": flat_basin})
+    assert np.nanmax(local.values) > 0
+    np.testing.assert_array_equal(basin.values, 0)
