@@ -39,6 +39,17 @@ def test_daily_meteo_is_used(make_cube, run_udf):
     assert not np.array_equal(mild.values, hot.values, equal_nan=True)
 
 
+def test_unknown_days_do_not_erase_the_snowpack(make_cube, run_udf):
+    # missing first date (NaN) and a cloudy day (205) inside the snow period
+    sca = np.repeat(np.array([np.nan, 100, 100, 205, 100, 100, 0, 0])[:, None, None], 3, axis=1).repeat(4, axis=2)
+    ta = np.repeat(np.array([5, -5, -5, 5, 5, 5, 5, 5], float)[:, None, None], 3, axis=1).repeat(4, axis=2)
+    precip = np.where(ta < 0, 10.0, 0.0)
+    swe = run_udf(SWE_RECONSTRUCTION_UDF, swe_cube(make_cube, sca, ta=ta, precip=precip)).values[:, 0]
+    assert np.isnan(swe[[0, 3]]).all()
+    assert np.isfinite(swe[[1, 2, 4, 5, 6, 7]]).all()
+    assert (swe[4] > 0).all()
+
+
 def test_basin_sca_context_replaces_neighborhood_sca(make_cube, run_udf):
     # warm, wet snowfall day: only accumulation if the SCA increases by more than 10 points
     sca = np.repeat(np.array([0, 100, 100, 100, 0, 0], float)[:, None, None], 3, axis=1).repeat(4, axis=2)

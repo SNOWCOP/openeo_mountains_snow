@@ -8,8 +8,8 @@ from openeo import DataCube
 from openeo.processes import gt, if_, is_nan, array_create
 
 from openeo_mountains_snow.config import (
-    CLOUD_VALUE, CRS, DELTA, EPSILON, INVALID_PIXEL_THRESHOLD, INVALID_VALUE,
-    MODIS_RESOLUTION, MODIS_SNOW_BAND, MODIS_STAC_URL, PIXEL_RATIO, RESOLUTION,
+    CLOUD_VALUE, DELTA, EPSILON, INVALID_PIXEL_THRESHOLD, INVALID_VALUE,
+    MODIS_RESOLUTION, MODIS_SNOW_BAND, MODIS_STAC_URL, PIXEL_RATIO, RESOLUTION, utm_epsg,
 )
 from openeo_mountains_snow.snow_cover_area.snow_map import create_mask
 
@@ -31,7 +31,7 @@ def low_resolution_snow_cover_fraction(
 ) -> DataCube:
     """Aggregate the high-resolution snow mask to the 500 m LR grid as SCF (0-100)."""
     average = valid_and_snow_mask.resample_spatial(
-        resolution=MODIS_RESOLUTION, projection=CRS, method="average")
+        resolution=MODIS_RESOLUTION, projection=utm_epsg(spatial_extent), method="average")
 
     def to_scf(bands):
         valid = bands["valid"]
@@ -73,7 +73,7 @@ def compute_snow_cover_fraction_range_masks(
     labels = [f"scf_{lower}_{upper}" for lower, upper in ranges.values()]
     range_masks = (scf_low_res.apply_dimension(to_range_bands, dimension="bands")
                    .rename_labels(dimension="bands", target=labels)
-                   .resample_spatial(resolution=RESOLUTION, projection=CRS, method="near")
+                   .resample_spatial(resolution=RESOLUTION, projection=utm_epsg(spatial_extent), method="near")
                    .resample_cube_spatial(snow))
     return range_masks.merge_cubes(valid_and_snow_mask), labels
 
@@ -114,5 +114,5 @@ def create_modis_snow_cover_fraction_cube(
         return if_(gt(ndsi, 100), CLOUD_VALUE, scf)
 
     return (modis.apply(clean)
-            .resample_spatial(resolution=RESOLUTION, projection=CRS, method="near")
+            .resample_spatial(resolution=RESOLUTION, projection=utm_epsg(spatial_extent), method="near")
             .rename_labels(dimension="bands", target=["scf"]))

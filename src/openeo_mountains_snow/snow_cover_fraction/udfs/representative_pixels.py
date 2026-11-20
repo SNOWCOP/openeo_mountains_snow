@@ -39,6 +39,55 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
             cube = cube.isel(bands=first_indices)
             logger.warning("Removed duplicate band labels before selection: bands=%s", list(cube.bands.values))
 
+    # The backend may drop the temporal dimension for a single-date chunk: add it back, remove it on return.
+    squeezed = "t" not in cube.dims
+    if squeezed:
+        cube = cube.expand_dims("t")
+
+    # The chunk holds one or more scenes from the configured temporal neighborhood (e.g. P1D):
+    # label each scene on its own.
+    values = np.concatenate([training_labels(cube.isel(t=[i]), context) for i in range(cube.sizes["t"])], axis=0)
+    if context.get("classify", False):
+        values = classify_scenes(cube, values, context.get("total_samples", 500), context.get("training_seed", 0))
+
+    out = cube.sel(bands=["B03"])
+    out = out.copy(data=values.astype(cube.dtype).reshape(out.shape))
+    return out.isel(t=0, drop=True) if squeezed else out
+
+
+def classify_scenes(cube, labels, total_samples, seed):
+    """SCF of every scene with one SVM trained on samples drawn from all scenes of the chunk.
+
+    `labels` is (t, y, x) with 1 = snow, 2 = snow-free. Unclassified pixels are 255.
+    """
+    spectral = [b for b in CLASSIFICATION_BANDS if b in cube.bands.values]
+    bands = cube.sel(bands=spectral).transpose("t", "bands", ...).values
+    rng = np.random.default_rng(seed)
+
+    def samples(label):
+        x = np.concatenate([bands[i][:, labels[i] == label].T for i in range(len(labels))])
+        return x[rng.choice(len(x), min(total_samples // 2, len(x)), replace=False)]
+
+    result = np.full(labels.shape, 255, dtype=np.float32)
+    snow, snowfree = samples(1), samples(2)
+    if len(snow) == 0 or len(snowfree) == 0:
+        # Only one class found (e.g. AOI fully snow-covered): no SVM, every clear pixel is that class.
+        if len(snow) or len(snowfree):
+            valid = np.all(np.isfinite(bands), axis=1)
+            result[valid] = 100 if len(snow) else 0
+        return result
+    try:
+        _, normalizer, svm, _ = model_training_svm(snow, snowfree)
+        for i in range(len(labels)):
+            result[i] = classify(bands[i], np.all(np.isfinite(bands[i]), axis=0), normalizer, svm)
+    except Exception as e:
+        logger.exception("Error during classification")
+        inspect(data=str(e), message=f"Error during classification: {e}")
+    return result
+
+
+def training_labels(cube, context):
+    """Training labels (1 = snow, 2 = snow-free, 0 = none) of a single-scene cube, shaped like its B03 band."""
     total_samples = context.get("total_samples", 500)
     training_seed = context.get("training_seed", 0)
 
@@ -71,7 +120,7 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
     )
 
     # SnowFLAKES excludes glacier pixels from shadow training (glacier band optional).
-    glacier = cube.sel(bands="glacier").values == 1 if "glacier" in cube.bands.values else False
+    glacier = cube.sel(bands="glacier").values == 1 if "glacier" in cube.bands.values else np.False_
     eligible_shadow = (
         np.isfinite(shadow_mask) & (shadow_mask != 0)
         & np.isfinite(green) & np.isfinite(diff_B_NIR)
@@ -134,36 +183,7 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
                 snowfree_sun, green, int(sample_count / 2), n_bins=20, seed=training_seed
             )
         values[eligible_sun_range] = sun_samples[eligible_sun_range]
-
-    if(context.get("classify", False)):
-        spectral = [b for b in CLASSIFICATION_BANDS if b in cube.bands.values]
-        curr_bands = cube.sel(bands=spectral)
-
-        def reshape(v):
-            return np.stack(v, axis=-1)
-        training_labels = values
-        # No SVM (missing class or error) -> nodata, not the 0/1/2 training labels.
-        values = np.full_like(values, 255)
-        try:
-            snow_representative_pixel_bands = curr_bands.values[:, training_labels == 1]
-            snowfree_representative_pixel_bands = curr_bands.values[:, training_labels == 2]
-            valid_pixels = np.all(np.isfinite(curr_bands.values), axis=0)
-
-            if (snow_representative_pixel_bands.shape[1] > 0
-                    and snowfree_representative_pixel_bands.shape[1] > 0):
-                class_array, normalizer, svm, training_array = model_training_svm(
-                    reshape(snow_representative_pixel_bands),
-                    reshape(snowfree_representative_pixel_bands),
-                )
-
-                SCF_map = classify(curr_bands.values, valid_pixels, normalizer, svm)
-                values = SCF_map
-        except Exception as e:
-            logger.exception("Error during classification")
-            inspect(data=str(e), message=f"Error during classification: {e}")
-
-    out = cube.sel(bands=["B03"])
-    return out.copy(data=values.astype(cube.dtype).reshape(out.shape))
+    return values
 
 def calculate_training_samples(solar_incidence_angle, ranges, total_samples):
     """

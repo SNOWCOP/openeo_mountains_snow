@@ -58,7 +58,9 @@ def test_clear_days_unchanged(make_cube, run_udf):
     np.testing.assert_array_equal(result.values[:, 0], history()[-3:])
 
 
-def test_single_timestep_returns_empty_cube(make_cube, run_udf):
-    result = run_udf(SCA_RECONSTRUCTION_UDF, sca_cube(make_cube, history(1)), {})
-    assert result.sizes["t"] == 0
+def test_single_timestep_keeps_single_map(make_cube, run_udf):
+    snow = history(1)
+    result = run_udf(SCA_RECONSTRUCTION_UDF, sca_cube(make_cube, snow), {})
+    assert result.sizes["t"] == 1
     assert list(result.bands.values) == ["reconstructed_snow"]
+    np.testing.assert_array_equal(result.values[:, 0], snow)

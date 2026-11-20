@@ -170,7 +170,7 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     p = {**DEFAULTS, **(context or {})}
     n_ranges = len(SCF_RANGES)
     if cube.sizes["t"] < 2:
-        return cube.isel(t=slice(0, 0), bands=slice(0, 1)).assign_coords(bands=["reconstructed_snow"])
+        return cube.isel(bands=slice(0, 1)).assign_coords(bands=["reconstructed_snow"])
 
     labels, n = lr_labels(cube.y.values, cube.x.values, p["lr_pixel_size"])
     # NaN on a day = no HR image = cloud (original); NaN on every day = outside the data (no data).

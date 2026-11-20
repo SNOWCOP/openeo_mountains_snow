@@ -27,6 +27,14 @@ AGERA_TEMPORAL_EXTENT = TEMPORAL_EXTENT.copy()
 CRS = 32632
 RESOLUTION = 20.  # Output resolution in meters
 
+
+def utm_epsg(spatial_extent: dict) -> int:
+    """EPSG code of the WGS84 UTM zone at the centre of the extent (32632 for the Senales valley)."""
+    from pyproj import Transformer
+    lon, lat = Transformer.from_crs(spatial_extent.get("crs", "EPSG:4326"), "EPSG:4326", always_xy=True).transform(
+        (spatial_extent["west"] + spatial_extent["east"]) / 2, (spatial_extent["south"] + spatial_extent["north"]) / 2)
+    return (32600 if lat >= 0 else 32700) + int((lon + 180) // 6) + 1
+
 SPATIAL_EXTENT = {
     "west": 631800.,
     "south": 5170700.,
@@ -73,12 +81,15 @@ SCA_NEIGHBORHOOD_OVERLAP = PIXEL_RATIO
 # ==============================
 
 JOB_OPTIONS = {
-    "executor-memory": "7G",
-    "executor-memoryOverhead": "3G",
+    "executor-memory": "8G",
+    "executor-memoryOverhead": "8G",
+    'executor-cores': 1,
     "driver-memory": "2G",
     "driver-memoryOverhead": "2G",
-    "python-memory": None, 
+    "python-memory": "disable", 
+    'max-executors': 8
 }
+
 
 
 # ==============================

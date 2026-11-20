@@ -8,14 +8,14 @@ Two sources:
 import openeo
 from openeo.processes import if_, is_nan, array_create
 
-from openeo_mountains_snow.config import CLOUD_VALUE, CRS, RESOLUTION, SNOW_FRACTION_THRESHOLD
+from openeo_mountains_snow.config import CLOUD_VALUE, CRS, RESOLUTION, SNOW_FRACTION_THRESHOLD, utm_epsg
 
 
-def snow_map_from_snow_cover_fraction(snow_cover_fraction: openeo.DataCube) -> openeo.DataCube:
+def snow_map_from_snow_cover_fraction(snow_cover_fraction: openeo.DataCube, crs: int = CRS) -> openeo.DataCube:
     """Binarize step-1 SCF (0-100, 255 = masked/no data) to snow (100) / no snow (0) / cloud.
 
     `snow_cover_fraction` is the cube from `snow_cover_fraction.snow_cover_fraction_cube`
-    (band `representative`), run with classify=True.
+    (band `representative`), run with classify=True. `crs`: output UTM EPSG, see `utm_epsg`.
     """
     def binarize(bands):
         scf = bands[0]
@@ -23,7 +23,7 @@ def snow_map_from_snow_cover_fraction(snow_cover_fraction: openeo.DataCube) -> o
         return if_(is_nan(scf).or_(scf > 100), float(CLOUD_VALUE), snow)
 
     return (snow_cover_fraction
-            .resample_spatial(resolution=RESOLUTION, projection=CRS, method="near")  # "average" would mix 255 into valid SCF
+            .resample_spatial(resolution=RESOLUTION, projection=crs, method="near")  # "average" would mix 255 into valid SCF
             .apply_dimension(dimension="bands", process=binarize)
             .rename_labels(dimension="bands", target=["snow"]))
 
@@ -37,7 +37,7 @@ def calculate_snow(connection, temporal_extent, spatial_extent, cloud_prob=80.0)
         bands=["SCL"],
         max_cloud_cover=cloud_prob,
     )
-    scl = scl.resample_spatial(resolution=RESOLUTION, projection=CRS, method="near")
+    scl = scl.resample_spatial(resolution=RESOLUTION, projection=utm_epsg(spatial_extent), method="near")
 
     def snow_callback(scl_data):
         classification = scl_data["SCL"]

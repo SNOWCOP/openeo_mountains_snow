@@ -7,7 +7,9 @@ redistributed over the accumulation days in proportion to their precipitation.
 
 Input bands (per t): 0 = SCA (0/100/205, NaN = no data), 1 = air temperature (°C),
 2 = precipitation (mm/day), 3 = incoming shortwave radiation (W/m²).
-Output band ``swe`` in mm, rounded to whole mm; NaN where SCA is cloud/no data.
+Output band ``swe`` in mm, rounded to whole mm; NaN where SCA is cloud/no data
+TODO; current mitigation for sparse MODIS offering on CDSEThe snowpack is carried through those days: the SCA is gap-filled with the last known
+value (the first known value before the first observation).
 
 Context ``basin_sca`` ({"YYYY-MM-DD": percent}): basin-wide SCA series, as in the original.
 Without it, the SCA of the neighborhood is used.
@@ -128,7 +130,15 @@ def get_swe(sca, melt, status, delta, sca_sum, tot_acc):
 
 def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     p = {**DEFAULTS, **(context or {})}
-    sca = cube.isel(bands=0).fillna(255).values.astype(np.float32)
+    #TODO define a better fix
+    observed = cube.isel(bands=0).values.astype(np.float32)
+    unknown = ~(observed <= 100)  # cloud (205), no data (NaN) or other flags
+    sca = np.where(unknown, np.nan, observed)
+    for i in range(1, len(sca)):  # forward fill
+        sca[i] = np.where(np.isnan(sca[i]), sca[i - 1], sca[i])
+    for i in range(len(sca) - 2, -1, -1):  # back fill before the first observation
+        sca[i] = np.where(np.isnan(sca[i]), sca[i + 1], sca[i])
+    sca = np.nan_to_num(sca, nan=255)  # never observed
     ta = cube.isel(bands=1).values.astype(np.float32)
     pr = cube.isel(bands=2).values.astype(np.float32)
     sw = cube.isel(bands=3).values.astype(np.float32)
@@ -141,6 +151,7 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     melt = get_melt_pomeroy(sca, ta, pr, sw, status, p)
     sca_sum, tot_acc = compute_state_and_accumulation(sca, melt, status, delta)
     swe = np.round(get_swe(sca, melt, status, delta, sca_sum, tot_acc))
+    swe[unknown] = np.nan
 
     out = cube.isel(bands=slice(0, 1)).copy(data=swe[:, None])
     return out.assign_coords(bands=["swe"])

@@ -59,6 +59,8 @@ def downscale_shortwave_radiation(sw: DataCube,  slope_aspect: DataCube):
     """
     solar_flux = sw.filter_bands(["solar-radiation-flux"])
     solar_flux = solar_flux / 86400  # J/m^2/day -> W/m^2 (daily mean)
+    # put the coarse AGERA5 flux on the slope/aspect grid first; else the merge happens on the ~10 km AGERA5 grid
+    solar_flux = solar_flux.resample_cube_spatial(slope_aspect, method="bilinear")
     compute_solarposition = UDF.from_file(str(SOLAR_POSITION_UDF))
     
     solar_flux_with_sunpos = solar_flux.apply_dimension(dimension="bands", process=compute_solarposition)

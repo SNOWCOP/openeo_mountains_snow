@@ -44,7 +44,12 @@ def apply_datacube(cube: xarray.DataArray, context) -> xarray.DataArray:
     )
 
     inspect(data=incidence.shape, message=f"Incidence shape: {incidence.shape}")
-    inspect(data=incidence, message=f"Incidence: {incidence}")
+    finite = {
+        name: int(np.isfinite(arr).sum())
+        for name, arr in [("slope", slope), ("aspect", aspect_deg), ("zenith", zenith),
+                          ("azimuth", azimuth), ("ssrd", agera_ssrd_resampled), ("incidence", incidence)]
+    }
+    inspect(data=finite, message=f"Finite pixel counts (of {incidence.size}): {finite}")
 
     #downscale shortwave radiation using incidence angle
     cosZ = np.cos(zenith)
