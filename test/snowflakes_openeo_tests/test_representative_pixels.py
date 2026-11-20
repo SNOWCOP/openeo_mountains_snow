@@ -47,17 +47,49 @@ def test_classification_trains_on_snow_and_snowfree_labels():
     with patch.object(rp, "inspect"):
         labels = rp.apply_datacube(cube, context).sel(bands="B03").values
     spectral = cube.sel(bands=SPECTRAL).values
-    predicted = np.full(labels.shape, 50.0)
+    predicted = np.full(labels.shape[1:], 50.0)
     with patch.object(rp, "inspect"), patch.object(
         rp, "model_training_svm", return_value=(None, "normalizer", "svm", None)
     ) as train, patch.object(rp, "classify", return_value=predicted) as classify:
         result = rp.apply_datacube(cube, {**context, "classify": True})
+    assert train.call_count == 1  # one SVM for all scenes of the month
+    for arg, label in zip(train.call_args.args, (1, 2)):
+        pooled = np.concatenate([spectral[:, t][:, labels[t] == label].T for t in range(2)])
+        assert len(arg) == min(120, len(pooled))
+        assert {tuple(r) for r in arg} <= {tuple(r) for r in pooled}
+    assert classify.call_count == 2
+    for t, classify_call in enumerate(classify.call_args_list):
+        np.testing.assert_array_equal(classify_call.args[1], np.all(np.isfinite(spectral[:, t]), axis=0))
+    np.testing.assert_array_equal(result.sel(bands="B03").values, np.stack([predicted, predicted]))
+
+
+def test_scene_without_snow_is_classified_with_month_model():
+    labels = np.zeros((2, 4, 4))
+    labels[0, 0, :2] = 1
+    labels[1, 2, :2] = 2  # scene 0 has no snow-free samples, scene 1 no snow samples
+    cube = xr.DataArray(np.ones((2, 10, 4, 4)), dims=("t", "bands", "y", "x"), coords={"bands": SPECTRAL})
+    with patch.object(rp, "model_training_svm", return_value=(None, "n", "svm", None)) as train, \
+            patch.object(rp, "classify", return_value=np.zeros((4, 4))) as classify:
+        result = rp.classify_scenes(cube, labels, total_samples=100, seed=0)
     train.assert_called_once()
-    np.testing.assert_array_equal(train.call_args.args[0], spectral[:, labels == 1].T)
-    np.testing.assert_array_equal(train.call_args.args[1], spectral[:, labels == 2].T)
-    classify.assert_called_once()
-    np.testing.assert_array_equal(classify.call_args.args[1], np.all(np.isfinite(spectral), axis=0))
-    np.testing.assert_array_equal(result.sel(bands="B03").values, predicted)
+    assert classify.call_count == 2
+    assert not np.any(result == 255)
+
+
+@pytest.mark.parametrize("label, expected", [(1, 100), (2, 0)])
+def test_single_class_chunk_is_fully_that_class(label, expected):
+    """Fully snow-covered (or snow-free) AOI: no SVM, clear pixels get 100 (or 0), masked stay 255."""
+    labels = np.zeros((1, 4, 4))
+    labels[0, 0, :2] = label
+    bands = np.ones((1, 10, 4, 4))
+    bands[0, 0, 3, 3] = np.nan  # cloud-masked pixel
+    cube = xr.DataArray(bands, dims=("t", "bands", "y", "x"), coords={"bands": SPECTRAL})
+    with patch.object(rp, "model_training_svm") as train:
+        result = rp.classify_scenes(cube, labels, total_samples=100, seed=0)
+    train.assert_not_called()
+    assert result[0, 3, 3] == 255
+    result[0, 3, 3] = expected
+    assert np.all(result == expected)
 
 
 def test_classification_uses_available_bands_only():
@@ -67,7 +99,7 @@ def test_classification_uses_available_bands_only():
         cube = xr.concat([cube, cube.sel(bands=["B03"]).assign_coords(bands=[band])], dim="bands")
     with patch.object(rp, "inspect"), patch.object(
         rp, "model_training_svm", return_value=(None, "normalizer", "svm", None)
-    ) as train, patch.object(rp, "classify", return_value=np.zeros((2, 48, 64))):
+    ) as train, patch.object(rp, "classify", return_value=np.zeros((48, 64))):
         rp.apply_datacube(cube, {"total_samples": 240, "training_seed": 7, "classify": True})
     assert train.call_args.args[0].shape[1] == 5
 
@@ -166,4 +198,13 @@ def test_udf_file_runs_on_backend_cube_layout(run_udf):
     result = run_udf(REPRESENTATIVE_PIXELS_UDF, cube, {"total_samples": 240, "training_seed": 7})
     assert result.dims == cube.dims
     assert list(result.bands.values) == ["B03"]
-    assert set(np.unique(result.values)) == {0, 1, 2}
+
+
+def test_single_date_chunk_without_time_dimension():
+    """The backend can drop `t` for a one-date chunk; the result must keep that layout."""
+    cube = training_cube()
+    with patch.object(rp, "inspect"):
+        with_t = rp.apply_datacube(cube.isel(t=[0]), {"total_samples": 240, "training_seed": 7})
+        no_t = rp.apply_datacube(cube.isel(t=0, drop=True), {"total_samples": 240, "training_seed": 7})
+    assert "t" not in no_t.dims
+    np.testing.assert_array_equal(no_t.values, with_t.isel(t=0).values)
