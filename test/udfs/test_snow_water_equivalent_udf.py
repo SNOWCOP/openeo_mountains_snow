@@ -50,6 +50,36 @@ def test_unknown_days_do_not_erase_the_snowpack(make_cube, run_udf):
     assert (swe[4] > 0).all()
 
 
+def test_no_melt_in_first_122_days_of_hydrological_year():
+    from openeo_mountains_snow.snow_water_equivalent.udfs.snow_water_equivalent_udf import no_melt_dates
+    t = np.array(["2023-09-30", "2023-10-01", "2024-01-31", "2024-02-01"], dtype="datetime64[D]")
+    np.testing.assert_array_equal(no_melt_dates(t, "10-01", 122), [False, True, True, False])
+    south = np.array(["2023-03-31", "2023-04-01", "2023-08-01", "2023-08-02"], dtype="datetime64[D]")
+    np.testing.assert_array_equal(no_melt_dates(south, "04-01", 122), [False, True, True, False])
+
+
+def test_hydrological_year_start_blocks_early_melt(make_cube, run_udf):
+    sca = np.repeat(np.array([0, 100, 100, 100, 100, 100, 0, 0], float)[:, None, None], 3, axis=1).repeat(4, axis=2)
+    ta = np.repeat(np.array([5, -5, -5, 5, 5, 5, 5, 5], float)[:, None, None], 3, axis=1).repeat(4, axis=2)
+    cube = swe_cube(make_cube, sca, ta=ta, precip=np.where(ta < 0, 10.0, 0.0))  # starts 2023-01-01
+    melting = run_udf(SWE_RECONSTRUCTION_UDF, cube, context={"hydrological_year_start": "04-01"})
+    frozen = run_udf(SWE_RECONSTRUCTION_UDF, cube, context={"hydrological_year_start": "10-01"})
+    assert np.nanmax(melting.values) > 0
+    np.testing.assert_array_equal(np.nan_to_num(frozen.values), 0)  # no melt -> nothing to reconstruct
+
+
+def test_basin_sca_gaps_are_interpolated(make_cube, run_udf):
+    # basin SCA 0 -> (missing) -> 40: the interpolated +20 step on the warm wet day triggers accumulation
+    sca = np.repeat(np.array([0, 100, 100, 100, 0, 0], float)[:, None, None], 3, axis=1).repeat(4, axis=2)
+    precip = np.zeros_like(sca)
+    precip[1] = 10.0
+    cube = swe_cube(make_cube, sca, ta=5.0, precip=precip)
+    dates = [str(t)[:10] for t in cube.t.values]
+    basin = {dates[0]: 0.0, dates[2]: 40.0, dates[3]: 40.0, dates[4]: 40.0, dates[5]: 40.0}
+    result = run_udf(SWE_RECONSTRUCTION_UDF, cube, context={"basin_sca": basin})
+    assert np.nanmax(result.values) > 0
+
+
 def test_basin_sca_context_replaces_neighborhood_sca(make_cube, run_udf):
     # warm, wet snowfall day: only accumulation if the SCA increases by more than 10 points
     sca = np.repeat(np.array([0, 100, 100, 100, 0, 0], float)[:, None, None], 3, axis=1).repeat(4, axis=2)

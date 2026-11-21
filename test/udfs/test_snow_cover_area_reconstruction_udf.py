@@ -52,6 +52,22 @@ def test_default_reconstructs_every_day(make_cube, run_udf):
     assert result.sizes["t"] == history().shape[0]
 
 
+def test_mostly_cloudy_modis_scene_is_dropped():
+    from openeo_mountains_snow.snow_cover_area.udfs.snow_cover_area_reconstruction_udf import modis_blocks
+    labels = np.arange(21)  # one HR pixel per LR pixel
+    modis = np.full(21, CLOUD, dtype=float)
+    modis[0] = 40  # 20 of 21 LR pixels cloudy: 95.2 % > 95 %
+    assert modis_blocks(modis, labels, 21)[0] == 40
+    assert (modis_blocks(modis, labels, 21, cloud_thres=95) == CLOUD).all()
+
+
+def test_scf_interpolation_uses_dates_not_positions():
+    from openeo_mountains_snow.snow_cover_area.udfs.snow_cover_area_reconstruction_udf import interpolate_scf
+    scf = np.array([[0.0], [CLOUD], [90.0]])  # dates: day 0, day 1, day 9
+    out = interpolate_scf(scf, np.zeros_like(scf), np.full_like(scf, 100), [0, 1, 9])
+    assert out[1, 0] == 10
+
+
 def test_clear_days_unchanged(make_cube, run_udf):
     cube = sca_cube(make_cube, history())
     result = run_udf(SCA_RECONSTRUCTION_UDF, cube, {"n_days_to_reconstruct": 3})

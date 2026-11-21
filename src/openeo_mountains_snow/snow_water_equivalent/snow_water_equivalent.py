@@ -20,6 +20,12 @@ from openeo_mountains_snow.snow_water_equivalent.downscale_variables import (
 )
 
 
+def southern_hemisphere(spatial_extent: dict) -> bool:
+    _, (south, north) = Transformer.from_crs(spatial_extent.get("crs", "EPSG:4326"), "EPSG:4326", always_xy=True).transform(
+        [spatial_extent["west"]] * 2, [spatial_extent["south"], spatial_extent["north"]])
+    return south + north < 0
+
+
 def swe_meteo_cube(
     connection: openeo.Connection,
     spatial_extent: dict,
@@ -65,7 +71,7 @@ def swe_meteo_cube(
     if not geopotential.metadata.has_temporal_dimension():
         geopotential.metadata = geopotential.metadata.add_dimension("t", label=first_date, type="temporal")
     geopotential = to_dem_grid(geopotential.max_time())
-    temperature = downscale_temperature(agera, dem, geopotential, southern_hemisphere=sum(lats) < 0)
+    temperature = downscale_temperature(agera, dem, geopotential, southern_hemisphere=southern_hemisphere(spatial_extent))
 
     if terrain.SLOPE_ASPECT_IN_RADIANS:
         slope_aspect = slope_aspect * (180.0 / math.pi)  # the shortwave downscaling wants degrees
@@ -97,7 +103,10 @@ def snow_water_equivalent_cube(
         snow_cover_area
         .merge_cubes(meteo.resample_cube_spatial(snow_cover_area, method="near"))  # no-op when already aligned
         .apply_neighborhood(
-            process=openeo.UDF.from_file(str(SWE_RECONSTRUCTION_UDF), context={"basin_sca": basin_sca or {}}),
+            process=openeo.UDF.from_file(str(SWE_RECONSTRUCTION_UDF), context={
+                "basin_sca": basin_sca or {},
+                "hydrological_year_start": "04-01" if southern_hemisphere(spatial_extent) else "10-01",
+            }),
             size=[
                 {"dimension": "x", "value": NEIGHBORHOOD_SIZE, "unit": "px"},
                 {"dimension": "y", "value": NEIGHBORHOOD_SIZE, "unit": "px"},

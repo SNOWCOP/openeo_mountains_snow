@@ -48,30 +48,35 @@ def apply_datacube(cube :xarray.DataArray, context) -> xarray.DataArray:
     # label each scene on its own.
     values = np.concatenate([training_labels(cube.isel(t=[i]), context) for i in range(cube.sizes["t"])], axis=0)
     if context.get("classify", False):
-        values = classify_scenes(cube, values, context.get("total_samples", 500), context.get("training_seed", 0))
+        values = classify_scenes(cube, values)
 
     out = cube.sel(bands=["B03"])
     out = out.copy(data=values.astype(cube.dtype).reshape(out.shape))
     return out.isel(t=0, drop=True) if squeezed else out
 
 
-def classify_scenes(cube, labels, total_samples, seed):
-    """SCF of every scene with one SVM trained on samples drawn from all scenes of the chunk.
+def classify_scenes(cube, labels):
+    """SCF of every scene with one SVM trained on all labelled pixels of all scenes of the chunk.
 
     `labels` is (t, y, x) with 1 = snow, 2 = snow-free. Unclassified pixels are 255.
+    Features as SnowFLAKES `build_feature_matrix`: spectral bands, cos(SIA), diff_B_NIR.
     """
     spectral = [b for b in CLASSIFICATION_BANDS if b in cube.bands.values]
     bands = cube.sel(bands=spectral).transpose("t", "bands", ...).values
-    rng = np.random.default_rng(seed)
+    hillshade = np.cos(np.deg2rad(cube.sel(bands="local_solar_incidence_angle").transpose("t", ...).values))
+    diff_b_nir = cube.sel(bands="diff_B_NIR").transpose("t", ...).values
+    bands = np.concatenate([bands, hillshade[:, None], diff_b_nir[:, None]], axis=1)
 
     def samples(label):
-        x = np.concatenate([bands[i][:, labels[i] == label].T for i in range(len(labels))])
-        return x[rng.choice(len(x), min(total_samples // 2, len(x)), replace=False)]
+        return np.concatenate([bands[i][:, labels[i] == label].T for i in range(len(labels))])
 
     result = np.full(labels.shape, 255, dtype=np.float32)
     snow, snowfree = samples(1), samples(2)
     if len(snow) == 0 or len(snowfree) == 0:
         # Only one class found (e.g. AOI fully snow-covered): no SVM, every clear pixel is that class.
+        # TODO/caveat: SnowFLAKES would borrow the closest model of another scene instead. We
+        # understand this difference and limitation; we do this currently to avoid a high
+        # amount of NaN values, which is also not wanted.
         if len(snow) or len(snowfree):
             valid = np.all(np.isfinite(bands), axis=1)
             result[valid] = 100 if len(snow) else 0
@@ -111,6 +116,8 @@ def training_labels(cube, context):
     for axis in spatial_axes:
         structure_shape[axis] = 3
     structure = generate_binary_structure(2, 1).reshape(structure_shape)
+    # SnowFLAKES `build_valid_scene`: no training within 2 pixels of invalid (masked) pixels.
+    valid_sun &= ~binary_dilation(~valid_sun, structure=structure, iterations=2)
     eligible_sun = (
         binary_erosion(
             binary_dilation((shadow_mask == 0) & valid_sun, structure=structure),
@@ -124,7 +131,7 @@ def training_labels(cube, context):
     eligible_shadow = (
         np.isfinite(shadow_mask) & (shadow_mask != 0)
         & np.isfinite(green) & np.isfinite(diff_B_NIR)
-        & ~glacier
+        & ~glacier & valid_sun
     )
 
     # define solar incidence angle ranges
@@ -636,7 +643,7 @@ def model_training_svm(snow_training, no_snow_training, gamma=None):
     Samples_train_normalized = normalizer.transform(training_array)
     if gamma == None:
         # Gamma selection by examining the kernel
-        gamma_range = np.logspace(-2, 2, 100)
+        gamma_range = np.logspace(-2, 2, 1000)
         std_list = []
         for curr_gamma in gamma_range:
             rbf = rbf_kernel(Samples_train_normalized, Samples_train_normalized, gamma=curr_gamma)

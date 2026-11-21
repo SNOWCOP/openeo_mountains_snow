@@ -55,7 +55,7 @@ INVALID_CODES = [205, 210, 254, 255]
 CLOUD_VALUE = 205  # cloud code in snow maps; the UDFs hardcode the same value
 INVALID_VALUE = 255
 INVALID_PIXEL_THRESHOLD = 40  # LR pixel invalid from this many invalid HR pixels (original nv_thres)
-SNOW_FRACTION_THRESHOLD = 50  # SCF (%) at or above which a pixel counts as snow
+SNOW_FRACTION_THRESHOLD = 15  # SCF (%) above which a pixel counts as snow (original dailyHR_SCA snow_thres)
 
 # SCF range parameters
 DELTA = 10  # Step size for SCF ranges (%)

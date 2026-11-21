@@ -11,7 +11,7 @@ from openeo.api.process import Parameter
 from openeo.processes import array_append, array_create
 from pyproj import Geod, Transformer
 
-from openeo_mountains_snow.common.masks import cloud_water_mask, glacier_mask
+from openeo_mountains_snow.common.masks import cloud_water_mask, glacier_mask, omnicloudmask_classes
 from openeo_mountains_snow.common.sun import aoi_shape
 from openeo_mountains_snow.common.terrain import local_incidence_angle, shadow_mask
 from openeo_mountains_snow.config import REPRESENTATIVE_PIXELS_UDF
@@ -119,7 +119,10 @@ def aoi_neighborhood_size(aoi, resolution: float = 10, tile: int = 128) -> int:
 
 
 def snowflake_inputs_cube(aoi, time_period, connection, cfg):
-    mask = cloud_water_mask(aoi, time_period, connection, cfg)
+    classes = None
+    if cfg.omnicloudmask.model_url is not None:
+        classes = omnicloudmask_classes(aoi, time_period, connection, cfg)
+    mask = cloud_water_mask(aoi, time_period, connection, cfg, classes=classes)
     sentinel2_bands = connection.load_collection(
         cfg.sentinel2_l1c.collection,
         spatial_extent=aoi,
@@ -135,19 +138,20 @@ def snowflake_inputs_cube(aoi, time_period, connection, cfg):
 
     s2_with_local_angle = local_incidence_angle(masked_s2, aoi, time_period, connection, cfg,
                                                 bands_to_retain=[n for n in names if n.startswith("B")])
-    inputs = add_indices(shadow_mask(s2_with_local_angle, aoi))
+    cloud_shadow = None if classes is None else classes.apply(lambda x: x == 3)
+    inputs = add_indices(shadow_mask(s2_with_local_angle, aoi, cloud_shadow=cloud_shadow))
     glacier = glacier_mask(aoi, connection, cfg)
     if glacier is not None:
         inputs = inputs.merge_cubes(glacier.add_dimension(name="bands", label="glacier", type="bands"))
     return inputs
 
 
-def add_indices(cube):
-    """Append NDSI, NDWI and diff_B_NIR (blue - nir), from reflectance bands."""
+def add_indices(cube, nir_band="B8A"):
+    """Append NDSI, NDWI and diff_B_NIR (blue - nir), from reflectance bands. SnowFLAKES uses B8A as NIR."""
     from openeo.processes import normalized_difference
     def compute_indices(bands):
         green = bands["B03"]
-        nir = bands["B08"]
+        nir = bands[nir_band]
         updated = array_append(bands, normalized_difference(green, bands["B11"]), "NDSI")
         updated = array_append(updated, normalized_difference(green, nir), "NDWI")
         return array_append(updated, bands["B02"] - nir, "diff_B_NIR")

@@ -14,14 +14,17 @@ from openeo_mountains_snow.config import SOLAR_POSITION_UDF
 SLOPE_ASPECT_IN_RADIANS = True
 
 
-def shadow_mask(s2_cube, region):
-    """Add the scene-wide composite shadow mask (self-shadow | spectral shadow) as a new band."""
+def shadow_mask(s2_cube, region, nir_band="B8A", cloud_shadow=None):
+    """Add the scene-wide composite shadow mask (self-shadow | spectral shadow | cloud shadow) as a new band.
+
+    `cloud_shadow`: optional boolean cube (t, y, x), e.g. OmniCloudMask class 3, as in SnowFLAKES.
+    """
     def select_band(cube, name):
         # ``DataCube.band`` enables a client-side band-math mode that cannot be
         # combined with the aggregated statistic cubes below.
         return cube.filter_bands([name]).reduce_dimension(dimension="bands", reducer="first")
 
-    nir = select_band(s2_cube, "B08")
+    nir = select_band(s2_cube, nir_band)
     red = select_band(s2_cube, "B04")
     sia = select_band(s2_cube, "local_solar_incidence_angle")
 
@@ -40,6 +43,8 @@ def shadow_mask(s2_cube, region):
     spectral_shadow = (CLOSDI - threshold) > 0
 
     shadow = (spectral_shadow & curr_angle_valid) | self_shadow
+    if cloud_shadow is not None:
+        shadow = shadow | cloud_shadow
 
     shadow = shadow.process_with_node(shadow.result_node(), metadata=sia.metadata)
     shadow_band = shadow.add_dimension(name="bands", label="shadow_mask", type="bands")

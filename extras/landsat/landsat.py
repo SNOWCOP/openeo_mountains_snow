@@ -155,7 +155,7 @@ def landsat_inputs_cube(
     with_scaled_angles = _scale_angles_and_set_local_incidence(mapped)
     # aoi is a EPSG:4326 bbox dict; the shadow threshold needs a geometry.
     region = shapely.box(aoi["west"], aoi["south"], aoi["east"], aoi["north"])
-    return add_indices(shadow_mask(with_scaled_angles, region))
+    return add_indices(shadow_mask(with_scaled_angles, region, nir_band="B08"), nir_band="B08")  # B08 = Landsat NIR (B5)
 
 
 def landsat_representative_pixels_cube(

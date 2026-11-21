@@ -35,7 +35,8 @@ DEFAULTS = {
     "cloud_thres": 0.1,   # max cloud fraction of a historical scene
     "cp_occur_thres": 10, # min occurrences for a usable conditional probability
     "nv_thres": 40,       # max HR invalid pixels per LR pixel for a valid SCF
-    "rule0100": True,     # LR SCF 0/100 forces all HR pixels to 0/100
+    "rule0100": False,    # LR SCF 0/100 forces all HR pixels to 0/100 (original main_new.py: False)
+    "modis_cloud_thres": 95,  # % cloudy LR pixels above which a MODIS scene is dropped (original: per basin, here per chunk)
 }
 
 
@@ -65,14 +66,22 @@ def scf(snow, labels, n, nv_thres, mode=None):
     return np.where(nv == 0, total / size, partial)
 
 
-def modis_blocks(modis, labels, n):
-    """MODIS SCF per LR pixel: mean if fully valid, CLOUD if cloudy, else NO_DATA."""
+def modis_blocks(modis, labels, n, cloud_thres=None):
+    """MODIS SCF per LR pixel: mean if fully valid, CLOUD if cloudy, else NO_DATA.
+
+    With `cloud_thres` (%): if more than that share of the observed (non-NO_DATA) LR pixels is
+    cloudy, the whole scene becomes CLOUD (original: per basin, here per chunk).
+    """
     size = np.bincount(labels.ravel(), minlength=n)
     valid = np.isfinite(modis) & (modis <= SNOW)
     cloudy = block_sum(np.isfinite(modis) & (modis > SNOW), labels, n) > 0
     mean = block_sum(np.where(valid, modis, 0), labels, n) / size
     full = block_sum(valid, labels, n) == size
-    return np.where(full, mean, np.where(cloudy, CLOUD, NO_DATA))
+    out = np.where(full, mean, np.where(cloudy, CLOUD, NO_DATA))
+    observed = out != NO_DATA
+    if cloud_thres is not None and observed.any() and (out[observed] == CLOUD).mean() * 100 > cloud_thres:
+        out[observed] = CLOUD
+    return out
 
 
 def reconstruct_hr(snow, nodata, history, p):
@@ -146,14 +155,14 @@ def hist_rec(snow, nodata, scf_init, modis_lr, history, cp, occ, labels, n, p):
             return snow, scf_hr, scf_min, scf_max
 
 
-def interpolate_scf(scf_days, scf_min, scf_max):
-    """Original ``interpolate_scf``: linear in time over cloudy (205) LR values, clamped.
+def interpolate_scf(scf_days, scf_min, scf_max, t):
+    """Original ``interpolate_scf``: linear in time (`t`, days) over cloudy (205) LR values, clamped.
 
     Cloudy values without valid values on both sides become NaN. Deviation from the
     original: 255 is not used as an interpolation anchor.
     """
     out = scf_days.astype(float)
-    t = np.arange(out.shape[0])
+    t = np.asarray(t, dtype=float)
     for j in range(out.shape[1]):
         ok = (out[:, j] >= 0) & (out[:, j] <= SNOW)
         cloudy = out[:, j] == CLOUD
@@ -193,7 +202,7 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     # Block 1
     modis_lr, b1 = {}, {}
     for i in days:
-        modis_lr[i] = modis_blocks(modis[i], labels, n)
+        modis_lr[i] = modis_blocks(modis[i], labels, n, p["modis_cloud_thres"])
         b1[i] = hist_rec(snow_all[i], nodata[i], modis_lr[i], modis_lr[i],
                          history(i), cp, occ, labels, n, p)
 
@@ -202,13 +211,14 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     pre = range(days[0])
 
     def raw_lr(i):
-        lr = modis_blocks(modis[i], labels, n)
+        lr = modis_blocks(modis[i], labels, n, p["modis_cloud_thres"])
         lr = np.where(lr == NO_DATA, scf(snow_all[i], labels, n, p["nv_thres"]), lr)
         return (lr, scf(snow_all[i], labels, n, p["nv_thres"], "min"),
                 scf(snow_all[i], labels, n, p["nv_thres"], "max"))
 
     stacks = [raw_lr(i) for i in pre] + [b1[i][1:] for i in days]
-    scf_interp = interpolate_scf(*(np.stack([s[k] for s in stacks]) for k in range(3)))[len(pre):]
+    t_days = (cube.t.values[:len(stacks)] - cube.t.values[0]) / np.timedelta64(1, "D")
+    scf_interp = interpolate_scf(*(np.stack([s[k] for s in stacks]) for k in range(3)), t_days)[len(pre):]
     result = snow_all.copy()
     for k, i in enumerate(days):
         result[i] = hist_rec(b1[i][0], nodata[i], scf_interp[k], modis_lr[i],
