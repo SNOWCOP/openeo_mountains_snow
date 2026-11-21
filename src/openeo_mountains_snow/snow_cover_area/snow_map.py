@@ -19,7 +19,7 @@ def snow_map_from_snow_cover_fraction(snow_cover_fraction: openeo.DataCube, crs:
     """
     def binarize(bands):
         scf = bands[0]
-        snow = if_(scf >= SNOW_FRACTION_THRESHOLD, 100.0, 0.0)
+        snow = if_(scf > SNOW_FRACTION_THRESHOLD, 100.0, 0.0)
         return if_(is_nan(scf).or_(scf > 100), float(CLOUD_VALUE), snow)
 
     return (snow_cover_fraction

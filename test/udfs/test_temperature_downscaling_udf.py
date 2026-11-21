@@ -20,6 +20,6 @@ def test_january_north_uses_winter_lapse_rate(make_cube, run_udf):
 def test_hemisphere_and_month_select_lapse_rate(make_cube, run_udf):
     cube = temperature_cube(make_cube, "2023-07-01")
     north = run_udf(TEMPERATURE_DOWNSCALING_UDF, cube)
-    south = run_udf(TEMPERATURE_DOWNSCALING_UDF, cube, context={"southern_hemisphere": True})
+    south = run_udf(TEMPERATURE_DOWNSCALING_UDF, cube, context={"hemisphere": "south"})
     np.testing.assert_allclose(north.values, -8.1, atol=1e-4)
     np.testing.assert_allclose(south.values, -4.4, atol=1e-4)

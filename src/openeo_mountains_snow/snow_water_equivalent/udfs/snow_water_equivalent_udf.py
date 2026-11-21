@@ -7,12 +7,15 @@ redistributed over the accumulation days in proportion to their precipitation.
 
 Input bands (per t): 0 = SCA (0/100/205, NaN = no data), 1 = air temperature (°C),
 2 = precipitation (mm/day), 3 = incoming shortwave radiation (W/m²).
-Output band ``swe`` in mm, rounded to whole mm; NaN where SCA is cloud/no data
-TODO; current mitigation for sparse MODIS offering on CDSEThe snowpack is carried through those days: the SCA is gap-filled with the last known
-value (the first known value before the first observation).
+Output band ``swe`` in mm, rounded to whole mm; NaN where SCA is cloud/no data.
+TODO: current mitigation for sparse MODIS offering on CDSE. The snowpack is carried through
+those days: the SCA is gap-filled with the last known value (the first known value before
+the first observation).
 
-Context ``basin_sca`` ({"YYYY-MM-DD": percent}): basin-wide SCA series, as in the original.
-Without it, the SCA of the neighborhood is used.
+Context ``basin_sca`` ({"YYYY-MM-DD": percent}): basin-wide SCA series, as in the original;
+missing dates are linearly interpolated. Without it, the SCA of the neighborhood is used.
+Context ``hydrological_year_start`` ("MM-DD", e.g. "04-01" south / "10-01" north): melt is
+zero for dates up to ``no_melt_days`` after it, as in the original. Without it, no guard.
 """
 import numpy as np
 import xarray as xr
@@ -23,8 +26,18 @@ DEFAULTS = {
     "sca_increase_threshold": 10.0,   # basin SCA increase, percentage points
     "TF": 0.24,                       # temperature factor, mm / (°C day)
     "SRF": 0.15,                      # shortwave radiation factor
-    "no_melt_days": 0,                # original forces zero melt for the first 122 days
+    "no_melt_days": 122,              # zero melt up to this many days after hydrological_year_start
+    "hydrological_year_start": None,  # "MM-DD"; None disables the no-melt guard
 }
+
+
+def no_melt_dates(t, start, days):
+    """True for dates at most `days` after the latest `start` ("MM-DD") on or before them."""
+    t = np.asarray(t, dtype="datetime64[D]")
+    year = t.astype("datetime64[Y]").astype(int) + 1970
+    begin = np.array([np.datetime64(f"{y}-{start}") for y in year], dtype="datetime64[D]")
+    begin = np.where(begin > t, [np.datetime64(f"{y - 1}-{start}") for y in year], begin)
+    return (t - begin).astype(int) <= days
 
 
 def get_status_and_delta(sca, ta, pr, p, basin_sca=None):
@@ -47,7 +60,7 @@ def get_status_and_delta(sca, ta, pr, p, basin_sca=None):
     return status, np.nan_to_num(delta, nan=0.0)
 
 
-def get_melt_pomeroy(sca, ta, pr, sw, status, p):
+def get_melt_pomeroy(sca, ta, pr, sw, status, p, no_melt=None):
     d_wet, d_dry = 0.005 * 24, 0.0003 * 24
     asmn, asmx, salb = 0.6, 0.9, 10
     t_thresh = p["temperature_threshold"]
@@ -67,7 +80,7 @@ def get_melt_pomeroy(sca, ta, pr, sw, status, p):
         warm = ta[i + 1] > t_thresh
         melt[i + 1] = np.minimum(p["TF"] * np.where(warm, ta[i + 1], 0)
                                  + p["SRF"] * np.where(warm, sw[i + 1], 0) * (1 - albs[i + 1]), 60)
-        if i < p["no_melt_days"]:
+        if no_melt is not None and no_melt[i + 1]:
             melt[i + 1] = 0
     return melt
 
@@ -146,9 +159,16 @@ def apply_datacube(cube: xr.DataArray, context: dict) -> xr.DataArray:
     if p.get("basin_sca"):
         dates = np.datetime_as_string(cube.t.values, unit="D")
         basin_sca = np.array([p["basin_sca"].get(d, np.nan) for d in dates], dtype=float)
+        known = np.isfinite(basin_sca)
+        if known.any():  # the original 'SCA final' series has no gaps
+            days = (cube.t.values - cube.t.values[0]) / np.timedelta64(1, "D")
+            basin_sca = np.interp(days, days[known], basin_sca[known])
+    no_melt = None
+    if p.get("hydrological_year_start"):
+        no_melt = no_melt_dates(cube.t.values, p["hydrological_year_start"], p["no_melt_days"])
 
     status, delta = get_status_and_delta(sca, ta, pr, p, basin_sca)
-    melt = get_melt_pomeroy(sca, ta, pr, sw, status, p)
+    melt = get_melt_pomeroy(sca, ta, pr, sw, status, p, no_melt)
     sca_sum, tot_acc = compute_state_and_accumulation(sca, melt, status, delta)
     swe = np.round(get_swe(sca, melt, status, delta, sca_sum, tot_acc))
     swe[unknown] = np.nan

@@ -36,10 +36,12 @@ def glacier_mask(region, conn: openeo.Connection, cfg: DictConfig):
     return glacier.max_time().reduce_dimension(dimension="bands", reducer=lambda x: x[0] == 1)
 
 
-def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfig):
+def cloud_water_mask(region, time_period, conn: openeo.Connection, cfg:DictConfig, classes=None):
+    """`classes`: precomputed `omnicloudmask_classes`, to avoid predicting twice."""
     if cfg.omnicloudmask.model_url is not None:
-        cloud_mask = omnicloudmask_classes(region, time_period, conn, cfg).apply(
-            lambda x: (x == 1).or_(x == 2))
+        if classes is None:
+            classes = omnicloudmask_classes(region, time_period, conn, cfg)
+        cloud_mask = classes.apply(lambda x: (x == 1).or_(x == 2))
     else:
         scl = conn.load_collection(
             cfg.sentinel2_l2a.collection,

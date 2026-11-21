@@ -55,7 +55,7 @@ INVALID_CODES = [205, 210, 254, 255]
 CLOUD_VALUE = 205  # cloud code in snow maps; the UDFs hardcode the same value
 INVALID_VALUE = 255
 INVALID_PIXEL_THRESHOLD = 40  # LR pixel invalid from this many invalid HR pixels (original nv_thres)
-SNOW_FRACTION_THRESHOLD = 50  # SCF (%) at or above which a pixel counts as snow
+SNOW_FRACTION_THRESHOLD = 15  # SCF (%) above which a pixel counts as snow (original dailyHR_SCA snow_thres)
 
 # SCF range parameters
 DELTA = 10  # Step size for SCF ranges (%)
@@ -80,14 +80,25 @@ SCA_NEIGHBORHOOD_OVERLAP = PIXEL_RATIO
 # Job Configuration
 # ==============================
 
+# Tuned from batch-job usage metrics (peak executor memory, cpu_utilization_ratio).
+# Heavy: Sentinel-2 SCF chain (peak ~14.9 GB, cpu ratio 0.82).
 JOB_OPTIONS = {
     "executor-memory": "8G",
     "executor-memoryOverhead": "8G",
     'executor-cores': 1,
     "driver-memory": "2G",
     "driver-memoryOverhead": "2G",
-    "python-memory": "disable", 
-    'max-executors': 8
+    "python-memory": "disable",
+    'max-executors': 6
+}
+# Medium: meteo, swe, sca, cp_occ (peak ~9 GB, cpu ratio 0.71-0.80).
+JOB_OPTIONS_MEDIUM = {**JOB_OPTIONS, "executor-memoryOverhead": "4G", 'max-executors': 4}
+# Small: modis_scf, snow, terrain (peak ~1 GB, cpu ratio 0.10-0.60).
+JOB_OPTIONS_SMALL = {
+    **JOB_OPTIONS,
+    "executor-memory": "2G",
+    "executor-memoryOverhead": "2G",
+    'max-executors': 2,
 }
 
 
