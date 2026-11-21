@@ -1,6 +1,10 @@
 # openeo_mountains_snow
 Snow processing in the mountains based on openEO.
 
+**New here? Start with the [tutorial notebook](tutorial.ipynb).** It runs the whole chain on CDSE
+(Sentinel-2 snow cover fraction → snow cover area → snow water equivalent) for a small Andean area,
+shows every intermediate product and lists the caveats compared to the original method.
+
 Full method docs: [docs/](docs/index.md) (Quarto).
 
 ## Pipeline
@@ -29,6 +33,8 @@ pip install -e .[dev]
 
 ## Run
 
+The [tutorial](tutorial.ipynb) runs each step as a separate job. The commands below run them as scripts.
+
 | Step | Command | Config |
 |------|---------|--------|
 | SCF | `python -m openeo_mountains_snow.snow_cover_fraction.snow_cover_fraction +experiment=andes_snow_cover_fraction` | `conf/` (Hydra) |
@@ -56,7 +62,8 @@ src/openeo_mountains_snow/
 extras/              Not installed; run from the repo root
 ├── upscaling/       Tile a large AOI into many batch jobs
 └── landsat/         Landsat SCF variant (work in progress)
-scripts/             export_omnicloudmask_onnx.py + validation/ notebooks
+tutorial.ipynb       Entry point: step-by-step tutorial of the full chain
+scripts/             export_omnicloudmask_onnx.py
 docs/                Method documentation (Quarto)
 test/                Tests
 ```
