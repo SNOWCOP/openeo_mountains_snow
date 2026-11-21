@@ -12,7 +12,7 @@ from openeo_mountains_snow.config import (
 )
 
 
-def downscale_temperature(agera_cube, elevation_cube, geopotential_cube, southern_hemisphere: bool):
+def downscale_temperature(agera_cube, elevation_cube, geopotential_cube, hemisphere: str):
     """
     Downscale AGERA5 mean temperature to the DEM with the monthly lapse rate of the hemisphere.
 
@@ -20,7 +20,7 @@ def downscale_temperature(agera_cube, elevation_cube, geopotential_cube, souther
         agera_cube: AGERA5 cube with band `temperature-mean` (K, scale 0.01)
         elevation_cube: DEM cube (band `DEM`, m)
         geopotential_cube: ERA5 surface geopotential (m2/s2), no time dimension
-        southern_hemisphere: selects the southern-hemisphere lapse-rate table
+        hemisphere: "north" or "south", selects the lapse-rate table
 
     Returns:
         DataCube with band `temperature_downscaled` (°C)
@@ -30,7 +30,7 @@ def downscale_temperature(agera_cube, elevation_cube, geopotential_cube, souther
     inputs = (temperature.merge_cubes(height)
               .resample_cube_spatial(elevation_cube, method="bilinear")
               .merge_cubes(elevation_cube.max_time()))
-    udf = UDF.from_file(str(TEMPERATURE_DOWNSCALING_UDF), context={"southern_hemisphere": southern_hemisphere})
+    udf = UDF.from_file(str(TEMPERATURE_DOWNSCALING_UDF), context={"hemisphere": hemisphere})
     return (inputs.apply_neighborhood(
                 process=udf,
                 size=[
