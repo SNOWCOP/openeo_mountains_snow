@@ -80,14 +80,25 @@ SCA_NEIGHBORHOOD_OVERLAP = PIXEL_RATIO
 # Job Configuration
 # ==============================
 
+# Tuned from batch-job usage metrics (peak executor memory, cpu_utilization_ratio).
+# Heavy: Sentinel-2 SCF chain (peak ~14.9 GB, cpu ratio 0.82).
 JOB_OPTIONS = {
     "executor-memory": "8G",
     "executor-memoryOverhead": "8G",
     'executor-cores': 1,
     "driver-memory": "2G",
     "driver-memoryOverhead": "2G",
-    "python-memory": "disable", 
-    'max-executors': 8
+    "python-memory": "disable",
+    'max-executors': 6
+}
+# Medium: meteo, swe, sca, cp_occ (peak ~9 GB, cpu ratio 0.71-0.80).
+JOB_OPTIONS_MEDIUM = {**JOB_OPTIONS, "executor-memoryOverhead": "4G", 'max-executors': 4}
+# Small: modis_scf, snow, terrain (peak ~1 GB, cpu ratio 0.10-0.60).
+JOB_OPTIONS_SMALL = {
+    **JOB_OPTIONS,
+    "executor-memory": "2G",
+    "executor-memoryOverhead": "2G",
+    'max-executors': 2,
 }
 
 
