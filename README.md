@@ -7,6 +7,9 @@ shows every intermediate product and lists the caveats compared to the original 
 
 Full method docs: [docs/](docs/index.md) (Quarto).
 
+Project history: [CHANGELOG.md](CHANGELOG.md). Technical before/after details:
+[technical fixes report](docs/technical_fixes_report.md).
+
 ## Pipeline
 
 ```mermaid
